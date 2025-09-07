@@ -18,9 +18,9 @@ import { trackContactClick } from './utils/analytics';
 
 const CONFIG = {
   businessName: {
-    hy: "Գալստյան Դպրոց",
-    en: "Galstyan School",
-    ru: "Школа Галстяна",
+    hy: "Գալստյան Ակադեմիա",
+    en: "Galstyan Academy",
+    ru: "Академия Галстяна",
   },
   owner: {
     name: {
@@ -32,16 +32,15 @@ const CONFIG = {
   },
   logo: "/logo.svg",
   phone: "+374 (94) 766-409",
-  email: "tikogal96@gmail.com",
+  email: "maratgalstyan1967@gmail.com",
   address: {
     hy: "Երևան, Հայաստան",
     en: "Yerevan, Armenia",
     ru: "Ереван, Армения",
   },
   social: {
-    x: "https://x.com/galstyanschool",
-    linkedin: "https://www.linkedin.com/company/galstyanschool/",
-    instagram: "https://www.instagram.com/galstyanschool/",
+    facebook: "https://www.facebook.com/galstyanacademy",
+    instagram: "https://www.instagram.com/galstyanacademy/",
   },
   color: {
     bg: "bg-sky-950",
@@ -102,7 +101,6 @@ const I18N = {
     nav: {
       courses: "Դասընթացներ",
       founder: "Հիմնադիր",
-      schedule: "Ժամացույց",
       pricing: "Գնացուցակ",
       faq: "ՀՏՀ",
       contact: "Կապ",
@@ -112,18 +110,19 @@ const I18N = {
       tagline: "Սովորիր․ Զարգացիր․ Հաջողիր․",
       subtitle:
         "Բարձրորակ դասեր մաթեմատիկա և ֆիզիկա բոլոր մակարդակների համար։",
-      primary: "Միացիր անվճար փորձնական դասին",
+      primary: "Միացիր դասընթացներին",
       secondary: "Դասընթացներ",
+      founder: "Հիմնադիր",
       smalls: [
         "🎯 Փոքր խմբեր և անհատական",
-        "🧑‍🏫 Օլիմպիադայի պատրաստում",
-        "📝 Քննության պատրաստում (ԱՏ/IELTS/SAT)",
-        "💻 Նախագծային ծրագրավորում",
+        "📐 Մաթեմատիկա բոլոր մակարդակների համար",
+        "⚗️ Ֆիզիկա՝ տեսություն և պրակտիկա",
       ],
     },
     courses: {
       title: "Մեր դասընթացները",
       subtitle: "Հիմնական առարկաներ՝ ամուր հիմք ստեղծելու համար։",
+      comingSoon: "Շուտով",
       items: [
         {
           icon: "➗",
@@ -137,25 +136,32 @@ const I18N = {
           desc:
             "Մեխանիկա, էլեկտրամագնիսականություն, օպտիկա, փորձեր և գործնական մտածողություն։",
         },
+        {
+          icon: "⚗️",
+          title: "Քիմիա",
+          desc: "Շուտով - օրգանական և անօրգանական քիմիա, լաբորատորիա։",
+          disabled: true,
+        },
+        {
+          icon: "🧬",
+          title: "Կենսաբանություն",
+          desc: "Շուտով - բջջային կենսաբանություն, գենետիկա, էկոլոգիա։",
+          disabled: true,
+        },
+        {
+          icon: "🇬🇧",
+          title: "Անգլերեն",
+          desc: "Շուտով - քերականություն, խոսակցություն, գրավոր արտահայտություն։",
+          disabled: true,
+        },
       ],
     },
     founder: {
       title: "Հիմնադիր",
       subtitle:
         "Փորձառու մենթոր՝ հստակության, պրակտիկայի և արդյունքների վրա կենտրոնացած։",
-      blurb: "10+ տարվա փորձ ուսանողների պատրաստման և ակադեմիական հաջողության ապահովման բնագավառում։ Մարատ Գալստյանը կրթության մեջ տեսնում է ապագայի հիմքը և հավատում, որ ամեն ուսանող կարող է հասնել բարձունքների՝ ճիշտ ղեկավարության և աջակցության դեպքում։ Նրա մոտեցումը հիմնված է անհատական բանալու վրա՝ ամեն ուսանողի հետ աշխատելիս նրա ուժեղ և թույլ կողմերը բացահայտելու և դրանց հիման վրա կառուցելու համար։",
+      blurb: "30+ տարվա փորձ ուսանողների պատրաստման և ակադեմիական հաջողության ապահովման բնագավառում։ Մարատ Գալստյանը կրթության մեջ տեսնում է ապագայի հիմքը և հավատում, որ ամեն ուսանող կարող է հասնել բարձունքների՝ ճիշտ ղեկավարության և աջակցության դեպքում։ Նրա մոտեցումը հիմնված է անհատական բանալու վրա՝ ամեն ուսանողի հետ աշխատելիս նրա ուժեղ և թույլ կողմերը բացահայտելու և դրանց հիման վրա կառուցելու համար։",
       mission: "Նպատակը պարզ է՝ ոչ միայն գիտելիքներ փոխանցել, այլև ներշնչել սովորելու սիրությունը և ինքնավստահությունը։ Մարատը համոզված է, որ կրթությունը պետք է լինի ոգևորիչ և գործնական՝ պատրաստելով ուսանողներին ոչ միայն քննությունների, այլև կյանքային մարտահրավերների համար։",
-    },
-    schedule: {
-      title: "Շաբաթական ժամացույց",
-      subtitle: "Ճկուն ժամանակացույց․ խմբակային կամ անհատական։",
-      groups: [
-        "Երկ/Չոր/Ուրբ — 18:00–19:30 (Մաթ/Ֆիզ)",
-        "Երք/Հնգ — 18:00–19:30 (Անգլ / Ծրագրավորում)",
-        "Շբթ — 12:00–14:00 (Խառը պրակտիկա)",
-      ],
-      oneOnOne:
-        "Անհատական դասեր՝ 10:00–20:00։ Նշեք նախընտրելի օրերը, և մենք կկազմակերպենք։",
     },
     results: {
       title: "Արդյունքներ, որոնք կարող եք սպասել",
@@ -246,7 +252,7 @@ const I18N = {
         formatOptions: ["Խմբակային", "Անհատական", "Առցանց", "Առկա"],
         placeholders: {
           name: "Արթուր Ավագյան",
-          email: "artur.avagyan@gmail.com",
+          email: "maratgalstyan1967@gmail.com",
           time: "Երք 18:00",
         },
       },
@@ -265,7 +271,6 @@ const I18N = {
     nav: {
       courses: "Courses",
       founder: "Founder",
-      schedule: "Schedule",
       pricing: "Pricing",
       faq: "FAQ",
       contact: "Contact",
@@ -275,39 +280,32 @@ const I18N = {
       tagline: "Learn. Grow. Excel.",
       subtitle:
         "High‑quality lessons in Math and Physics for all levels.",
-      primary: "Join a Free Trial Lesson",
+      primary: "Join Courses",
       secondary: "View Courses",
+      founder: "Founder",
       smalls: [
         "🎯 Small groups & private",
-        "🧑‍🏫 Olympiad prep",
-        "📝 Exam readiness (AT/IELTS/SAT)",
-        "💻 Project‑based coding",
+        "📐 Mathematics for all levels",
+        "⚗️ Physics theory & practice",
       ],
     },
     courses: {
       title: "Our Courses",
       subtitle: "Core subjects designed to build a strong foundation.",
+      comingSoon: "Coming Soon",
       items: [
         { icon: "➗", title: "Math", desc: "Algebra, geometry, trigonometry, calculus, problem solving, olympiad." },
         { icon: "🧲", title: "Physics", desc: "Mechanics, E&M, optics, experiments, real‑world intuition." },
+        { icon: "⚗️", title: "Chemistry", desc: "Coming soon - organic & inorganic chemistry, laboratory work.", disabled: true },
+        { icon: "🧬", title: "Biology", desc: "Coming soon - cell biology, genetics, ecology.", disabled: true },
+        { icon: "🇬🇧", title: "English", desc: "Coming soon - grammar, conversation, written expression.", disabled: true },
       ],
     },
     founder: {
       title: "Founder",
       subtitle: "Experienced mentor focused on clarity, practice, and results.",
-      blurb: "10+ years of experience in student preparation and ensuring academic success. Marat Galstyan sees education as the foundation of the future and believes that every student can reach great heights with the right guidance and support. His approach is based on finding the individual key to each student, working to discover their strengths and weaknesses and building upon them.",
+      blurb: "30+ years of experience in student preparation and ensuring academic success. Marat Galstyan sees education as the foundation of the future and believes that every student can reach great heights with the right guidance and support. His approach is based on finding the individual key to each student, working to discover their strengths and weaknesses and building upon them.",
       mission: "The goal is clear: not just to transfer knowledge, but to inspire a love of learning and confidence. Marat is convinced that education should be inspiring and practical, preparing students not only for exams, but for life's challenges.",
-    },
-    schedule: {
-      title: "Weekly schedule",
-      subtitle: "Flexible time slots. Choose group or private.",
-      groups: [
-        "Mon/Wed/Fri — 18:00–19:30 (Math / Physics)",
-        "Tue/Thu — 18:00–19:30 (English / Programming)",
-        "Sat — 12:00–14:00 (Mixed practice)",
-      ],
-      oneOnOne:
-        "Private lessons between 10:00–20:00. Tell us your preferred days and we'll arrange.",
     },
     results: {
       title: "Results you can expect",
@@ -398,7 +396,7 @@ const I18N = {
         formatOptions: ["Group", "Private", "Online", "In‑person"],
         placeholders: {
           name: "Arthur Avagyan",
-          email: "arthur.avagyan@gmail.com",
+          email: "maratgalstyan1967@gmail.com",
           time: "Tue 18:00",
         },
       },
@@ -417,7 +415,6 @@ const I18N = {
     nav: {
       courses: "Курсы",
       founder: "Основатель",
-      schedule: "Расписание",
       pricing: "Цены",
       faq: "Вопросы",
       contact: "Контакты",
@@ -427,21 +424,25 @@ const I18N = {
       tagline: "Учись. Расти. Добивайся.",
       subtitle:
         "Качественные занятия по математике и физике для всех уровней.",
-      primary: "Записаться на бесплатный пробный урок",
+      primary: "Записаться на курсы",
       secondary: "Посмотреть курсы",
+      founder: "Основатель",
       smalls: [
         "🎯 Небольшие группы и индивидуальные",
-        "🧑‍🏫 Подготовка к олимпиадам",
-        "📝 Подготовка к экзаменам (AT/IELTS/SAT)",
-        "💻 Проектное программирование",
+        "📐 Математика для всех уровней",
+        "⚗️ Физика: теория и практика",
       ],
     },
     courses: {
       title: "Наши курсы",
       subtitle: "Базовые предметы для прочного фундамента.",
+      comingSoon: "Скоро",
       items: [
         { icon: "➗", title: "Математика", desc: "Алгебра, геометрия, тригонометрия, анализ, решение задач, олимпиада." },
         { icon: "🧲", title: "Физика", desc: "Механика, ЭМ, оптика, эксперименты и практическое мышление." },
+        { icon: "⚗️", title: "Химия", desc: "Скоро - органическая и неорганическая химия, лабораторные работы.", disabled: true },
+        { icon: "🧬", title: "Биология", desc: "Скоро - клеточная биология, генетика, экология.", disabled: true },
+        { icon: "🇬🇧", title: "Английский", desc: "Скоро - грамматика, разговорная речь, письменное выражение.", disabled: true },
       ],
     },
     founder: {
@@ -449,17 +450,6 @@ const I18N = {
       subtitle: "Опытный наставник, ориентированный на практику и результат.",
       blurb: "Более 10 лет опыта в подготовке студентов и обеспечении академических успехов. Марат Галстян видит в образовании основу будущего и верит, что каждый студент может достичь больших высот при правильном руководстве и поддержке. Его подход основан на поиске индивидуального ключа к каждому ученику, работая над выявлением их сильных и слабых сторон и опираясь на них.",
       mission: "Цель ясна: не просто передать знания, а вдохновить на любовь к учебе и уверенность в себе. Марат убежден, что образование должно быть вдохновляющим и практичным, готовя студентов не только к экзаменам, но и к жизненным вызовам.",
-    },
-    schedule: {
-      title: "Недельное расписание",
-      subtitle: "Гибкие слоты. Группы и индивидуальные.",
-      groups: [
-        "Пн/Ср/Пт — 18:00–19:30 (Математика / Физика)",
-        "Вт/Чт — 18:00–19:30 (Английский / Программирование)",
-        "Сб — 12:00–14:00 (Смешанная практика)",
-      ],
-      oneOnOne:
-        "Индивидуальные с 10:00 до 20:00. Сообщите удобные дни — подберём время.",
     },
     results: {
       title: "Ожидаемые результаты",
@@ -550,7 +540,7 @@ const I18N = {
         formatOptions: ["Группа", "Индивидуальные", "Онлайн", "Очно"],
         placeholders: {
           name: "Артур Авагян",
-          email: "artur.avagyan@gmail.com",
+          email: "maratgalstyan1967@gmail.com",
           time: "Вт 18:00",
         },
       },
@@ -605,6 +595,7 @@ export default function LandingPage() {
       window.localStorage.setItem("lang", lang);
     }
   }, [lang]);
+
 
   const t = (path) => {
     const parts = path.split(".");
@@ -670,9 +661,21 @@ export default function LandingPage() {
 
       {/* Courses */}
       <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {t("courses.items").map((c, i) => (
-            <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} />
+            <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} />
+          ))}
+        </div>
+      </Section>
+
+      {/* Results */}
+      <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {t("results.kpis").map((c, i) => (
+            <Card key={i} CONFIG={CONFIG}>
+              <div className="text-4xl font-bold text-white">{c.kpi}</div>
+              <p className="mt-2 text-sky-200">{c.label}</p>
+            </Card>
           ))}
         </div>
       </Section>
@@ -695,36 +698,6 @@ export default function LandingPage() {
               )}
             </div>
           </Card>
-        </div>
-      </Section>
-
-      {/* Schedule */}
-      <Section id="schedule" title={t("schedule.title")} subtitle={t("schedule.subtitle")}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card CONFIG={CONFIG}>
-            <h3 className="text-white font-semibold">{t("nav.courses")}</h3>
-            <ul className="mt-3 text-sm text-sky-200 space-y-2">
-              {t("schedule.groups").map((line, i) => (
-                <li key={i}>{line}</li>
-              ))}
-            </ul>
-          </Card>
-          <Card CONFIG={CONFIG}>
-            <h3 className="text-white font-semibold">{lang === "hy" ? "Անհատական" : lang === "en" ? "Private" : "Индивидуальные"}</h3>
-            <p className="mt-3 text-sm text-sky-200">{t("schedule.oneOnOne")}</p>
-          </Card>
-        </div>
-      </Section>
-
-      {/* Results */}
-      <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {t("results.kpis").map((c, i) => (
-            <Card key={i} CONFIG={CONFIG}>
-              <div className="text-4xl font-bold text-white">{c.kpi}</div>
-              <p className="mt-2 text-sky-200">{c.label}</p>
-            </Card>
-          ))}
         </div>
       </Section>
 
@@ -759,7 +732,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-center gap-3">
-                    <span className="text-2xl">📧</span>
+                    <i className="fa-solid fa-envelope text-2xl text-sky-400"></i>
                     <a 
                       href={`mailto:${CONFIG.email}`} 
                       className="text-sky-200 hover:text-white transition-colors text-lg"
@@ -769,7 +742,7 @@ export default function LandingPage() {
                     </a>
                   </div>
                   <div className="flex items-center justify-center gap-3">
-                    <span className="text-2xl">📞</span>
+                    <i className="fa-solid fa-phone text-2xl text-sky-400"></i>
                     <a 
                       href={`tel:${CONFIG.phone}`} 
                       className="text-sky-200 hover:text-white transition-colors text-lg"
@@ -779,7 +752,7 @@ export default function LandingPage() {
                     </a>
                   </div>
                   <div className="flex items-center justify-center gap-3">
-                    <span className="text-2xl">📍</span>
+                    <i className="fa-solid fa-location-dot text-2xl text-sky-400"></i>
                     <span className="text-sky-200">{CONFIG.address[lang]}</span>
                   </div>
                 </div>
@@ -789,10 +762,27 @@ export default function LandingPage() {
                       {lang === "hy" ? "Մեր սոցիալական ցանցերը" : 
                        lang === "en" ? "Follow us" : "Мы в соцсетях"}
                     </h4>
-                    <div className="flex justify-center gap-4">
-                      <a className="underline decoration-white/20 hover:decoration-white/40 transition-colors" href={CONFIG.social.instagram} target="_blank" rel="noopener noreferrer" onClick={() => trackContactClick('instagram')}>Instagram</a>
-                      <a className="underline decoration-white/20 hover:decoration-white/40 transition-colors" href={CONFIG.social.x} target="_blank" rel="noopener noreferrer" onClick={() => trackContactClick('x')}>X</a>
-                      <a className="underline decoration-white/20 hover:decoration-white/40 transition-colors" href={CONFIG.social.linkedin} target="_blank" rel="noopener noreferrer" onClick={() => trackContactClick('linkedin')}>LinkedIn</a>
+                    <div className="flex justify-center gap-6">
+                      <a 
+                        className="text-sky-200 hover:text-white hover:scale-110 transition-all duration-200" 
+                        href={CONFIG.social.facebook} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        onClick={() => trackContactClick('facebook')}
+                        title="Facebook"
+                      >
+                        <i className="fa-brands fa-facebook text-3xl"></i>
+                      </a>
+                      <a 
+                        className="text-sky-200 hover:text-white hover:scale-110 transition-all duration-200" 
+                        href={CONFIG.social.instagram} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        onClick={() => trackContactClick('instagram')}
+                        title="Instagram"
+                      >
+                        <i className="fa-brands fa-instagram text-3xl"></i>
+                      </a>
                     </div>
                   </div>
                 </div>

@@ -15,7 +15,6 @@ export const Header = ({ lang, setLang, t, CONFIG }) => (
       <nav className="hidden md:flex items-center gap-1">
         <NavLink href="#courses">{t("nav.courses")}</NavLink>
         <NavLink href="#founder">{t("nav.founder")}</NavLink>
-        <NavLink href="#schedule">{t("nav.schedule")}</NavLink>
         <NavLink href="#pricing">{t("nav.pricing")}</NavLink>
         <NavLink href="#faq">{t("nav.faq")}</NavLink>
         <NavLink href="#contact">{t("nav.contact")}</NavLink>

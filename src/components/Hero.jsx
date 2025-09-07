@@ -23,6 +23,12 @@ export const Hero = ({ t, CONFIG, lang }) => (
           >
             {t("hero.secondary")}
           </a>
+          <a
+            href="#founder"
+            className="inline-flex items-center justify-center rounded-xl bg-white/5 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/10 hover:bg-white/10 transition-all"
+          >
+            {t("hero.founder")}
+          </a>
         </div>
         <div className="mt-6 flex flex-wrap gap-4 text-sm text-sky-200">
           {t("hero.smalls").map((s, i) => (

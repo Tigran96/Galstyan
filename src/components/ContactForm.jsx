@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card } from './Card';
 import { trackFormSubmission, trackEvent, trackContactClick } from '../utils/analytics';
+import { sendContactEmail } from '../services/emailService';
 
 export const ContactForm = ({ t, CONFIG, lang }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -13,22 +14,27 @@ export const ContactForm = ({ t, CONFIG, lang }) => {
 
     try {
       const formData = new FormData(e.target);
-      const response = await fetch('https://formspree.io/f/YOUR_FORM_ID', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
+      const contactData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        course: formData.get('course'),
+        format: formData.get('format'),
+        time: formData.get('time'),
+        message: formData.get('message'),
+        source: formData.get('source'),
+        language: formData.get('language')
+      };
 
-      if (response.ok) {
+      const result = await sendContactEmail(contactData);
+
+      if (result.success) {
         setSubmitStatus('success');
         e.target.reset();
         trackFormSubmission('contact_form');
         trackEvent('form_success', { form_type: 'contact' });
       } else {
         setSubmitStatus('error');
-        trackEvent('form_error', { form_type: 'contact', error: 'submission_failed' });
+        trackEvent('form_error', { form_type: 'contact', error: result.message });
       }
     } catch (error) {
       setSubmitStatus('error');

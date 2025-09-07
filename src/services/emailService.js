@@ -1,9 +1,9 @@
 import emailjs from '@emailjs/browser';
 
 // EmailJS configuration
-const SERVICE_ID = 'YOUR_SERVICE_ID'; // Replace with your EmailJS service ID
-const TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Replace with your EmailJS template ID
-const PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // Replace with your EmailJS public key
+const SERVICE_ID = 'service_2e1aiqm'; // Replace with your EmailJS service ID
+const TEMPLATE_ID = 'template_4mez5m9'; // Replace with your EmailJS template ID
+const PUBLIC_KEY = 'wqqU-EPc69HC3t9U8'; // Replace with your EmailJS public key
 
 export const sendEnrollmentEmail = async (enrollmentData) => {
   try {
@@ -12,7 +12,7 @@ export const sendEnrollmentEmail = async (enrollmentData) => {
 
     // Prepare email data
     const templateParams = {
-      to_email: 'tikogal96@gmail.com', // Your email
+      to_email: 'maratgalstyan1967@gmail.com', // Your email
       from_name: `${enrollmentData.firstName} ${enrollmentData.lastName}`,
       from_email: enrollmentData.email,
       phone: enrollmentData.phone,
@@ -73,6 +73,69 @@ Please contact the student to confirm the enrollment and schedule the first less
     return {
       success: false,
       message: 'Failed to send email',
+      error: error.message
+    };
+  }
+};
+
+// Contact form email service
+export const sendContactEmail = async (contactData) => {
+  try {
+    // Initialize EmailJS
+    emailjs.init(PUBLIC_KEY);
+
+    // Prepare email data for contact form
+    const templateParams = {
+      to_email: 'maratgalstyan1967@gmail.com', // Your email
+      from_name: contactData.name,
+      from_email: contactData.email,
+      course: contactData.course || 'Not specified',
+      format: contactData.format || 'Not specified',
+      time: contactData.time || 'Not specified',
+      message: contactData.message,
+      source: contactData.source || 'website',
+      language: contactData.language || 'en',
+      contact_date: new Date().toLocaleDateString(),
+      contact_time: new Date().toLocaleTimeString(),
+      
+      // Detailed message for email body
+      detailed_message: `
+CONTACT FORM SUBMISSION:
+========================
+
+CONTACT INFORMATION:
+- Name: ${contactData.name}
+- Email: ${contactData.email}
+- Course Interest: ${contactData.course || 'Not specified'}
+- Format Preference: ${contactData.format || 'Not specified'}
+- Preferred Time: ${contactData.time || 'Not specified'}
+- Page Language: ${contactData.language === 'hy' ? 'Armenian' : contactData.language === 'en' ? 'English' : 'Russian'}
+
+MESSAGE:
+${contactData.message}
+
+SUBMISSION INFO:
+- Date: ${new Date().toLocaleDateString()}
+- Time: ${new Date().toLocaleTimeString()}
+- Source: ${contactData.source || 'Website Contact Form'}
+
+Please respond to this inquiry as soon as possible.
+      `.trim()
+    };
+
+    // Send email using the same service but different template
+    const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+    
+    return {
+      success: true,
+      message: 'Contact email sent successfully',
+      result
+    };
+  } catch (error) {
+    console.error('EmailJS Contact Error:', error);
+    return {
+      success: false,
+      message: 'Failed to send contact email',
       error: error.message
     };
   }
