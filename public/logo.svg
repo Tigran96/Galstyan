@@ -1,22 +1,37 @@
-<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="200" height="80" fill="#0f172a"/>
-  
-  <!-- Graduation Cap -->
-  <path d="M25 25L35 20L45 25L35 30L25 25Z" fill="white"/>
-  <path d="M25 25L35 20L45 25L40 28L35 30L30 28L25 25Z" fill="white"/>
-  
-  <!-- Tassel -->
-  <path d="M35 20L35 15L37 17L35 20Z" fill="white"/>
-  
-  <!-- Book/Shield Shape -->
-  <path d="M20 35L30 30L40 35L40 50L30 55L20 50L20 35Z" fill="white"/>
-  
-  <!-- Vertical lines in book -->
-  <line x1="25" y1="35" x2="25" y2="50" stroke="#0f172a" stroke-width="1"/>
-  <line x1="35" y1="35" x2="35" y2="50" stroke="#0f172a" stroke-width="1"/>
-  
-  <!-- Text: GALSTYAN ACADEMY -->
-  <text x="60" y="35" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">GALSTYAN</text>
-  <text x="60" y="55" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">ACADEMY</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256">
+  <title>Galstyan Academy - Icon</title>
+  <defs>
+    <style>
+      .book { fill: #0d4663; }        /* deep blue */
+      .sun  { fill: #ffc857; }        /* golden accent */
+    </style>
+  </defs>
+
+  <!-- Rising sun (semi-circle) -->
+  <path class="sun" d="M92 92a36 36 0 0 1 72 0v0a36 36 0 0 1-72 0z" />
+
+  <!-- Sun rays -->
+  <g class="sun" opacity="0.95">
+    <rect x="127" y="44" width="2" height="12" rx="1" />
+    <rect x="158" y="51" width="2" height="12" rx="1" transform="rotate(25 159 57)" />
+    <rect x="182" y="71" width="2" height="12" rx="1" transform="rotate(55 183 77)" />
+    <rect x="96" y="51" width="2" height="12" rx="1" transform="rotate(-25 97 57)" />
+    <rect x="72" y="71" width="2" height="12" rx="1" transform="rotate(-55 73 77)" />
+  </g>
+
+  <!-- Open book (left & right pages) -->
+  <path class="book" d="M128 200L128 112 64 88 64 176 128 200Z" />
+  <path class="book" d="M128 200L128 112 192 88 192 176 128 200Z" />
+
+  <!-- Book base curve (subtle shadow/cover) -->
+  <path class="book" d="M56 196
+                        C 80 204, 104 208, 128 208
+                        C 152 208, 176 204, 200 196
+                        L 200 208
+                        C 176 216, 152 220, 128 220
+                        C 104 220, 80 216, 56 208 Z" opacity="0.9"/>
+
+  <!-- Center fold highlight (negative space line) -->
+  <rect x="127" y="108" width="2" height="98" fill="#ffffff" opacity="0.8"/>
 </svg>

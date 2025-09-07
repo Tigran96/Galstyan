@@ -1,8 +1,9 @@
 {
-  "name": "galstyanschool",
+  "name": "galstyanacademy",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://tigran96.github.io/Galstyan/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
