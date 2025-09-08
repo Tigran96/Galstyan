@@ -264,6 +264,7 @@ const I18N = {
     },
     footer: {
       links: { enroll: "Գրանցվել", faq: "ՀՏՀ", pricing: "Գնացուցակ" },
+      rights: "Բոլոր իրավունքները պաշտպանված են",
     },
   },
   en: {
@@ -408,6 +409,7 @@ const I18N = {
     },
     footer: {
       links: { enroll: "Enroll", faq: "FAQ", pricing: "Pricing" },
+      rights: "All rights reserved",
     },
   },
   ru: {
@@ -552,6 +554,7 @@ const I18N = {
     },
     footer: {
       links: { enroll: "Запись", faq: "Вопросы", pricing: "Цены" },
+      rights: "Все права защищены",
     },
   },
 };
@@ -706,10 +709,10 @@ export default function LandingPage() {
         <PricingAccordion 
           t={t} 
           CONFIG={CONFIG} 
-          lang={lang} 
+              lang={lang}
           formatPrice={formatPrice}
           onPlanSelect={handlePlanSelect}
-        />
+            />
       </Section>
 
       {/* FAQ */}
@@ -738,9 +741,9 @@ export default function LandingPage() {
                       className="text-sky-200 hover:text-white transition-colors text-lg"
                       onClick={() => trackContactClick('email')}
                     >
-                      {CONFIG.email}
-                    </a>
-                  </div>
+                {CONFIG.email}
+              </a>
+              </div>
                   <div className="flex items-center justify-center gap-3">
                     <i className="fa-solid fa-phone text-2xl text-sky-400"></i>
                     <a 
@@ -750,12 +753,12 @@ export default function LandingPage() {
                     >
                       {CONFIG.phone}
                     </a>
-                  </div>
+                </div>
                   <div className="flex items-center justify-center gap-3">
                     <i className="fa-solid fa-location-dot text-2xl text-sky-400"></i>
                     <span className="text-sky-200">{CONFIG.address[lang]}</span>
-                  </div>
                 </div>
+              </div>
                 <div className="space-y-4">
                   <div className="text-sky-200">
                     <h4 className="text-white font-semibold mb-3">
@@ -783,10 +786,10 @@ export default function LandingPage() {
                       >
                         <i className="fa-brands fa-instagram text-3xl"></i>
                       </a>
-                    </div>
-                  </div>
                 </div>
               </div>
+              </div>
+          </div>
             </div>
           </Card>
         </div>
