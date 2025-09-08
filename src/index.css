@@ -83,7 +83,7 @@ a, button, .clickable {
 
 /* Custom cursor image (modern touch) */
 body {
-  cursor: url('custom-cursor.png'), auto;
+  cursor: url('./assets/custom-cursor.png'), auto;
 }
 
 /* Different effect when hovering */
