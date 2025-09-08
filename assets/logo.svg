@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256">
+  <title>Galstyan Academy - Icon</title>
+  <defs>
+    <style>
+      .book { fill: #0d4663; }        /* deep blue */
+      .sun  { fill: #ffc857; }        /* golden accent */
+    </style>
+  </defs>
+
+  <!-- Rising sun (semi-circle) -->
+  <path class="sun" d="M92 92a36 36 0 0 1 72 0v0a36 36 0 0 1-72 0z" />
+
+  <!-- Sun rays -->
+  <g class="sun" opacity="0.95">
+    <rect x="127" y="44" width="2" height="12" rx="1" />
+    <rect x="158" y="51" width="2" height="12" rx="1" transform="rotate(25 159 57)" />
+    <rect x="182" y="71" width="2" height="12" rx="1" transform="rotate(55 183 77)" />
+    <rect x="96" y="51" width="2" height="12" rx="1" transform="rotate(-25 97 57)" />
+    <rect x="72" y="71" width="2" height="12" rx="1" transform="rotate(-55 73 77)" />
+  </g>
+
+  <!-- Open book (left & right pages) -->
+  <path class="book" d="M128 200L128 112 64 88 64 176 128 200Z" />
+  <path class="book" d="M128 200L128 112 192 88 192 176 128 200Z" />
+
+  <!-- Book base curve (subtle shadow/cover) -->
+  <path class="book" d="M56 196
+                        C 80 204, 104 208, 128 208
+                        C 152 208, 176 204, 200 196
+                        L 200 208
+                        C 176 216, 152 220, 128 220
+                        C 104 220, 80 216, 56 208 Z" opacity="0.9"/>
+
+  <!-- Center fold highlight (negative space line) -->
+  <rect x="127" y="108" width="2" height="98" fill="#ffffff" opacity="0.8"/>
+</svg>
