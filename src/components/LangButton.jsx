@@ -19,7 +19,7 @@ export const LangButton = ({ code, label, active, onClick }) => {
       }`}
     >
       <img 
-        src={`/flags/${code === "hy" ? "am" : code === "en" ? "gb" : "ru"}.svg`}
+        src={`./flags/${code === "hy" ? "am" : code === "en" ? "gb" : "ru"}.svg`}
         alt={`${label} flag`}
         className="w-6 h-4 object-cover rounded-sm"
       />

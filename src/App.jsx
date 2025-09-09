@@ -28,9 +28,9 @@ const CONFIG = {
       en: "Marat Galstyan",
       ru: "Марат Галստян",
     },
-    photo: "/owner.jpg",
+    photo: "./owner.jpg",
   },
-  logo: "/logo.svg",
+  logo: "./logo.svg",
   phone: "+374 (94) 766-409",
   email: "maratgalstyan1967@gmail.com",
   address: {
