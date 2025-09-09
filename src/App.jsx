@@ -59,15 +59,15 @@ const CONFIG = {
         lessons: 1,
       },
       weekly2: {
-        amd: 35000,
-        rub: 9100, // ~1 AMD = 0.26 RUB
-        usd: 91,   // ~1 AMD = 0.0026 USD
+        amd: 40000,
+        rub: 10400, // ~1 AMD = 0.26 RUB
+        usd: 104,   // ~1 AMD = 0.0026 USD
         lessons: 2,
       },
       weekly3: {
-        amd: 55000,
-        rub: 14300, // ~1 AMD = 0.26 RUB
-        usd: 143,   // ~1 AMD = 0.0026 USD
+        amd: 60000,
+        rub: 15600, // ~1 AMD = 0.26 RUB
+        usd: 156,   // ~1 AMD = 0.0026 USD
         lessons: 3,
       },
     },
