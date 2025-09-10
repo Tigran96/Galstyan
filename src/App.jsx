@@ -599,6 +599,12 @@ export default function LandingPage() {
     }
   }, [lang]);
 
+  // Update document title when language changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.title = CONFIG.businessName[lang];
+    }
+  }, [lang]);
 
   const t = (path) => {
     const parts = path.split(".");
