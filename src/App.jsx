@@ -734,7 +734,7 @@ export default function LandingPage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex md:items-center justify-center gap-3">
                     <i className="fa-solid fa-envelope text-2xl text-sky-400"></i>
                     <a 
                       href={`mailto:${CONFIG.email}`} 
@@ -744,7 +744,7 @@ export default function LandingPage() {
                 {CONFIG.email}
               </a>
               </div>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex justify-center items-center  gap-3">
                     <i className="fa-solid fa-phone text-2xl text-sky-400"></i>
                     <a 
                       href={`tel:${CONFIG.phone}`} 
