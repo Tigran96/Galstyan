@@ -1,6 +1,13 @@
 import { Card } from './Card';
 
 export const PricingCard = ({ name, price, period, features, cta, ctaHref = "#enroll", lang, CONFIG, formatPrice, onSelect }) => (
+
+  /**
+   * 
+   * 
+   */
+
+
   <Card CONFIG={CONFIG}>
     <div className="flex flex-col h-full">
       <div>
