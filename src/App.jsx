@@ -116,7 +116,7 @@ const I18N = {
     },
     hero: {
       badge: "Մաթեմատիկա • Ֆիզիկա",
-      tagline: "Սովորիր․ Զարգացիր․ Հաջողիր․",
+      tagline: "Սովորի՛ր, Զարգացի՛ր, Հաջողի՛ր",
       subtitle:
         "Բարձորակ դասեր մաթեմատիկա և ֆիզիկա բոլոր մակարդակների համար։",
       primary: "Միացիր դասընթացներին",
@@ -178,7 +178,7 @@ const I18N = {
       kpis: [
         { kpi: "+2x", label: "Տնայինների կատարում և վստահություն" },
         { kpi: "−30%", label: "Սխալների նվազում թեստերում" },
-        { kpi: "+1–2", label: "Գնահատականի աճ մեկ քառորդ ուսումնական տարում ընթացքում" },
+        { kpi: "+1–2", label: "Գնահատականի աճ մեկ քառորդ ուսումնական տարվա ընթացքում" },
       ],
     },
     pricing: {
@@ -297,9 +297,9 @@ const I18N = {
     },
     hero: {
       badge: "Math • Physics",
-      tagline: "Learn. Grow. Excel.",
+      tagline: "Learn, Grow, Succeed",
       subtitle:
-        "High‑quality lessons in Math and Physics for all levels.",
+        "High‑quality lessons in Math and Physics for all levels",
       primary: "Join Courses",
       secondary: "View Courses",
       founder: "Founder",
@@ -452,7 +452,7 @@ const I18N = {
     },
     hero: {
       badge: "Математика • Физика",
-      tagline: "Учись. Расти. Добивайся.",
+      tagline: "Учись, Расти, Достигай",
       subtitle:
         "Качественные занятия по математике и физике для всех уровней.",
       primary: "Записаться на курсы",

@@ -7,7 +7,8 @@ export const Hero = ({ t, CONFIG, lang }) => (
       <div className="max-w-3xl">
         <Badge>{t("hero.badge")}</Badge>
         <h1 className="mt-6 text-4xl md:text-6xl font-bold tracking-tight text-white">
-          {CONFIG.businessName[lang]}: {t("hero.tagline")}
+          <div>{CONFIG.businessName[lang]}</div>
+          <div className="text-2xl md:text-4xl text-sky-200 mt-2">{t("hero.tagline")}</div>
         </h1>
         <p className="mt-5 text-lg text-sky-200">{t("hero.subtitle")}</p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3">
