@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Card } from './Card';
-import { trackFormSubmission, trackEvent } from '../utils/analytics';
+import { trackFormSubmission, trackEvent, trackLanguageChange } from '../utils/analytics';
 import { sendEnrollmentEmail } from '../services/emailService';
 
-export const EnrollPage = ({ selectedPlan, CONFIG, lang, t, onBack }) => {
+export const EnrollPage = ({ selectedPlan, CONFIG, lang, setLang, t, onBack }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -23,8 +23,20 @@ export const EnrollPage = ({ selectedPlan, CONFIG, lang, t, onBack }) => {
     const pathParts = selectedPlan.split('.');
     const planData = pathParts.reduce((obj, key) => obj[key], CONFIG.pricing);
     
-    const planType = pathParts[0]; // 'group' or 'private'
-    const frequency = pathParts[1]; // 'weekly1', 'weekly2', 'weekly3'
+    const planType = pathParts[0]; // 'group', 'private', or 'popular'
+    const frequency = pathParts[1]; // 'weekly1', 'weekly2', 'weekly3', or 'daily'
+    
+    if (planType === 'popular') {
+      return {
+        type: planType,
+        frequency,
+        lessonsPerWeek: 0, // Not applicable for homework plan
+        lessonsPerMonth: 0, // Not applicable for homework plan
+        tasksPerDay: planData.tasks || 5,
+        price: planData,
+        typeName: lang === "hy" ? "Ծնողների պլան" : lang === "en" ? "Parents Plan" : "План для родителей"
+      };
+    }
     
     const lessonsPerWeek = frequency === 'weekly1' ? 1 : frequency === 'weekly2' ? 2 : 3;
     const lessonsPerMonth = lessonsPerWeek * 4;
@@ -88,7 +100,36 @@ export const EnrollPage = ({ selectedPlan, CONFIG, lang, t, onBack }) => {
       };
 
       // Create detailed email message
-      const detailedMessage = `
+      const detailedMessage = lang === 'hy' ? `
+ԳՐԱՆՑՄԱՆ ՄԱՆՐԱՄԱՍՆԵՐ:
+====================
+
+ՈՒՍԱՆՈՂԻ ՏՎՅԱԼՆԵՐ:
+- Անուն: ${formData.firstName} ${formData.lastName}
+- Էլ-փոստ: ${formData.email}
+- Հեռախոս: ${formData.phone}
+- Առարկա: ${formData.subject || 'Չի ընտրվել'}
+- Ուսուցման լեզու: ${formData.studyLanguage === 'hy' ? 'Հայերեն' : formData.studyLanguage === 'en' ? 'Անգլերեն' : 'Ռուսերեն'}
+- Էջի լեզու: ${lang === 'hy' ? 'Հայերեն' : lang === 'en' ? 'Անգլերեն' : 'Ռուսերեն'}
+
+ԸՆՏՐՎԱԾ ՊԼԱՆ:
+- Տիպ: ${planDetails?.typeName}
+${planDetails?.type === 'popular' ? 
+  `- Ծառայություն: Տնային աշխատանքի աջակցություն
+- Ֆորմատ: Առցանց աջակցություն` : 
+  `- Հաճախականություն: ${planDetails?.lessonsPerWeek} դաս/շաբաթ
+- Ամսական դասեր: ${planDetails?.lessonsPerMonth} դաս`}
+- Գին: ${formatPrice(selectedPlan, lang)} (${planDetails?.price.amd} AMD / $${planDetails?.price.usd} USD / ₽${planDetails?.price.rub} RUB)
+
+ԳՐԱՆՑՄԱՆ ՏՎՅԱԼՆԵՐ:
+- Ամսաթիվ: ${new Date().toLocaleDateString()}
+- Ժամ: ${new Date().toLocaleTimeString()}
+- Աղբյուր: Կայքի գրանցման էջ
+
+${formData.message ? `ԼՐԱՑՈՒՑԱԿԱՆ ՀԱՂՈՐԴԱԳՐՈՒԹՅՈՒՆ:\n${formData.message}` : ''}
+
+Խնդրում ենք կապվել ուսանողի հետ գրանցումը հաստատելու և առաջին դասը պլանավորելու համար:
+      `.trim() : lang === 'en' ? `
 ENROLLMENT DETAILS:
 ==================
 
@@ -102,8 +143,11 @@ STUDENT INFORMATION:
 
 SELECTED PLAN:
 - Type: ${planDetails?.typeName}
-- Frequency: ${planDetails?.lessonsPerWeek} lessons per week
-- Monthly Lessons: ${planDetails?.lessonsPerMonth} lessons
+${planDetails?.type === 'popular' ? 
+  `- Service: Homework support
+- Format: Online support` : 
+  `- Frequency: ${planDetails?.lessonsPerWeek} lessons per week
+- Monthly Lessons: ${planDetails?.lessonsPerMonth} lessons`}
 - Price: ${formatPrice(selectedPlan, lang)} (${planDetails?.price.amd} AMD / $${planDetails?.price.usd} USD / ₽${planDetails?.price.rub} RUB)
 
 ENROLLMENT INFO:
@@ -114,10 +158,41 @@ ENROLLMENT INFO:
 ${formData.message ? `ADDITIONAL MESSAGE:\n${formData.message}` : ''}
 
 Please contact the student to confirm the enrollment and schedule the first lesson.
+      `.trim() : `
+ДЕТАЛИ ЗАПИСИ:
+==============
+
+ИНФОРМАЦИЯ О СТУДЕНТЕ:
+- Имя: ${formData.firstName} ${formData.lastName}
+- Email: ${formData.email}
+- Телефон: ${formData.phone}
+- Предмет: ${formData.subject || 'Не выбрано'}
+- Язык обучения: ${formData.studyLanguage === 'hy' ? 'Армянский' : formData.studyLanguage === 'en' ? 'Английский' : 'Русский'}
+- Язык страницы: ${lang === 'hy' ? 'Армянский' : lang === 'en' ? 'Английский' : 'Русский'}
+
+ВЫБРАННЫЙ ПЛАН:
+- Тип: ${planDetails?.typeName}
+${planDetails?.type === 'popular' ? 
+  `- Услуга: Поддержка домашних заданий
+- Формат: Онлайн поддержка` : 
+  `- Частота: ${planDetails?.lessonsPerWeek} уроков/неделя
+- Месячные уроки: ${planDetails?.lessonsPerMonth} уроков`}
+- Цена: ${formatPrice(selectedPlan, lang)} (${planDetails?.price.amd} AMD / $${planDetails?.price.usd} USD / ₽${planDetails?.price.rub} RUB)
+
+ИНФОРМАЦИЯ О ЗАПИСИ:
+- Дата: ${new Date().toLocaleDateString()}
+- Время: ${new Date().toLocaleTimeString()}
+- Источник: Страница записи на сайте
+
+${formData.message ? `ДОПОЛНИТЕЛЬНОЕ СООБЩЕНИЕ:\n${formData.message}` : ''}
+
+Пожалуйста, свяжитесь со студентом для подтверждения записи и планирования первого урока.
       `.trim();
 
       // Send email using EmailJS
-      console.log('Sending enrollment email...', enrollmentData);
+      console.log(lang === 'hy' ? 'Ուղարկվում է գրանցման էլ-փոստ...' : 
+                 lang === 'en' ? 'Sending enrollment email...' : 
+                 'Отправляется email записи...', enrollmentData);
       
       const emailResult = await sendEnrollmentEmail(enrollmentData);
       
@@ -130,11 +205,15 @@ Please contact the student to confirm the enrollment and schedule the first less
           plan_frequency: planDetails?.frequency 
         });
         setFormData({ firstName: '', lastName: '', phone: '', email: '', subject: '', studyLanguage: lang, message: '' });
-        console.log('Email sent successfully!', emailResult.result);
+        console.log(lang === 'hy' ? 'Էլ-փոստը հաջողությամբ ուղարկվեց!' : 
+                   lang === 'en' ? 'Email sent successfully!' : 
+                   'Email успешно отправлен!', emailResult.result);
       } else {
         setSubmitStatus('error');
         trackEvent('form_error', { form_type: 'enroll', error: emailResult.message });
-        console.error('Email failed:', emailResult.error);
+        console.error(lang === 'hy' ? 'Էլ-փոստի ուղարկումը ձախողվեց:' : 
+                     lang === 'en' ? 'Email failed:' : 
+                     'Отправка email не удалась:', emailResult.error);
       }
       
       // TODO: Uncomment when Formspree is set up
@@ -220,8 +299,73 @@ Please contact the student to confirm the enrollment and schedule the first less
               <span>←</span>
               <span>{lang === "hy" ? "Վերադառնալ" : lang === "en" ? "Back to Plans" : "Назад к планам"}</span>
             </button>
-            <div className="text-sm text-sky-200">
-              {lang === "hy" ? "Գրանցում" : lang === "en" ? "Enrollment" : "Запись"}
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-sky-200">
+                {lang === "hy" ? "Գրանցում" : lang === "en" ? "Enrollment" : "Запись"}
+              </div>
+              {/* Language Switcher */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (lang !== "hy") {
+                      trackLanguageChange("hy");
+                    }
+                    setLang("hy");
+                  }}
+                  className={`inline-flex items-center justify-center rounded-xl p-1.5 ring-1 transition ${
+                    lang === "hy"
+                      ? "bg-white/15 ring-white/30"
+                      : "bg-white/5 ring-white/10 hover:bg-white/10"
+                  }`}
+                  title="Հայերեն"
+                >
+                  <img 
+                    src="./flags/am.svg"
+                    alt="Armenian flag"
+                    className="w-6 h-4 object-cover rounded-sm"
+                  />
+                </button>
+                <button
+                  onClick={() => {
+                    if (lang !== "en") {
+                      trackLanguageChange("en");
+                    }
+                    setLang("en");
+                  }}
+                  className={`inline-flex items-center justify-center rounded-xl p-1.5 ring-1 transition ${
+                    lang === "en"
+                      ? "bg-white/15 ring-white/30"
+                      : "bg-white/5 ring-white/10 hover:bg-white/10"
+                  }`}
+                  title="English"
+                >
+                  <img 
+                    src="./flags/gb.svg"
+                    alt="British flag"
+                    className="w-6 h-4 object-cover rounded-sm"
+                  />
+                </button>
+                <button
+                  onClick={() => {
+                    if (lang !== "ru") {
+                      trackLanguageChange("ru");
+                    }
+                    setLang("ru");
+                  }}
+                  className={`inline-flex items-center justify-center rounded-xl p-1.5 ring-1 transition ${
+                    lang === "ru"
+                      ? "bg-white/15 ring-white/30"
+                      : "bg-white/5 ring-white/10 hover:bg-white/10"
+                  }`}
+                  title="Русский"
+                >
+                  <img 
+                    src="./flags/ru.svg"
+                    alt="Russian flag"
+                    className="w-6 h-4 object-cover rounded-sm"
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -236,9 +380,13 @@ Please contact the student to confirm the enrollment and schedule the first less
             </h1>
             <div className="bg-white/5 rounded-xl p-6">
               {/* Plan Type Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-sky-500/20 to-indigo-400/20 border border-sky-500/30 mb-4">
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-4 ${
+                planDetails.type === 'popular' 
+                  ? 'bg-gradient-to-r from-yellow-400/20 to-orange-400/20 border-yellow-400/30' 
+                  : 'bg-gradient-to-r from-sky-500/20 to-indigo-400/20 border-sky-500/30'
+              }`}>
                 <span className="text-2xl">
-                  {planDetails.type === 'group' ? '👥' : '👤'}
+                  {planDetails.type === 'group' ? '👥' : planDetails.type === 'private' ? '👤' : '👨‍👩‍👧‍👦'}
                 </span>
                 <span className="text-lg font-semibold text-sky-200">
                   {planDetails.typeName}
@@ -246,26 +394,46 @@ Please contact the student to confirm the enrollment and schedule the first less
               </div>
               
               {/* Plan Details */}
-              <div className="text-2xl font-semibold text-white mb-2">
-                {planDetails.lessonsPerWeek} {lang === "hy" ? "դաս/շաբաթ" : lang === "en" ? "lesson/week" : "урок/неделя"}
-              </div>
-              <div className="text-4xl font-bold text-sky-400 mb-2">
-                {formatPrice(selectedPlan, lang)}
-              </div>
-              <div className="text-sky-200">
-                {lang === "hy" ? "ամսական" : lang === "en" ? "monthly" : "месячно"} • {planDetails.lessonsPerMonth} {lang === "hy" ? "դաս" : lang === "en" ? "lessons" : "уроков"}
-              </div>
+              {planDetails.type === 'popular' ? (
+                <>
+                  <div className="text-2xl font-semibold text-white mb-2">
+                    {lang === "hy" ? "Տնային աշխատանք" : lang === "en" ? "Homework" : "Домашние задания"}
+                  </div>
+                  <div className="text-4xl font-bold text-sky-400 mb-2">
+                    {formatPrice(selectedPlan, lang)}
+                  </div>
+                  <div className="text-sky-200">
+                    {lang === "hy" ? "ամսական" : lang === "en" ? "monthly" : "месячно"} • {lang === "hy" ? "Տնային աշխատանք" : lang === "en" ? "Homework" : "Домашние задания"}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-2xl font-semibold text-white mb-2">
+                    {planDetails.lessonsPerWeek} {lang === "hy" ? "դաս/շաբաթ" : lang === "en" ? "lesson/week" : "урок/неделя"}
+                  </div>
+                  <div className="text-4xl font-bold text-sky-400 mb-2">
+                    {formatPrice(selectedPlan, lang)}
+                  </div>
+                  <div className="text-sky-200">
+                    {lang === "hy" ? "ամսական" : lang === "en" ? "monthly" : "месячно"} • {planDetails.lessonsPerMonth} {lang === "hy" ? "դաս" : lang === "en" ? "lessons" : "уроков"}
+                  </div>
+                </>
+              )}
               
               {/* Plan Type Description */}
               <div className="mt-4 text-sm text-sky-300">
                 {planDetails.type === 'group' ? (
-                  lang === "hy" ? "Փոքր խմբեր մինչև 8 ուսանող" :
-                  lang === "en" ? "Small groups up to 8 students" :
-                  "Малые группы до 8 учеников"
-                ) : (
+                  lang === "hy" ? "Փոքր խմբեր մինչև 5 ուսանող" :
+                  lang === "en" ? "Small groups up to 5 students" :
+                  "Малые группы до 5 учеников"
+                ) : planDetails.type === 'private' ? (
                   lang === "hy" ? "Անհատական պլան և ճկուն գրաֆիկ" :
                   lang === "en" ? "Personal plan and flexible schedule" :
                   "Личный план и гибкий график"
+                ) : (
+                  lang === "hy" ? "Առցանց տնային աշխատանքի աջակցություն" :
+                  lang === "en" ? "Online homework support" :
+                  "Онлайн поддержка домашних заданий"
                 )}
               </div>
             </div>
@@ -322,7 +490,7 @@ Please contact the student to confirm the enrollment and schedule the first less
                   onChange={handleInputChange}
                   required
                   className="w-full rounded-xl bg-white/5 px-4 py-3 text-white placeholder:text-sky-400 outline-none ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-sky-500/50 transition-all"
-                  placeholder="+374 94 123 456"
+                  placeholder={lang === "hy" ? "+374 94 123 456" : lang === "en" ? "+374 94 123 456" : "+374 94 123 456"}
                 />
               </div>
               <div>
@@ -336,7 +504,7 @@ Please contact the student to confirm the enrollment and schedule the first less
                   onChange={handleInputChange}
                   required
                   className="w-full rounded-xl bg-white/5 px-4 py-3 text-white placeholder:text-sky-400 outline-none ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-sky-500/50 transition-all"
-                  placeholder="arthur.avagyan@gmail.com"
+                  placeholder={lang === "hy" ? "arthur.avagyan@gmail.com" : lang === "en" ? "arthur.avagyan@gmail.com" : "arthur.avagyan@gmail.com"}
                 />
               </div>
             </div>
@@ -371,9 +539,15 @@ Please contact the student to confirm the enrollment and schedule the first less
                   className="w-full rounded-xl bg-white/5 px-4 py-3 text-white ring-1 ring-white/10 focus:ring-2 focus:ring-sky-500/50 transition-all [&>option]:bg-sky-900 [&>option]:text-white"
                   style={{ colorScheme: 'dark' }}
                 >
-                  <option value="hy" className="bg-sky-900 text-white">🇦🇲 Հայերեն (Armenian)</option>
-                  <option value="en" className="bg-sky-900 text-white">🇬🇧 English</option>
-                  <option value="ru" className="bg-sky-900 text-white">🇷🇺 Русский (Russian)</option>
+                  <option value="hy" className="bg-sky-900 text-white">
+                    🇦🇲 {lang === "hy" ? "Հայերեն" : lang === "en" ? "Հայերեն (Armenian)" : "Հայերեն (Армянский)"}
+                  </option>
+                  <option value="en" className="bg-sky-900 text-white">
+                    🇬🇧 {lang === "hy" ? "Անգլերեն" : lang === "en" ? "English" : "English (Английский)"}
+                  </option>
+                  <option value="ru" className="bg-sky-900 text-white">
+                    🇷🇺 {lang === "hy" ? "Ռուսերեն" : lang === "en" ? "Русский (Russian)" : "Русский"}
+                  </option>
                 </select>
               </div>
             </div>

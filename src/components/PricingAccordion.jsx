@@ -4,7 +4,7 @@ import { Card } from './Card';
 import { trackEvent } from '../utils/analytics';
 
 export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect }) => {
-  const [activeTab, setActiveTab] = useState('group');
+  const [activeTab, setActiveTab] = useState('popular');
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
@@ -13,11 +13,20 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
 
   const tabs = [
     {
+      id: 'popular',
+      name: lang === "hy" ? "Ծնողների պլան" : lang === "en" ? "Parents Plan" : "План для родителей",
+      description: lang === "hy" ? "Առցանց տնային աշխատանք" : 
+                  lang === "en" ? "Online homework support" : 
+                  "Онлайн домашние задания",
+      icon: "👨‍👩‍👧‍👦",
+      tiers: t("pricing.popularTiers")
+    },
+    {
       id: 'group',
       name: lang === "hy" ? "Խմբակային դասեր" : lang === "en" ? "Group Lessons" : "Групповые занятия",
-      description: lang === "hy" ? "Փոքր խմբեր մինչև 8 ուսանող" : 
-                  lang === "en" ? "Small groups up to 8 students" : 
-                  "Малые группы до 8 учеников",
+      description: lang === "hy" ? "Փոքր խմբեր մինչև 5 ուսանող" : 
+                  lang === "en" ? "Small groups up to 5 students" : 
+                  "Малые группы до 5 учеников",
       icon: "👥",
       tiers: t("pricing.groupTiers")
     },
@@ -56,7 +65,11 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className={`grid gap-6 ${
+        activeTab === 'popular' 
+          ? 'grid-cols-1 justify-center max-w-sm mx-auto' 
+          : 'grid-cols-1 md:grid-cols-3'
+      }`}>
         {tabs.find(tab => tab.id === activeTab)?.tiers.map((tier, i) => (
           <PricingCard
             key={i}
@@ -69,6 +82,7 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
             CONFIG={CONFIG}
             formatPrice={formatPrice}
             onSelect={() => onPlanSelect(tier.price)}
+            popular={tier.popular}
           />
         ))}
       </div>
@@ -82,6 +96,9 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
           <span>• {lang === "hy" ? "60 րոպեանոց դասեր" : lang === "en" ? "60-minute lessons" : "60-минутные уроки"}</span>
           <span>• {lang === "hy" ? "Անվճար փորձնական դաս" : lang === "en" ? "Free trial lesson" : "Бесплатный пробный урок"}</span>
           <span>• {lang === "hy" ? "Ճկուն վճարում" : lang === "en" ? "Flexible payment" : "Гибкая оплата"}</span>
+          {activeTab === 'popular' && (
+            <span className="text-green-300 font-semibold">• 🌐 {lang === "hy" ? "Ծնողների պլանը առցանց է" : lang === "en" ? "Parents Plan is online" : "План для родителей онлайн"}</span>
+          )}
         </div>
       </Card>
     </div>

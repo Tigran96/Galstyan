@@ -71,6 +71,15 @@ const CONFIG = {
         lessons: 3,
       },
     },
+    popular: {
+      daily: {
+        amd: 10000,
+        rub: 2600, // ~1 AMD = 0.26 RUB
+        usd: 26,   // ~1 AMD = 0.0026 USD
+        tasks: 5,
+        popular: true,
+      },
+    },
     private: {
       weekly1: {
         amd: 40000,
@@ -196,6 +205,16 @@ const I18N = {
           period: "ամսական",
           features: ["Մինչև 5 ուսանող", "12 դաս ամսական", "Վարժություններ", "Շաբաթական արձագանք"],
           cta: "Ընտրել պլան",
+        },
+      ],
+      popularTiers: [
+        {
+          name: "⭐ Ծնողների պլան - Տնային աշխատանք",
+          price: "popular.daily",
+          period: "ամսական",
+          features: ["Տնային աշխատանք", "Առցանց աջակցություն", "Անմիջական աջակցություն"],
+          cta: "Ընտրել պլան",
+          popular: true,
         },
       ],
       privateTiers: [
@@ -343,6 +362,16 @@ const I18N = {
           cta: "Choose Plan",
         },
       ],
+      popularTiers: [
+        {
+          name: "⭐ Parents Plan - Homework",
+          price: "popular.daily",
+          period: "monthly",
+          features: ["Homework", "Online support", "Instant support"],
+          cta: "Choose Plan",
+          popular: true,
+        },
+      ],
       privateTiers: [
         {
           name: "Private - 1 lesson/week",
@@ -486,6 +515,16 @@ const I18N = {
           period: "месячно",
           features: ["До 5 учеников", "12 уроков в месяц", "Практические задания", "Еженедельный прогресс"],
           cta: "Выбрать план",
+        },
+      ],
+      popularTiers: [
+        {
+          name: "⭐ План для родителей - Домашние задания",
+          price: "popular.daily",
+          period: "месячно",
+          features: ["Домашние задания", "Онлайн поддержка", "Мгновенная поддержка"],
+          cta: "Выбрать план",
+          popular: true,
         },
       ],
       privateTiers: [
@@ -647,6 +686,7 @@ export default function LandingPage() {
         selectedPlan={selectedPlan}
         CONFIG={CONFIG}
         lang={lang}
+        setLang={setLang}
         t={t}
         onBack={handleBackToHome}
       />
@@ -655,12 +695,6 @@ export default function LandingPage() {
 
   return (
     <div className={`min-h-screen ${CONFIG.color.bg} ${CONFIG.color.text} antialiased`}>
-      {/* Top banner */}
-      <div className="bg-gradient-to-r from-sky-600/10 to-indigo-500/10 border-b border-white/10">
-        <div className="mx-auto max-w-6xl px-6 py-2 text-center text-xs text-sky-200">
-          {t("banner")}
-        </div>
-      </div>
 
       {/* Header */}
       <Header lang={lang} setLang={setLang} t={t} CONFIG={CONFIG} />
@@ -740,7 +774,7 @@ export default function LandingPage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="flex md:items-center justify-center gap-3">
+                  <div className="flex items-center justify-start gap-3">
                     <i className="fa-solid fa-envelope text-2xl text-sky-400"></i>
                     <a 
                       href={`mailto:${CONFIG.email}`} 
@@ -750,7 +784,7 @@ export default function LandingPage() {
                 {CONFIG.email}
               </a>
               </div>
-                  <div className="flex justify-center items-center  gap-3">
+                  <div className="flex items-center justify-start gap-3">
                     <i className="fa-solid fa-phone text-2xl text-sky-400"></i>
                     <a 
                       href={`tel:${CONFIG.phone}`} 
@@ -760,7 +794,7 @@ export default function LandingPage() {
                       {CONFIG.phone}
                     </a>
                 </div>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center justify-start gap-3">
                     <i className="fa-solid fa-location-dot text-2xl text-sky-400"></i>
                     <span className="text-sky-200">{CONFIG.address[lang]}</span>
                 </div>

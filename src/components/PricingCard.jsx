@@ -1,14 +1,7 @@
 import { Card } from './Card';
 
-export const PricingCard = ({ name, price, period, features, cta, ctaHref = "#enroll", lang, CONFIG, formatPrice, onSelect }) => (
-
-  /**
-   * 
-   * 
-   */
-
-
-  <Card CONFIG={CONFIG}>
+export const PricingCard = ({ name, price, period, features, cta, ctaHref = "#enroll", lang, CONFIG, formatPrice, onSelect, popular = false }) => (
+  <Card CONFIG={CONFIG} className={popular ? "ring-2 ring-yellow-400 ring-opacity-50 bg-gradient-to-br from-yellow-50/5 to-orange-50/5" : ""}>
     <div className="flex flex-col h-full">
       <div>
         <h3 className="text-xl font-semibold text-white">{name}</h3>
@@ -27,7 +20,11 @@ export const PricingCard = ({ name, price, period, features, cta, ctaHref = "#en
       </div>
       <button
         onClick={onSelect}
-        className="mt-8 w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-400 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 hover:opacity-95 transition-opacity"
+        className={`mt-8 w-full inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-lg transition-opacity ${
+          popular 
+            ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-black hover:opacity-95 shadow-yellow-400/20" 
+            : "bg-gradient-to-r from-sky-500 to-indigo-400 hover:opacity-95 shadow-sky-500/20"
+        }`}
       >
         {cta}
       </button>

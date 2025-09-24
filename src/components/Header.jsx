@@ -20,9 +20,9 @@ export const Header = ({ lang, setLang, t, CONFIG }) => (
         <NavLink href="#contact">{t("nav.contact")}</NavLink>
       </nav>
       <div className="flex items-center gap-2">
-        <LangButton code="hy" label="Հայ" active={lang === "hy"} onClick={() => setLang("hy")} />
-        <LangButton code="en" label="EN" active={lang === "en"} onClick={() => setLang("en")} />
-        <LangButton code="ru" label="РУ" active={lang === "ru"} onClick={() => setLang("ru")} />
+        <LangButton code="hy" label="🇦🇲 Հայ" active={lang === "hy"} onClick={() => setLang("hy")} />
+        <LangButton code="en" label="🇬🇧 EN" active={lang === "en"} onClick={() => setLang("en")} />
+        <LangButton code="ru" label="🇷🇺 РУ" active={lang === "ru"} onClick={() => setLang("ru")} />
       </div>
     </div>
   </header>
