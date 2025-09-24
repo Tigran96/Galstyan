@@ -49,16 +49,16 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            className={`flex items-center gap-3 px-6 py-4 rounded-xl transition-all ${
+            className={`group flex items-center gap-3 px-6 py-4 rounded-xl transition-all duration-300 hover:scale-105 ${
               activeTab === tab.id
-                ? 'bg-gradient-to-r from-sky-500 to-indigo-400 text-white shadow-lg'
-                : 'bg-white/10 text-sky-200 hover:bg-white/15'
+                ? 'bg-gradient-to-r from-sky-500 to-indigo-400 text-white shadow-lg shadow-sky-500/20 ring-2 ring-sky-400/50'
+                : 'bg-white/10 text-sky-200 hover:bg-white/15 hover:ring-1 hover:ring-white/20 backdrop-blur-sm'
             }`}
           >
-            <span className="text-2xl">{tab.icon}</span>
+            <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{tab.icon}</span>
             <div className="text-left">
-              <div className="font-semibold">{tab.name}</div>
-              <div className="text-sm opacity-90">{tab.description}</div>
+              <div className="font-semibold group-hover:text-white transition-colors duration-300">{tab.name}</div>
+              <div className="text-sm opacity-90 group-hover:opacity-100 transition-opacity duration-300">{tab.description}</div>
             </div>
           </button>
         ))}

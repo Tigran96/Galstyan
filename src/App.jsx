@@ -115,10 +115,10 @@ const I18N = {
       contact: "Կապ",
     },
     hero: {
-      badge: "Մաթեմատիկա • Ֆիզիկա",
+      badge: "",
       tagline: "Սովորի՛ր, Զարգացի՛ր, Հաջողի՛ր",
       subtitle:
-        "Բարձորակ դասեր մաթեմատիկա և ֆիզիկա բոլոր մակարդակների համար։",
+        "Բարձրորակ դասեր մաթեմատիկա և ֆիզիկա բոլոր մակարդակների համար։",
       primary: "Միացիր դասընթացներին",
       secondary: "Դասընթացներ",
       founder: "Հիմնադիր",
@@ -296,7 +296,7 @@ const I18N = {
       contact: "Contact",
     },
     hero: {
-      badge: "Math • Physics",
+      badge: "",
       tagline: "Learn, Grow, Succeed",
       subtitle:
         "High‑quality lessons in Math and Physics for all levels",
@@ -451,7 +451,7 @@ const I18N = {
       contact: "Контакты",
     },
     hero: {
-      badge: "Математика • Физика",
+      badge: "",
       tagline: "Учись, Расти, Достигай",
       subtitle:
         "Качественные занятия по математике и физике для всех уровней.",
