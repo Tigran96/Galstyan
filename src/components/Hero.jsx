@@ -19,8 +19,8 @@ export const Hero = ({ t, CONFIG, lang }) => (
     <div className="mx-auto max-w-6xl px-6 py-20 md:py-28 relative z-10">
       <div className="max-w-3xl">
         {t("hero.badge") && <Badge>{t("hero.badge")}</Badge>}
-        <h1 className="mt-6 text-4xl md:text-6xl font-heading font-bold tracking-tight leading-tight">
-          <div className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%]">
+        <h1 className="mt-6 text-4xl md:text-6xl font-heading font-bold tracking-tight leading-normal">
+          <div className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%] py-2">
             {CONFIG.businessName[lang]}
           </div>
           <div className="text-2xl md:text-4xl text-sky-200 mt-4 font-medium tracking-wide">
