@@ -30,7 +30,7 @@ const CONFIG = {
     },
     photo: "./owner.jpg",
   },
-  logo: "./logo.svg",
+  logo: "./logo.png",
   phone: "+374 (94) 766-409",
   email: "maratgalstyan1967@gmail.com",
   address: {
@@ -53,29 +53,29 @@ const CONFIG = {
   pricing: {
     group: {
       weekly1: {
-        amd: 20000,
-        rub: 5200, // ~1 AMD = 0.26 RUB
-        usd: 52,   // ~1 AMD = 0.0026 USD
+        amd: 30000,
+        rub: 7800, // ~1 AMD = 0.26 RUB
+        usd: 78,   // ~1 AMD = 0.0026 USD
         lessons: 1,
       },
       weekly2: {
-        amd: 40000,
-        rub: 10400, // ~1 AMD = 0.26 RUB
-        usd: 104,   // ~1 AMD = 0.0026 USD
+        amd: 50000,
+        rub: 13000, // ~1 AMD = 0.26 RUB
+        usd: 130,   // ~1 AMD = 0.0026 USD
         lessons: 2,
       },
       weekly3: {
-        amd: 60000,
-        rub: 15600, // ~1 AMD = 0.26 RUB
-        usd: 156,   // ~1 AMD = 0.0026 USD
+        amd: 70000,
+        rub: 18200, // ~1 AMD = 0.26 RUB
+        usd: 182,   // ~1 AMD = 0.0026 USD
         lessons: 3,
       },
     },
     popular: {
       daily: {
-        amd: 10000,
-        rub: 2600, // ~1 AMD = 0.26 RUB
-        usd: 26,   // ~1 AMD = 0.0026 USD
+        amd: 20000,
+        rub: 5200, // ~1 AMD = 0.26 RUB
+        usd: 52,   // ~1 AMD = 0.0026 USD
         tasks: 5,
         popular: true,
       },
@@ -367,7 +367,7 @@ const I18N = {
           name: "⭐ Parents Plan - Homework",
           price: "popular.daily",
           period: "monthly",
-          features: ["Homework", "Online support", "Instant support"],
+          features: ["Homework", "Online support"],
           cta: "Choose Plan",
           popular: true,
         },
@@ -677,7 +677,7 @@ export default function LandingPage() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner CONFIG={CONFIG} lang={lang} />;
   }
 
   if (currentPage === 'enroll') {
@@ -703,7 +703,7 @@ export default function LandingPage() {
       <Hero t={t} CONFIG={CONFIG} lang={lang} />
 
       {/* Courses */}
-      <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")}>
+      <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")} variant="subtle">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {t("courses.items").map((c, i) => (
             <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} />
@@ -712,7 +712,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Results */}
-      <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")}>
+      <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")} variant="minimal">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {t("results.kpis").map((c, i) => (
             <Card key={i} CONFIG={CONFIG}>
@@ -724,7 +724,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Founder */}
-      <Section id="founder" title={t("founder.title")} subtitle={t("founder.subtitle")}>
+      <Section id="founder" title={t("founder.title")} subtitle={t("founder.subtitle")} variant="subtle">
         <div className="flex justify-center">
           <Card className="max-w-md" CONFIG={CONFIG}>
             <div className="text-center">
@@ -745,7 +745,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Pricing */}
-      <Section id="pricing" title={t("pricing.title")} subtitle={t("pricing.subtitle")}>
+      <Section id="pricing" title={t("pricing.title")} subtitle={t("pricing.subtitle")} variant="default">
         <PricingAccordion 
           t={t} 
           CONFIG={CONFIG} 
@@ -756,7 +756,7 @@ export default function LandingPage() {
       </Section>
 
       {/* FAQ */}
-      <Section id="faq" title={t("faq.title")} subtitle={t("faq.subtitle")}>
+      <Section id="faq" title={t("faq.title")} subtitle={t("faq.subtitle")} variant="minimal">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {t("faq.items").map((f, i) => (
             <FAQItem key={i} q={f.q} a={f.a} />
@@ -765,7 +765,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Contact Info */}
-      <Section id="contact" title={t("contact.title")} subtitle={t("contact.subtitle")}>
+      <Section id="contact" title={t("contact.title")} subtitle={t("contact.subtitle")} variant="subtle">
         <div className="max-w-4xl mx-auto">
           <Card CONFIG={CONFIG}>
             <div className="text-center">
@@ -774,34 +774,34 @@ export default function LandingPage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-start gap-3">
+                  <div className="flex items-center justify-center gap-3">
                     <i className="fa-solid fa-envelope text-2xl text-sky-400"></i>
                     <a 
                       href={`mailto:${CONFIG.email}`} 
-                      className="text-sky-200 hover:text-white transition-colors text-lg"
+                      className="text-sky-200 hover:text-white transition-colors text-lg text-center"
                       onClick={() => trackContactClick('email')}
                     >
                 {CONFIG.email}
               </a>
               </div>
-                  <div className="flex items-center justify-start gap-3">
+                  <div className="flex items-center justify-center gap-3">
                     <i className="fa-solid fa-phone text-2xl text-sky-400"></i>
                     <a 
                       href={`tel:${CONFIG.phone}`} 
-                      className="text-sky-200 hover:text-white transition-colors text-lg"
+                      className="text-sky-200 hover:text-white transition-colors text-lg text-center"
                       onClick={() => trackContactClick('phone')}
                     >
                       {CONFIG.phone}
                     </a>
                 </div>
-                  <div className="flex items-center justify-start gap-3">
+                  <div className="flex items-center justify-center gap-3">
                     <i className="fa-solid fa-location-dot text-2xl text-sky-400"></i>
-                    <span className="text-sky-200">{CONFIG.address[lang]}</span>
+                    <span className="text-sky-200 text-center">{CONFIG.address[lang]}</span>
                 </div>
               </div>
-                <div className="space-y-4">
+                <div className="space-y-4 text-center">
                   <div className="text-sky-200">
-                    <h4 className="text-white font-semibold mb-3">
+                    <h4 className="text-white font-semibold mb-3 text-center">
                       {lang === "hy" ? "Մեր սոցիալական ցանցերը" : 
                        lang === "en" ? "Follow us" : "Мы в соцсетях"}
                     </h4>

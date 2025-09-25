@@ -42,9 +42,17 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Subtle logo watermark */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none z-0">
+        <img
+          src={CONFIG.logo}
+          alt=""
+          className="h-64 w-auto"
+        />
+      </div>
       {/* Tab Selector */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 relative z-10">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -65,7 +73,7 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
       </div>
 
       {/* Pricing Cards */}
-      <div className={`grid gap-6 ${
+      <div className={`grid gap-6 relative z-10 ${
         activeTab === 'popular' 
           ? 'grid-cols-1 justify-center max-w-sm mx-auto' 
           : 'grid-cols-1 md:grid-cols-3'
@@ -88,7 +96,7 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
       </div>
 
       {/* Additional Info */}
-      <Card CONFIG={CONFIG} className="text-center">
+      <Card CONFIG={CONFIG} className="text-center relative z-10">
         <p className="text-sm text-sky-200">
           {t("pricing.note")}
         </p>

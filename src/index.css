@@ -378,3 +378,104 @@ a:hover {
   cursor: pointer;
   color: #00aced; /* hover effect */
 }
+
+/* Floating animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(-3deg);
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 8s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 10s ease-in-out infinite;
+}
+
+/* Consistent text heights for all languages */
+.text-height-fixed {
+  min-height: 1.5em;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.text-height-large {
+  min-height: 2em;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.text-height-xl {
+  min-height: 2.5em;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Ensure consistent spacing for multi-line text */
+.consistent-text {
+  line-height: 1.4;
+  min-height: 1.4em;
+  text-align: center;
+}
+
+.consistent-text-lg {
+  line-height: 1.3;
+  min-height: 1.3em;
+  text-align: center;
+}
+
+.consistent-text-xl {
+  line-height: 1.2;
+  min-height: 1.2em;
+  text-align: center;
+}
+
+/* Global text alignment for consistency across languages */
+h1, h2, h3, h4, h5, h6 {
+  text-align: center;
+}
+
+p {
+  text-align: center;
+}
+
+/* Ensure all text elements are centered */
+.text-center {
+  text-align: center !important;
+}

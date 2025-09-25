@@ -1,34 +1,31 @@
 import { Badge } from './Badge';
+import { AnimatedBackground } from './AnimatedBackground';
 
 export const Hero = ({ t, CONFIG, lang }) => (
   <section id="home" className="relative overflow-hidden min-h-screen flex items-center">
-    {/* Multi-layer animated background */}
-    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_30rem_at_50%_-10%,rgba(56,189,248,.25),transparent)]" />
-    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_20rem_at_80%_20%,rgba(99,102,241,.15),transparent)]" />
-    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(30rem_15rem_at_20%_80%,rgba(168,85,247,.1),transparent)]" />
-    
-    {/* Animated floating shapes */}
-    <div className="pointer-events-none absolute inset-0">
-      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-br from-sky-400/20 to-indigo-400/20 rounded-full animate-float blur-sm"></div>
-      <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full animate-float-delayed blur-sm"></div>
-      <div className="absolute bottom-40 left-1/4 w-12 h-12 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full animate-float-slow blur-sm"></div>
-      <div className="absolute top-1/3 right-1/3 w-8 h-8 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full animate-float blur-sm"></div>
-      <div className="absolute bottom-20 right-10 w-14 h-14 bg-gradient-to-br from-orange-400/20 to-red-400/20 rounded-full animate-float-delayed blur-sm"></div>
-    </div>
+    <AnimatedBackground variant="default" />
     
     <div className="mx-auto max-w-6xl px-6 py-20 md:py-28 relative z-10">
-      <div className="max-w-3xl">
+      <div className="max-w-3xl mx-auto text-center">
+        {/* Large Logo */}
+        <div className="flex justify-center mb-8">
+          <img
+            src={CONFIG.logo}
+            alt={CONFIG.businessName[lang] + " logo"}
+            className="h-32 w-auto md:h-40 lg:h-48 drop-shadow-2xl"
+          />
+        </div>
         {t("hero.badge") && <Badge>{t("hero.badge")}</Badge>}
-        <h1 className="mt-6 text-4xl md:text-6xl font-heading font-bold tracking-tight leading-normal">
-          <div className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%] py-2">
+        <h1 className="mt-6 text-4xl md:text-6xl font-heading font-bold tracking-tight leading-normal text-center">
+          <div className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%] py-2 text-height-xl text-center">
             {CONFIG.businessName[lang]}
           </div>
-          <div className="text-2xl md:text-4xl text-sky-200 mt-4 font-medium tracking-wide">
+          <div className="text-2xl md:text-4xl text-sky-200 mt-4 font-medium tracking-wide text-height-large text-center">
             {t("hero.tagline")}
           </div>
         </h1>
-        <p className="mt-6 text-lg text-sky-200 font-sans leading-relaxed">{t("hero.subtitle")}</p>
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+        <p className="mt-6 text-lg text-sky-200 font-sans leading-relaxed text-center">{t("hero.subtitle")}</p>
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <a
             href="#pricing"
             className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-400 px-8 py-4 text-sm font-heading font-semibold text-white shadow-lg shadow-sky-500/20 hover:shadow-sky-500/40 hover:scale-105 transition-all duration-300 overflow-hidden"
@@ -66,7 +63,7 @@ export const Hero = ({ t, CONFIG, lang }) => (
             <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </a>
         </div>
-        <div className="mt-6 flex flex-wrap gap-4 text-sm text-sky-200">
+        <div className="mt-6 flex flex-wrap gap-4 text-sm text-sky-200 justify-center">
           {t("hero.smalls").map((s, i) => (
             <span key={i}>{s}</span>
           ))}

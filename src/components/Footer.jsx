@@ -2,8 +2,15 @@ export const Footer = ({ t, CONFIG, lang }) => (
   <footer className="border-t border-white/10">
     <div className="mx-auto max-w-6xl px-6 py-10 text-sm text-sky-200">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          © {new Date().getFullYear()} {CONFIG.businessName[lang]}. {t("footer.rights")}.
+        <div className="flex items-center gap-3">
+          <img
+            src={CONFIG.logo}
+            alt={CONFIG.businessName[lang] + " logo"}
+            className="h-8 w-auto opacity-80"
+          />
+          <div>
+            © {new Date().getFullYear()} {CONFIG.businessName[lang]}. {t("footer.rights")}.
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <a href="#enroll" className="underline decoration-white/20 hover:decoration-white/40 transition-colors">

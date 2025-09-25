@@ -8,9 +8,9 @@ export const Header = ({ lang, setLang, t, CONFIG }) => (
         <img
           src={CONFIG.logo}
           alt={CONFIG.businessName[lang] + " logo"}
-          className="h-10 w-auto md:h-12"
+          className="h-12 w-auto md:h-16"
         />
-        <span className="text-white font-semibold">{CONFIG.businessName[lang]}</span>
+        <span className="text-white font-semibold text-height-fixed">{CONFIG.businessName[lang]}</span>
       </a>
       <nav className="hidden md:flex items-center gap-1">
         <NavLink href="#courses">{t("nav.courses")}</NavLink>
