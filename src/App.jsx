@@ -30,7 +30,7 @@ const CONFIG = {
     },
     photo: "./owner.jpg",
   },
-  logo: "./logo.svg",
+  logo: "./logo.png",
   phone: "+374 (94) 766-409",
   email: "maratgalstyan1967@gmail.com",
   address: {
@@ -53,22 +53,31 @@ const CONFIG = {
   pricing: {
     group: {
       weekly1: {
-        amd: 20000,
-        rub: 5200, // ~1 AMD = 0.26 RUB
-        usd: 52,   // ~1 AMD = 0.0026 USD
+        amd: 25000,
+        rub: 6500, // ~1 AMD = 0.26 RUB
+        usd: 65,   // ~1 AMD = 0.0026 USD
         lessons: 1,
       },
       weekly2: {
-        amd: 40000,
-        rub: 10400, // ~1 AMD = 0.26 RUB
-        usd: 104,   // ~1 AMD = 0.0026 USD
+        amd: 45000,
+        rub: 11700, // ~1 AMD = 0.26 RUB
+        usd: 117,   // ~1 AMD = 0.0026 USD
         lessons: 2,
       },
       weekly3: {
-        amd: 60000,
-        rub: 15600, // ~1 AMD = 0.26 RUB
-        usd: 156,   // ~1 AMD = 0.0026 USD
+        amd: 65000,
+        rub: 16900, // ~1 AMD = 0.26 RUB
+        usd: 169,   // ~1 AMD = 0.0026 USD
         lessons: 3,
+      },
+    },
+    popular: {
+      daily: {
+        amd: 9000,
+        rub: 2340, // ~1 AMD = 0.26 RUB
+        usd: 23,   // ~1 AMD = 0.0026 USD
+        tasks: 5,
+        popular: true,
       },
     },
     private: {
@@ -106,8 +115,8 @@ const I18N = {
       contact: "Կապ",
     },
     hero: {
-      badge: "Մաթեմատիկա • Ֆիզիկա",
-      tagline: "Սովորիր․ Զարգացիր․ Հաջողիր․",
+      badge: "",
+      tagline: "Սովորի՛ր, Զարգացի՛ր, Հաջողի՛ր",
       subtitle:
         "Բարձրորակ դասեր մաթեմատիկա և ֆիզիկա բոլոր մակարդակների համար։",
       primary: "Միացիր դասընթացներին",
@@ -159,9 +168,9 @@ const I18N = {
     founder: {
       title: "Հիմնադիր",
       subtitle:
-        "Փորձառու ուսուցանողը՝ հստակության, պրակտիկայի և արդյունքների վրա կենտրոնացած։",
-      blurb: "30+ տարվա փորձ ուսանողների պատրաստման և ակադեմիական հաջողության ապահովման բնագավառում։ Մարատ Գալստյանը կրթության մեջ տեսնում է ապագայի հիմքը և հավատում, որ ամեն ուսանող կարող է հասնել բարձունքների՝ ճիշտ ղեկավարության և աջակցության դեպքում։ Նրա մոտեցումը հիմնված է անհատական բանալու վրա՝ ամեն ուսանողի հետ աշխատելիս նրա ուժեղ և թույլ կողմերը բացահայտելու և դրանց հիման վրա կառուցելու համար։",
-      mission: "Նպատակը պարզ է՝ ոչ միայն գիտելիքներ փոխանցել, այլև ներշնչել սովորելու սիրությունը և ինքնավստահությունը։ Մարատը համոզված է, որ կրթությունը պետք է լինի ոգևորիչ և գործնական՝ պատրաստելով ուսանողներին ոչ միայն քննությունների, այլև կյանքային մարտահրավերների համար։",
+        "Փորձառու ուսուցանող՝ հստակության, պրակտիկայի և արդյունքների վրա կենտրոնացած։",
+      blurb: "30+ տարվա փորձ ուսանողների պատրաստման և ակադեմիական հաջողության ապահովման բնագավառում։ Մարատ Գալստյանը կրթության մեջ տեսնում է ապագայի հիմքը և հավատում, որ ամեն ուսանող կարող է հասնել բարձունքների՝ ճիշտ ղեկավարության և աջակցության դեպքում։ Նրա աշխատանքը հիմնված է անհատական մոտեցման վրա՝ ամեն ուսանողի հետ աշխատելիս նրա ուժեղ և թույլ կողմերը բացահայտելու և դրանց հիման վրա կառուցել հետագա աշխատանքի անհատական պլանը։",
+      mission: "Նպատակը պարզ է՝ ոչ միայն գիտելիքներ փոխանցել, այլև ներշնչել սովորելու արվեստը և ինքնավստահությունը։ Մարատը համոզված է, որ կրթությունը պետք է լինի ոգևորիչ և գործնական՝ պատրաստելով ուսանողներին ոչ միայն քննությունների, այլև կյանքի մարտահրավերները հաղթահարելու համար։",
     },
     results: {
       title: "Արդյունքներ, որոնք կարող եք սպասել",
@@ -169,7 +178,7 @@ const I18N = {
       kpis: [
         { kpi: "+2x", label: "Տնայինների կատարում և վստահություն" },
         { kpi: "−30%", label: "Սխալների նվազում թեստերում" },
-        { kpi: "+1–2", label: "Գնահատականի աճ մեկ քառորդ ուսումնական տարում ընթացքում" },
+        { kpi: "+1–2", label: "Գնահատականի աճ մեկ քառորդ ուսումնական տարվա ընթացքում" },
       ],
     },
     pricing: {
@@ -196,6 +205,16 @@ const I18N = {
           period: "ամսական",
           features: ["Մինչև 5 ուսանող", "12 դաս ամսական", "Վարժություններ", "Շաբաթական արձագանք"],
           cta: "Ընտրել պլան",
+        },
+      ],
+      popularTiers: [
+        {
+          name: "⭐ Ծնողների պլան",
+          price: "popular.daily",
+          period: "ամսական",
+          features: ["5 խնդիր օրական", "Առցանց աջակցություն"],
+          cta: "Ընտրել պլան",
+          popular: true,
         },
       ],
       privateTiers: [
@@ -227,9 +246,9 @@ const I18N = {
       title: "ՀՏՀ",
       subtitle: "Հաճախ տրվող հարցեր",
       items: [
-        { q: "Առցանց դասեր ունե՞ք", a: "Այո, առցանց (Zoom/Meet) և առկա Երևանում։" },
+        { q: "Առցանց դասեր ունե՞ք", a: "Այո, առցանց (Viber/WhatsApp/Meet) և առկա Երևանում։" },
         { q: "Ո՞ր մակարդակներին է", a: "5-րդ դասարանից մինչև բուհ ընդունելություն։" },
-        { q: "Տունաշխա՞տ ենք տալիս", a: "Այո, հավասարակշռված տնայիններ՝ հետադարձ կապով։" },
+        { q: "Տնային աշխատանք տալիս ե՞ք", a: "Այո, հավասարակշռված տնայիններ՝ հետադարձ կապով։" },
         { q: "Կա՞ փորձնական", a: "Այո, անվճար փորձնական դաս՝ նախքան վճարելը։" },
       ],
     },
@@ -277,10 +296,10 @@ const I18N = {
       contact: "Contact",
     },
     hero: {
-      badge: "Math • Physics",
-      tagline: "Learn. Grow. Excel.",
+      badge: "",
+      tagline: "Learn, Grow, Succeed",
       subtitle:
-        "High‑quality lessons in Math and Physics for all levels.",
+        "High‑quality lessons in Math and Physics for all levels",
       primary: "Join Courses",
       secondary: "View Courses",
       founder: "Founder",
@@ -343,6 +362,16 @@ const I18N = {
           cta: "Choose Plan",
         },
       ],
+      popularTiers: [
+        {
+          name: "⭐ Parents Plan",
+          price: "popular.daily",
+          period: "monthly",
+          features: ["5 tasks a day", "Online support"],
+          cta: "Choose Plan",
+          popular: true,
+        },
+      ],
       privateTiers: [
         {
           name: "Private - 1 lesson/week",
@@ -372,7 +401,7 @@ const I18N = {
       title: "FAQ",
       subtitle: "Common questions",
       items: [
-        { q: "Do you offer online lessons?", a: "Yes. In‑person in Yerevan or online via Zoom/Meet." },
+        { q: "Do you offer online lessons?", a: "Yes. In‑person in Yerevan or online via Viber/WhatsApp/Meet." },
         { q: "What levels do you teach?", a: "From grade 5 to university entrance." },
         { q: "Do you give homework?", a: "Yes, balanced homework with feedback to build mastery." },
         { q: "Can we try before paying?", a: "Absolutely—book a free trial lesson." },
@@ -422,8 +451,8 @@ const I18N = {
       contact: "Контакты",
     },
     hero: {
-      badge: "Математика • Физика",
-      tagline: "Учись. Расти. Добивайся.",
+      badge: "",
+      tagline: "Учись, Расти, Достигай",
       subtitle:
         "Качественные занятия по математике и физике для всех уровней.",
       primary: "Записаться на курсы",
@@ -488,6 +517,16 @@ const I18N = {
           cta: "Выбрать план",
         },
       ],
+      popularTiers: [
+        {
+          name: "⭐ План для родителей",
+          price: "popular.daily",
+          period: "месячно",
+          features: ["5 заданий в день", "Онлайн поддержка"],
+          cta: "Выбрать план",
+          popular: true,
+        },
+      ],
       privateTiers: [
         {
           name: "Индивидуальные - 1 урок/неделя",
@@ -517,7 +556,7 @@ const I18N = {
       title: "Вопросы и ответы",
       subtitle: "Частые вопросы",
       items: [
-        { q: "Проводите ли вы онлайн‑занятия?", a: "Да. Очно в Ереване и онлайн (Zoom/Meet)." },
+        { q: "Проводите ли вы онлайн‑занятия?", a: "Да. Очно в Ереване и онлайн (Viber/WhatsApp/Meet)." },
         { q: "С какими уровнями вы работаете?", a: "С 5 класса до поступления в вуз." },
         { q: "Даёте ли вы домашние задания?", a: "Да, сбалансированные задания с обратной связью." },
         { q: "Можно ли попробовать бесплатно?", a: "Да, бесплатный пробный урок." },
@@ -638,7 +677,7 @@ export default function LandingPage() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner CONFIG={CONFIG} lang={lang} />;
   }
 
   if (currentPage === 'enroll') {
@@ -647,6 +686,7 @@ export default function LandingPage() {
         selectedPlan={selectedPlan}
         CONFIG={CONFIG}
         lang={lang}
+        setLang={setLang}
         t={t}
         onBack={handleBackToHome}
       />
@@ -655,12 +695,6 @@ export default function LandingPage() {
 
   return (
     <div className={`min-h-screen ${CONFIG.color.bg} ${CONFIG.color.text} antialiased`}>
-      {/* Top banner */}
-      <div className="bg-gradient-to-r from-sky-600/10 to-indigo-500/10 border-b border-white/10">
-        <div className="mx-auto max-w-6xl px-6 py-2 text-center text-xs text-sky-200">
-          {t("banner")}
-        </div>
-      </div>
 
       {/* Header */}
       <Header lang={lang} setLang={setLang} t={t} CONFIG={CONFIG} />
@@ -669,7 +703,7 @@ export default function LandingPage() {
       <Hero t={t} CONFIG={CONFIG} lang={lang} />
 
       {/* Courses */}
-      <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")}>
+      <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")} variant="subtle">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {t("courses.items").map((c, i) => (
             <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} />
@@ -678,7 +712,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Results */}
-      <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")}>
+      <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")} variant="minimal">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {t("results.kpis").map((c, i) => (
             <Card key={i} CONFIG={CONFIG}>
@@ -690,7 +724,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Founder */}
-      <Section id="founder" title={t("founder.title")} subtitle={t("founder.subtitle")}>
+      <Section id="founder" title={t("founder.title")} subtitle={t("founder.subtitle")} variant="subtle">
         <div className="flex justify-center">
           <Card className="max-w-md" CONFIG={CONFIG}>
             <div className="text-center">
@@ -711,7 +745,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Pricing */}
-      <Section id="pricing" title={t("pricing.title")} subtitle={t("pricing.subtitle")}>
+      <Section id="pricing" title={t("pricing.title")} subtitle={t("pricing.subtitle")} variant="default">
         <PricingAccordion 
           t={t} 
           CONFIG={CONFIG} 
@@ -722,7 +756,7 @@ export default function LandingPage() {
       </Section>
 
       {/* FAQ */}
-      <Section id="faq" title={t("faq.title")} subtitle={t("faq.subtitle")}>
+      <Section id="faq" title={t("faq.title")} subtitle={t("faq.subtitle")} variant="minimal">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {t("faq.items").map((f, i) => (
             <FAQItem key={i} q={f.q} a={f.a} />
@@ -731,7 +765,7 @@ export default function LandingPage() {
       </Section>
 
       {/* Contact Info */}
-      <Section id="contact" title={t("contact.title")} subtitle={t("contact.subtitle")}>
+      <Section id="contact" title={t("contact.title")} subtitle={t("contact.subtitle")} variant="subtle">
         <div className="max-w-4xl mx-auto">
           <Card CONFIG={CONFIG}>
             <div className="text-center">
@@ -739,35 +773,37 @@ export default function LandingPage() {
                 {t("contact.lead")}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex md:items-center justify-center gap-3">
-                    <i className="fa-solid fa-envelope text-2xl text-sky-400"></i>
-                    <a 
-                      href={`mailto:${CONFIG.email}`} 
-                      className="text-sky-200 hover:text-white transition-colors text-lg"
-                      onClick={() => trackContactClick('email')}
-                    >
-                {CONFIG.email}
-              </a>
-              </div>
-                  <div className="flex justify-center items-center  gap-3">
-                    <i className="fa-solid fa-phone text-2xl text-sky-400"></i>
-                    <a 
-                      href={`tel:${CONFIG.phone}`} 
-                      className="text-sky-200 hover:text-white transition-colors text-lg"
-                      onClick={() => trackContactClick('phone')}
-                    >
-                      {CONFIG.phone}
-                    </a>
+                <div className="max-w-md">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-envelope text-2xl text-sky-400 w-8"></i>
+                      <a 
+                        href={`mailto:${CONFIG.email}`} 
+                        className="text-sky-200 hover:text-white transition-colors text-lg"
+                        onClick={() => trackContactClick('email')}
+                      >
+                  {CONFIG.email}
+                </a>
                 </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <i className="fa-solid fa-location-dot text-2xl text-sky-400"></i>
-                    <span className="text-sky-200">{CONFIG.address[lang]}</span>
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-phone text-2xl text-sky-400 w-8"></i>
+                      <a 
+                        href={`tel:${CONFIG.phone}`} 
+                        className="text-sky-200 hover:text-white transition-colors text-lg"
+                        onClick={() => trackContactClick('phone')}
+                      >
+                        {CONFIG.phone}
+                      </a>
+                  </div>
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-location-dot text-2xl text-sky-400 w-8"></i>
+                      <span className="text-sky-200">{CONFIG.address[lang]}</span>
+                  </div>
                 </div>
-              </div>
-                <div className="space-y-4">
+                </div>
+                <div className="space-y-4 text-center">
                   <div className="text-sky-200">
-                    <h4 className="text-white font-semibold mb-3">
+                    <h4 className="text-white font-semibold mb-3 text-center">
                       {lang === "hy" ? "Մեր սոցիալական ցանցերը" : 
                        lang === "en" ? "Follow us" : "Мы в соцсетях"}
                     </h4>
