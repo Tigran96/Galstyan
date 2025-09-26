@@ -53,29 +53,29 @@ const CONFIG = {
   pricing: {
     group: {
       weekly1: {
-        amd: 30000,
-        rub: 7800, // ~1 AMD = 0.26 RUB
-        usd: 78,   // ~1 AMD = 0.0026 USD
+        amd: 25000,
+        rub: 6500, // ~1 AMD = 0.26 RUB
+        usd: 65,   // ~1 AMD = 0.0026 USD
         lessons: 1,
       },
       weekly2: {
-        amd: 50000,
-        rub: 13000, // ~1 AMD = 0.26 RUB
-        usd: 130,   // ~1 AMD = 0.0026 USD
+        amd: 45000,
+        rub: 11700, // ~1 AMD = 0.26 RUB
+        usd: 117,   // ~1 AMD = 0.0026 USD
         lessons: 2,
       },
       weekly3: {
-        amd: 70000,
-        rub: 18200, // ~1 AMD = 0.26 RUB
-        usd: 182,   // ~1 AMD = 0.0026 USD
+        amd: 65000,
+        rub: 16900, // ~1 AMD = 0.26 RUB
+        usd: 169,   // ~1 AMD = 0.0026 USD
         lessons: 3,
       },
     },
     popular: {
       daily: {
-        amd: 20000,
-        rub: 5200, // ~1 AMD = 0.26 RUB
-        usd: 52,   // ~1 AMD = 0.0026 USD
+        amd: 9000,
+        rub: 2340, // ~1 AMD = 0.26 RUB
+        usd: 23,   // ~1 AMD = 0.0026 USD
         tasks: 5,
         popular: true,
       },
@@ -209,10 +209,10 @@ const I18N = {
       ],
       popularTiers: [
         {
-          name: "⭐ Ծնողների պլան - Տնային աշխատանք",
+          name: "⭐ Ծնողների պլան",
           price: "popular.daily",
           period: "ամսական",
-          features: ["Տնային աշխատանք", "Առցանց աջակցություն", "Անմիջական աջակցություն"],
+          features: ["5 խնդիր օրական", "Առցանց աջակցություն"],
           cta: "Ընտրել պլան",
           popular: true,
         },
@@ -364,10 +364,10 @@ const I18N = {
       ],
       popularTiers: [
         {
-          name: "⭐ Parents Plan - Homework",
+          name: "⭐ Parents Plan",
           price: "popular.daily",
           period: "monthly",
-          features: ["Homework", "Online support"],
+          features: ["5 tasks a day", "Online support"],
           cta: "Choose Plan",
           popular: true,
         },
@@ -519,10 +519,10 @@ const I18N = {
       ],
       popularTiers: [
         {
-          name: "⭐ План для родителей - Домашние задания",
+          name: "⭐ План для родителей",
           price: "popular.daily",
           period: "месячно",
-          features: ["Домашние задания", "Онлайн поддержка", "Мгновенная поддержка"],
+          features: ["5 заданий в день", "Онлайн поддержка"],
           cta: "Выбрать план",
           popular: true,
         },
@@ -773,32 +773,34 @@ export default function LandingPage() {
                 {t("contact.lead")}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-3">
-                    <i className="fa-solid fa-envelope text-2xl text-sky-400"></i>
-                    <a 
-                      href={`mailto:${CONFIG.email}`} 
-                      className="text-sky-200 hover:text-white transition-colors text-lg text-center"
-                      onClick={() => trackContactClick('email')}
-                    >
-                {CONFIG.email}
-              </a>
-              </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <i className="fa-solid fa-phone text-2xl text-sky-400"></i>
-                    <a 
-                      href={`tel:${CONFIG.phone}`} 
-                      className="text-sky-200 hover:text-white transition-colors text-lg text-center"
-                      onClick={() => trackContactClick('phone')}
-                    >
-                      {CONFIG.phone}
-                    </a>
+                <div className="max-w-md">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-envelope text-2xl text-sky-400 w-8"></i>
+                      <a 
+                        href={`mailto:${CONFIG.email}`} 
+                        className="text-sky-200 hover:text-white transition-colors text-lg"
+                        onClick={() => trackContactClick('email')}
+                      >
+                  {CONFIG.email}
+                </a>
                 </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <i className="fa-solid fa-location-dot text-2xl text-sky-400"></i>
-                    <span className="text-sky-200 text-center">{CONFIG.address[lang]}</span>
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-phone text-2xl text-sky-400 w-8"></i>
+                      <a 
+                        href={`tel:${CONFIG.phone}`} 
+                        className="text-sky-200 hover:text-white transition-colors text-lg"
+                        onClick={() => trackContactClick('phone')}
+                      >
+                        {CONFIG.phone}
+                      </a>
+                  </div>
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-location-dot text-2xl text-sky-400 w-8"></i>
+                      <span className="text-sky-200">{CONFIG.address[lang]}</span>
+                  </div>
                 </div>
-              </div>
+                </div>
                 <div className="space-y-4 text-center">
                   <div className="text-sky-200">
                     <h4 className="text-white font-semibold mb-3 text-center">
