@@ -1,7 +1,7 @@
 // GalstyanSchool Landing Page — React + Tailwind with i18n (HY • EN • RU)
 // Improved version with better component structure, SEO, and UX
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Section } from './components/Section';
@@ -15,6 +15,7 @@ import { Footer } from './components/Footer';
 import { Card } from './components/Card';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { trackContactClick } from './utils/analytics';
+import { Helmet } from "react-helmet-async";
 
 const CONFIG = {
   businessName: {
@@ -598,6 +599,9 @@ const I18N = {
   },
 };
 
+// SEO and Analytics.
+
+
 const formatPrice = (pricePath, lang) => {
   const pathParts = pricePath.split('.');
   const prices = pathParts.reduce((obj, key) => obj[key], CONFIG.pricing);
@@ -616,6 +620,83 @@ const smoothScrollTo = (elementId) => {
   if (element) {
     element.scrollIntoView({ behavior: 'smooth' });
   }
+};
+
+export const SEO = ({ lang = "hy" }) => {
+  const meta = {
+    hy: {
+      title: "Գալստյան Ակադեմիա | Մաթեմատիկա և Ֆիզիկա Երևանում",
+      description:
+        "Բարձրորակ դասընթացներ մաթեմատիկայի և ֆիզիկայի՝ փորձառու ուսուցիչ Մարատ Գալստյանի կողմից։ Փոքր խմբեր և անհատական մոտեցում։",
+    },
+    en: {
+      title: "Galstyan Academy | Math & Physics in Yerevan",
+      description:
+        "High-quality Math and Physics lessons by experienced teacher Marat Galstyan. Small groups and private tutoring available.",
+    },
+    ru: {
+      title: "Академия Галстяна | Математика и Физика в Ереване",
+      description:
+        "Качественные занятия по математике и физике от опытного преподавателя Марата Галстяна. Малые группы и индивидуальные занятия.",
+    },
+  };
+
+  const { title, description } = meta[lang];
+
+  return (
+    <Helmet>
+      <html lang={lang} />
+      <title>{title}</title>
+      <meta name="description" content={description} />
+
+      {/* Social */}
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:type" content="website" />
+      <meta property="og:image" content="/logo.png" />
+      <meta property="og:url" content="https://www.galstyanacademy.com" />
+
+      {/* Twitter */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content="/logo.png" />
+
+      {/* Keywords (less important but okay) */}
+      <meta
+        name="keywords"
+        content="Galstyan Academy, Math Yerevan, Physics tutoring, Մաթեմատիկա Երևան, Физика Ереван"
+      />
+
+      {/* Google Analyse */}
+
+      <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      name: "Galstyan Academy",
+      url: "https://www.galstyanacademy.com",
+      logo: "https://galstyanacademy.com/logo.png",
+      founder: "Marat Galstyan",
+      sameAs: [
+        "https://www.facebook.com/galstyanacademy", 
+        "https://www.instagram.com/galstyanacademy/"
+      ],
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Yerevan",
+        addressCountry: "Armenia",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+37494766409",
+        contactType: "customer service",
+        availableLanguage: ["hy", "en", "ru"],
+      },
+    })}
+  </script>
+    </Helmet>
+  );
 };
 
 export default function LandingPage() {
@@ -694,6 +775,10 @@ export default function LandingPage() {
   }
 
   return (
+    <Fragment>
+<SEO lang={lang} />
+
+    
     <div className={`min-h-screen ${CONFIG.color.bg} ${CONFIG.color.text} antialiased`}>
 
       {/* Header */}
@@ -840,5 +925,7 @@ export default function LandingPage() {
       {/* Footer */}
       <Footer t={t} CONFIG={CONFIG} lang={lang} />
     </div>
+
+    </Fragment>
   );
 }
