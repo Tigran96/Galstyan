@@ -647,22 +647,21 @@ export const SEO = ({ lang = "hy" }) => {
     <Helmet>
       <html lang={lang} />
       <title>{title}</title>
+
+
       <meta name="description" content={description} />
 
-      {/* Social */}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content="website" />
       <meta property="og:image" content="/logo.png" />
       <meta property="og:url" content="https://www.galstyanacademy.com" />
-
-      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content="/logo.png" />
 
-      {/* Keywords (less important but okay) */}
+
       <meta
         name="keywords"
         content="Galstyan Academy, Math Yerevan, Physics tutoring, Մաթեմատիկա Երևան, Физика Ереван"
