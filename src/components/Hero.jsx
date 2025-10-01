@@ -2,6 +2,8 @@ import { Badge } from './Badge';
 import { AnimatedBackground } from './AnimatedBackground';
 
 export const Hero = ({ t, CONFIG, lang }) => (
+
+
   <section id="home" className="relative overflow-hidden min-h-screen flex items-center">
     <AnimatedBackground variant="default" />
     
@@ -16,14 +18,14 @@ export const Hero = ({ t, CONFIG, lang }) => (
           />
         </div>
         {t("hero.badge") && <Badge>{t("hero.badge")}</Badge>}
-        <h1 className="mt-6 text-4xl md:text-6xl font-heading font-bold tracking-tight leading-normal text-center">
-          <div className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%] py-2 text-height-xl text-center">
+        <div className="mt-6 text-4xl md:text-6xl font-heading font-bold tracking-tight leading-normal text-center">
+          <h1 className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%] py-2 text-height-xl text-center">
             {CONFIG.businessName[lang]}
-          </div>
+          </h1>
           <div className="text-2xl md:text-4xl text-sky-200 mt-4 font-medium tracking-wide text-height-large text-center">
             {t("hero.tagline")}
           </div>
-        </h1>
+        </div>
         <p className="mt-6 text-lg text-sky-200 font-sans leading-relaxed text-center">{t("hero.subtitle")}</p>
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <a
