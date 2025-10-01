@@ -14,7 +14,7 @@ import { ContactForm } from './components/ContactForm';
 import { Footer } from './components/Footer';
 import { Card } from './components/Card';
 import { LoadingSpinner } from './components/LoadingSpinner';
-import { trackContactClick } from './utils/analytics';
+import { trackContactClick, trackPageView } from './utils/analytics';
 import { Helmet } from "react-helmet-async";
 
 const CONFIG = {
@@ -724,6 +724,13 @@ export default function LandingPage() {
       document.title = CONFIG.businessName[lang];
     }
   }, [lang]);
+
+  // Track page view on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      trackPageView('Home Page');
+    }
+  }, []);
 
   const t = (path) => {
     const parts = path.split(".");

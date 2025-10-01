@@ -1,8 +1,8 @@
-// Simple analytics utility
-// Replace with your preferred analytics service (Google Analytics, Plausible, etc.)
+// Google Analytics 4 integration
+// Tracking ID: G-LPR3C1S4KP
 
 export const trackEvent = (eventName, properties = {}) => {
-  // Google Analytics 4 example
+  // Google Analytics 4
   if (typeof gtag !== 'undefined') {
     gtag('event', eventName, properties);
   }
