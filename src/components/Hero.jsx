@@ -19,9 +19,9 @@ export const Hero = ({ t, CONFIG, lang }) => (
         </div>
         {t("hero.badge") && <Badge>{t("hero.badge")}</Badge>}
         <h1 className="mt-6 text-4xl md:text-6xl font-heading font-bold tracking-tight leading-normal text-center">
-          <div className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%] py-2 text-height-xl text-center">
+          <span className="bg-gradient-to-r from-white via-sky-100 to-sky-200 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_200%] py-2 text-height-xl text-center">
             {CONFIG.businessName[lang]}
-          </div>
+          </span>
         </h1>
         <div className="text-2xl md:text-4xl text-sky-200 mt-4 font-medium tracking-wide text-height-large text-center">
           {t("hero.tagline")}
