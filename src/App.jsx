@@ -120,9 +120,11 @@ const I18N = {
       tagline: "Սովորի՛ր, Զարգացի՛ր, Հաջողի՛ր",
       subtitle:
         "Բարձրորակ դասեր մաթեմատիկա և ֆիզիկա բոլոր մակարդակների համար։",
+      subtitleLink: "Իմացեք ավելին",
       primary: "Միացիր դասընթացներին",
       secondary: "Դասընթացներ",
       founder: "Հիմնադիր",
+      or: "կամ",
       smalls: [
         "🎯 Փոքր խմբեր և անհատական",
         "📐 Մաթեմատիկա բոլոր մակարդակների համար",
@@ -133,6 +135,9 @@ const I18N = {
       title: "Մեր դասընթացները",
       subtitle: "Հիմնական առարկաներ՝ ամուր հիմք ստեղծելու համար։",
       comingSoon: "Շուտով",
+      cta: "Պատրա՞ստ եք սկսել ձեր ուսուցման ճանապարհը:",
+      ctaLink1: "Դիտեք մեր գնացուցակը",
+      ctaLink2: "իմացեք մեր հիմնադրի մասին",
       items: [
         {
           icon: "➗",
@@ -172,10 +177,17 @@ const I18N = {
         "Փորձառու ուսուցանող՝ հստակության, պրակտիկայի և արդյունքների վրա կենտրոնացած։",
       blurb: "30+ տարվա փորձ ուսանողների պատրաստման և ակադեմիական հաջողության ապահովման բնագավառում։ Մարատ Գալստյանը կրթության մեջ տեսնում է ապագայի հիմքը և հավատում, որ ամեն ուսանող կարող է հասնել բարձունքների՝ ճիշտ ղեկավարության և աջակցության դեպքում։ Նրա աշխատանքը հիմնված է անհատական մոտեցման վրա՝ ամեն ուսանողի հետ աշխատելիս նրա ուժեղ և թույլ կողմերը բացահայտելու և դրանց հիման վրա կառուցել հետագա աշխատանքի անհատական պլանը։",
       mission: "Նպատակը պարզ է՝ ոչ միայն գիտելիքներ փոխանցել, այլև ներշնչել սովորելու արվեստը և ինքնավստահությունը։ Մարատը համոզված է, որ կրթությունը պետք է լինի ոգևորիչ և գործնական՝ պատրաստելով ուսանողներին ոչ միայն քննությունների, այլև կյանքի մարտահրավերները հաղթահարելու համար։",
+      cta: "Պատրա՞ստ եք սովորել Մարատի հետ:",
+      ctaLink1: "Դիտեք մեր դասընթացները",
+      ctaLink2: "կապվեք մեզ հետ",
     },
     results: {
       title: "Արդյունքներ, որոնք կարող եք սպասել",
       subtitle: "Շոշափելի առաջընթաց՝ մի քանի շաբաթում",
+      cta: "Ցանկանու՞մ եք հասնել նման արդյունքների:",
+      ctaLink1: "Ստուգեք մեր գնացուցակը",
+      ctaLink2: "կապվեք մեզ հետ",
+      ctaEnd: "ավելի մանրամասն տեղեկությունների համար:",
       kpis: [
         { kpi: "+2x", label: "Տնայինների կատարում և վստահություն" },
         { kpi: "−30%", label: "Սխալների նվազում թեստերում" },
@@ -246,6 +258,10 @@ const I18N = {
     faq: {
       title: "ՀՏՀ",
       subtitle: "Հաճախ տրվող հարցեր",
+      cta: "Դեռ հարցեր ունե՞ք:",
+      ctaLink1: "Կապվեք մեզ հետ",
+      ctaLink2: "դիտեք մեր գնացուցակը",
+      ctaEnd: "սկսելու համար:",
       items: [
         { q: "Առցանց դասեր ունե՞ք", a: "Այո, առցանց (Viber/WhatsApp/Meet) և առկա Երևանում։" },
         { q: "Ո՞ր մակարդակներին է", a: "5-րդ դասարանից մինչև բուհ ընդունելություն։" },
@@ -281,6 +297,9 @@ const I18N = {
       title: "Կապ",
       subtitle: "Կապվեք մեզ հետ",
       lead: "Հարցեր ունե՞ք կամ ցանկանու՞մ եք գրանցվել։ Մենք պատասխանում ենք մեկ աշխատանքային օրվա ընթացքում։",
+      cta: "Պատրա՞ստ եք սկսել:",
+      ctaLink1: "Դիտեք մեր դասընթացները",
+      ctaLink2: "կարդացեք մեր ՀՏՀ-ն",
     },
     footer: {
       links: { enroll: "Գրանցվել", faq: "ՀՏՀ", pricing: "Գնացուցակ" },
@@ -300,10 +319,12 @@ const I18N = {
       badge: "",
       tagline: "Learn, Grow, Succeed",
       subtitle:
-        "High‑quality lessons in Math and Physics for all levels",
+        "High‑quality lessons in Math and Physics for all levels.",
+      subtitleLink: "Learn More",
       primary: "Join Courses",
       secondary: "View Courses",
       founder: "Founder",
+      or: "or",
       smalls: [
         "🎯 Small groups & private",
         "📐 Mathematics for all levels",
@@ -314,6 +335,9 @@ const I18N = {
       title: "Our Courses",
       subtitle: "Core subjects designed to build a strong foundation.",
       comingSoon: "Coming Soon",
+      cta: "Ready to start your learning journey?",
+      ctaLink1: "View our pricing plans",
+      ctaLink2: "learn more about our founder",
       items: [
         { icon: "➗", title: "Math", desc: "Algebra, geometry, trigonometry, calculus, problem solving, olympiad." },
         { icon: "🧲", title: "Physics", desc: "Mechanics, E&M, optics, experiments, real‑world intuition." },
@@ -327,10 +351,17 @@ const I18N = {
       subtitle: "Experienced mentor focused on clarity, practice, and results.",
       blurb: "30+ years of experience in student preparation and ensuring academic success. Marat Galstyan sees education as the foundation of the future and believes that every student can reach great heights with the right guidance and support. His approach is based on finding the individual key to each student, working to discover their strengths and weaknesses and building upon them.",
       mission: "The goal is clear: not just to transfer knowledge, but to inspire a love of learning and confidence. Marat is convinced that education should be inspiring and practical, preparing students not only for exams, but for life's challenges.",
+      cta: "Ready to learn with Marat?",
+      ctaLink1: "View our courses",
+      ctaLink2: "get in touch",
     },
     results: {
       title: "Results you can expect",
       subtitle: "Real improvements within weeks",
+      cta: "Want to achieve similar results?",
+      ctaLink1: "Check our pricing",
+      ctaLink2: "contact us",
+      ctaEnd: "for more information.",
       kpis: [
         { kpi: "+2x", label: "Homework completion & confidence" },
         { kpi: "−30%", label: "Fewer mistakes on quizzes" },
@@ -401,6 +432,10 @@ const I18N = {
     faq: {
       title: "FAQ",
       subtitle: "Common questions",
+      cta: "Still have questions?",
+      ctaLink1: "Contact us",
+      ctaLink2: "view our pricing",
+      ctaEnd: "to get started.",
       items: [
         { q: "Do you offer online lessons?", a: "Yes. In‑person in Yerevan or online via Viber/WhatsApp/Meet." },
         { q: "What levels do you teach?", a: "From grade 5 to university entrance." },
@@ -436,6 +471,9 @@ const I18N = {
       title: "Contact",
       subtitle: "Get in touch with us",
       lead: "Have questions or want to enroll? We reply within one business day.",
+      cta: "Ready to get started?",
+      ctaLink1: "View our courses",
+      ctaLink2: "read our FAQ",
     },
     footer: {
       links: { enroll: "Enroll", faq: "FAQ", pricing: "Pricing" },
@@ -456,9 +494,11 @@ const I18N = {
       tagline: "Учись, Расти, Достигай",
       subtitle:
         "Качественные занятия по математике и физике для всех уровней.",
+      subtitleLink: "Узнайте больше",
       primary: "Записаться на курсы",
       secondary: "Посмотреть курсы",
       founder: "Основатель",
+      or: "или",
       smalls: [
         "🎯 Небольшие группы и индивидуальные",
         "📐 Математика для всех уровней",
@@ -469,6 +509,9 @@ const I18N = {
       title: "Наши курсы",
       subtitle: "Базовые предметы для прочного фундамента.",
       comingSoon: "Скоро",
+      cta: "Готовы начать свое обучение?",
+      ctaLink1: "Посмотрите наши цены",
+      ctaLink2: "узнайте больше о нашем основателе",
       items: [
         { icon: "➗", title: "Математика", desc: "Алгебра, геометрия, тригонометрия, анализ, решение задач, олимпиада." },
         { icon: "🧲", title: "Физика", desc: "Механика, ЭМ, оптика, эксперименты и практическое мышление." },
@@ -482,10 +525,17 @@ const I18N = {
       subtitle: "Опытный наставник, ориентированный на практику и результат.",
       blurb: "30+ лет опыта в подготовке студентов и обеспечении академических успехов. Марат Галстян видит в образовании основу будущего и верит, что каждый студент может достичь больших высот при правильном руководстве и поддержке. Его подход основан на поиске индивидуального ключа к каждому ученику, работая над выявлением их сильных и слабых сторон и опираясь на них.",
       mission: "Цель ясна: не просто передать знания, а вдохновить на любовь к учебе и уверенность в себе. Марат убежден, что образование должно быть вдохновляющим и практичным, готовя студентов не только к экзаменам, но и к жизненным вызовам.",
+      cta: "Готовы учиться с Маратом?",
+      ctaLink1: "Посмотрите наши курсы",
+      ctaLink2: "свяжитесь с нами",
     },
     results: {
       title: "Ожидаемые результаты",
       subtitle: "Заметный прогресс за несколько недель",
+      cta: "Хотите достичь таких же результатов?",
+      ctaLink1: "Посмотрите наши цены",
+      ctaLink2: "свяжитесь с нами",
+      ctaEnd: "для получения дополнительной информации.",
       kpis: [
         { kpi: "+2x", label: "Выполнение домашних и уверенность" },
         { kpi: "−30%", label: "Меньше ошибок в тестах" },
@@ -556,6 +606,10 @@ const I18N = {
     faq: {
       title: "Вопросы и ответы",
       subtitle: "Частые вопросы",
+      cta: "Остались вопросы?",
+      ctaLink1: "Свяжитесь с нами",
+      ctaLink2: "посмотрите наши цены",
+      ctaEnd: "чтобы начать.",
       items: [
         { q: "Проводите ли вы онлайн‑занятия?", a: "Да. Очно в Ереване и онлайн (Viber/WhatsApp/Meet)." },
         { q: "С какими уровнями вы работаете?", a: "С 5 класса до поступления в вуз." },
@@ -591,6 +645,9 @@ const I18N = {
       title: "Контакты",
       subtitle: "Свяжитесь с нами",
       lead: "Есть вопросы или хотите записаться? Отвечаем в течение рабочего дня.",
+      cta: "Готовы начать?",
+      ctaLink1: "Посмотрите наши курсы",
+      ctaLink2: "прочитайте наши вопросы",
     },
     footer: {
       links: { enroll: "Запись", faq: "Вопросы", pricing: "Цены" },
@@ -800,6 +857,11 @@ export default function LandingPage() {
             <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} />
           ))}
         </div>
+        <div className="mt-12 text-center">
+          <p className="text-sky-200 mb-6">
+            {t("courses.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink1")}</a> {t("hero.or")} <a href="#founder" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink2")}</a>.
+          </p>
+        </div>
       </Section>
 
       {/* Results */}
@@ -811,6 +873,11 @@ export default function LandingPage() {
               <p className="mt-2 text-sky-200">{c.label}</p>
             </Card>
           ))}
+        </div>
+        <div className="mt-12 text-center">
+          <p className="text-sky-200 mb-6">
+            {t("results.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("results.ctaLink1")}</a> {t("hero.or")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("results.ctaLink2")}</a> {t("results.ctaEnd")}
+          </p>
         </div>
       </Section>
 
@@ -830,6 +897,11 @@ export default function LandingPage() {
               {t("founder.mission") && (
                 <p className="mt-4 text-sm text-sky-200 italic">{t("founder.mission")}</p>
               )}
+              <div className="mt-6">
+                <p className="text-sm text-sky-200">
+                  {t("founder.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("founder.ctaLink1")}</a> {t("hero.or")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("founder.ctaLink2")}</a>.
+                </p>
+              </div>
             </div>
           </Card>
         </div>
@@ -852,6 +924,11 @@ export default function LandingPage() {
           {t("faq.items").map((f, i) => (
             <FAQItem key={i} q={f.q} a={f.a} />
           ))}
+        </div>
+        <div className="mt-12 text-center">
+          <p className="text-sky-200 mb-6">
+            {t("faq.cta")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("faq.ctaLink1")}</a> {t("hero.or")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("faq.ctaLink2")}</a> {t("faq.ctaEnd")}
+          </p>
         </div>
       </Section>
 
@@ -925,6 +1002,11 @@ export default function LandingPage() {
           </div>
             </div>
           </Card>
+          <div className="mt-8 text-center">
+            <p className="text-sky-200 mb-4">
+              {t("contact.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("contact.ctaLink1")}</a> {t("hero.or")} <a href="#faq" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("contact.ctaLink2")}</a>.
+            </p>
+          </div>
         </div>
       </Section>
 

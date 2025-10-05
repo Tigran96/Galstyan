@@ -26,7 +26,9 @@ export const Hero = ({ t, CONFIG, lang }) => (
         <div className="text-2xl md:text-4xl text-sky-200 mt-4 font-medium tracking-wide text-height-large text-center">
           {t("hero.tagline")}
         </div>
-        <p className="mt-6 text-lg text-sky-200 font-sans leading-relaxed text-center">{t("hero.subtitle")}</p>
+        <p className="mt-6 text-lg text-sky-200 font-sans leading-relaxed text-center">
+          {t("hero.subtitle")} <a href="#courses" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("hero.subtitleLink")}</a>
+        </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <a
             href="#pricing"
