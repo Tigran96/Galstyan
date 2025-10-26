@@ -55,11 +55,11 @@ export const Hero = ({ t, CONFIG, lang }) => (
             <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </a>
           <a
-            href="#founder"
+            href="#teachers"
             className="group relative inline-flex items-center justify-center rounded-xl bg-white/5 px-6 py-4 text-sm font-heading font-semibold text-white ring-1 ring-white/10 hover:bg-white/10 hover:ring-white/20 hover:scale-105 transition-all duration-300 backdrop-blur-sm overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">
-              {t("hero.founder")}
+              {t("hero.teachers")}
               <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>

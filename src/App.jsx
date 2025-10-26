@@ -15,6 +15,7 @@ import { Footer } from './components/Footer';
 import { Card } from './components/Card';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { trackContactClick, trackPageView } from './utils/analytics';
+import { detectUserLanguage, isLocationDetectionSupported } from './utils/locationService';
 import { Helmet } from "react-helmet-async";
 
 const CONFIG = {
@@ -31,6 +32,66 @@ const CONFIG = {
     },
     photo: "./owner.jpg",
   },
+  teachers: [
+    {
+      id: "marat",
+      name: {
+        hy: "Մարատ Գալստյան",
+        en: "Marat Galstyan",
+        ru: "Марат Галстян",
+      },
+      photo: "./owner.jpg",
+      role: {
+        hy: "Հիմնադիր",
+        en: "Founder",
+        ru: "Основатель",
+      },
+      specialties: {
+        hy: ["Մաթեմատիկա", "Ֆիզիկա"],
+        en: ["Mathematics", "Physics"],
+        ru: ["Математика", "Физика"],
+      },
+      experience: {
+        hy: "30+ տարի փորձ",
+        en: "30+ years experience",
+        ru: "30+ лет опыта",
+      },
+      bio: {
+        hy: "30+ տարվա փորձ ուսանողների պատրաստման և ակադեմիական հաջողության ապահովման բնագավառում։ Մարատ Գալստյանը կրթության մեջ տեսնում է ապագայի հիմքը և հավատում, որ ամեն ուսանող կարող է հասնել բարձունքների՝ ճիշտ ղեկավարության և աջակցության դեպքում։ Նրա աշխատանքը հիմնված է անհատական մոտեցման վրա՝ ամեն ուսանողի հետ աշխատելիս նրա ուժեղ և թույլ կողմերը բացահայտելու և դրանց հիման վրա կառուցել հետագա աշխատանքի անհատական պլանը։ Նպատակը պարզ է՝ ոչ միայն գիտելիքներ փոխանցել, այլև ներշնչել սովորելու արվեստը և ինքնավստահությունը։",
+        en: "30+ years of experience in student preparation and ensuring academic success. Marat Galstyan sees education as the foundation of the future and believes that every student can reach great heights with the right guidance and support. His approach is based on individual attention to each student, working to discover their strengths and weaknesses and building upon them. The goal is clear: not just to transfer knowledge, but to inspire a love of learning and confidence.",
+        ru: "30+ лет опыта в подготовке студентов и обеспечении академических успехов. Марат Галстян видит в образовании основу будущего и верит, что каждый студент может достичь больших высот при правильном руководстве и поддержке. Его подход основан на индивидуальном внимании к каждому ученику, работе по выявлению их сильных и слабых сторон и опоре на них. Цель ясна: не просто передать знания, а вдохновить на любовь к учебе и уверенность в себе.",
+      },
+    },
+    {
+      id: "armen",
+      name: {
+        hy: "Արմեն Սարդարյան",
+        en: "Armen Sardaryan",
+        ru: "Армен Сардарян",
+      },
+      photo: "./armen-sardaryan.jpg",
+      role: {
+        hy: "Մաթեմատիկայի ուսուցիչ",
+        en: "Mathematics Teacher",
+        ru: "Преподаватель математики",
+      },
+      specialties: {
+        hy: ["Մաթեմատիկա", "SAT", "GRE", "GMAT", "Անգլերեն"],
+        en: ["Mathematics", "SAT", "GRE", "GMAT", "English"],
+        ru: ["Математика", "SAT", "GRE", "GMAT", "Английский"],
+      },
+      experience: {
+        hy: "15+ տարի փորձ",
+        en: "15+ years experience",
+        ru: "15+ лет опыта",
+      },
+      bio: {
+        hy: "Արմեն Սարդարյանը ունի դասավանդման ավելի քան 15 տարվա փորձառություն։ Հիմնականում դասավանդել է մաթեմատիկա՝ անգլերեն լեզվով։ Ունեցել է մեծ փորձ SAT թեսթերին պատրաստելու, ինչպես նաև GRE և GMAT ստանդարտ ամերիկյան թեսթերի պատրաստման պարապմունքների։ Ունի բազային մաթեմատիկական կրթություն և անգլերենին տիրապետում է գերազանց։ Ուսանել է ԱՄՆ-ում (CMU համալսարան, Միչիգանի նահանգ) տնտեսագիտություն և պաշտպանել մագիստրոսի թեզ։ Ուսանելու տարիների աշխատել է որպես ինստրուկտոր և բակալավրիատի ուսանողներին ուսուցանել է տնտեսագիտության մաթեմատիկական մոդելներ։ Ներկայումս դասավանդում է մաթեմատիկա՝ Բրիտանական Միջազգային Դպրոցում և ղեկավարում է Հայաստանում եզակի իր բնույթով գիտական հիմնադրամ (CSIE)։ Արմեն Սարդարյանը հետաքրքրված է Գալստյան Ակադեմիայում պարապմունքներով։ Նախընտրելի է SAT, GRE և այլ թեսթերի պարապմունեքներ, որտեղ նա ունի հաջողված պատմություն։",
+        en: "Armen Sardaryan has over 15 years of teaching experience. He has mainly taught mathematics in English. He has extensive experience preparing students for SAT tests, as well as GRE and GMAT standardized American tests. He has a solid mathematical education and excellent proficiency in English. He studied economics in the USA (CMU University, Michigan) and has a master's degree. During his studies, he worked as an instructor and taught undergraduate students mathematical models in economics. Currently, he teaches mathematics at the British International School and heads a unique scientific foundation (CSIE) in Armenia. Armen Sardaryan is interested in conducting courses at Galstyan Academy. He prefers SAT, GRE and other test preparation courses where he has a successful track record.",
+        ru: "Армен Сардарян имеет более 15 лет преподавательского опыта. В основном он преподавал математику на английском языке. Он имеет большой опыт подготовки к тестам SAT, а также GRE и GMAT - стандартизированным американским тестам. Он имеет базовое математическое образование и отлично владеет английским языком. Он изучал экономику в США (университет CMU, штат Мичиган) и имеет степень магистра. Во время учебы он работал преподавателем и преподавал студентам бакалавриата математические модели в экономике. В настоящее время он преподает математику в Британской международной школе и возглавляет уникальный научный фонд (CSIE) в Армении. Армен Сардарян заинтересован в проведении курсов в Академии Галстяна. Он предпочитает курсы по подготовке к SAT, GRE и другим тестам, где у него успешный опыт.",
+      },
+    },
+  ],
   logo: "./logo.png",
   phone: "+374 (94) 766-409",
   email: "maratgalstyan1967@gmail.com",
@@ -110,7 +171,7 @@ const I18N = {
     banner: "✨ Անվճար փորձնական դաս նոր ուսանողների համար — գրանցվեք այսօր",
     nav: {
       courses: "Դասընթացներ",
-      founder: "Հիմնադիր",
+      teachers: "Ուսուցիչներ",
       pricing: "Գնացուցակ",
       faq: "ՀՏՀ",
       contact: "Կապ",
@@ -123,7 +184,7 @@ const I18N = {
       subtitleLink: "Իմացեք ավելին",
       primary: "Միացիր դասընթացներին",
       secondary: "Դասընթացներ",
-      founder: "Հիմնադիր",
+      teachers: "Ուսուցիչներ",
       or: "կամ",
       smalls: [
         "🎯 Փոքր խմբեր և անհատական",
@@ -169,15 +230,18 @@ const I18N = {
           desc: "Շուտով - քերականություն, խոսակցություն, գրավոր արտահայտություն։",
           disabled: true,
         },
+        {
+          icon: "📝",
+          title: "SAT/GRE/GMAT",
+          desc: "Ամերիկյան ստանդարտ թեսթերի պատրաստում - մաթեմատիկա անգլերենով։",
+          disabled: false,
+        },
       ],
     },
-    founder: {
-      title: "Հիմնադիր",
-      subtitle:
-        "Փորձառու ուսուցանող՝ հստակության, պրակտիկայի և արդյունքների վրա կենտրոնացած։",
-      blurb: "30+ տարվա փորձ ուսանողների պատրաստման և ակադեմիական հաջողության ապահովման բնագավառում։ Մարատ Գալստյանը կրթության մեջ տեսնում է ապագայի հիմքը և հավատում, որ ամեն ուսանող կարող է հասնել բարձունքների՝ ճիշտ ղեկավարության և աջակցության դեպքում։ Նրա աշխատանքը հիմնված է անհատական մոտեցման վրա՝ ամեն ուսանողի հետ աշխատելիս նրա ուժեղ և թույլ կողմերը բացահայտելու և դրանց հիման վրա կառուցել հետագա աշխատանքի անհատական պլանը։",
-      mission: "Նպատակը պարզ է՝ ոչ միայն գիտելիքներ փոխանցել, այլև ներշնչել սովորելու արվեստը և ինքնավստահությունը։ Մարատը համոզված է, որ կրթությունը պետք է լինի ոգևորիչ և գործնական՝ պատրաստելով ուսանողներին ոչ միայն քննությունների, այլև կյանքի մարտահրավերները հաղթահարելու համար։",
-      cta: "Պատրա՞ստ եք սովորել Մարատի հետ:",
+    teachers: {
+      title: "Մեր ուսուցիչները",
+      subtitle: "Փորձառու ուսուցիչներ՝ հստակության, պրակտիկայի և արդյունքների վրա կենտրոնացած։",
+      cta: "Պատրա՞ստ եք սովորել մեր ուսուցիչների հետ:",
       ctaLink1: "Դիտեք մեր դասընթացները",
       ctaLink2: "կապվեք մեզ հետ",
     },
@@ -284,7 +348,7 @@ const I18N = {
         placeholderMsg:
           "Գրեք դասարան, նպատակներ և նախընտրելի գրաֆիկ",
         submit: "Ուղարկել",
-        courseOptions: ["Մաթեմատիկա", "Ֆիզիկա", "Անգլերեն", "Ծրագրավորում"],
+        courseOptions: ["Մաթեմատիկա", "Ֆիզիկա", "Անգլերեն", "Ծրագրավորում", "SAT/GRE/GMAT"],
         formatOptions: ["Խմբակային", "Անհատական", "Առցանց", "Առկա"],
         placeholders: {
           name: "Արթուր Ավագյան",
@@ -310,7 +374,7 @@ const I18N = {
     banner: "✨ Free trial lesson for new students — book today",
     nav: {
       courses: "Courses",
-      founder: "Founder",
+      teachers: "Teachers",
       pricing: "Pricing",
       faq: "FAQ",
       contact: "Contact",
@@ -323,7 +387,7 @@ const I18N = {
       subtitleLink: "Learn More",
       primary: "Join Courses",
       secondary: "View Courses",
-      founder: "Founder",
+      teachers: "Teachers",
       or: "or",
       smalls: [
         "🎯 Small groups & private",
@@ -337,21 +401,20 @@ const I18N = {
       comingSoon: "Coming Soon",
       cta: "Ready to start your learning journey?",
       ctaLink1: "View our pricing plans",
-      ctaLink2: "learn more about our founder",
+      ctaLink2: "learn more about our teachers",
       items: [
         { icon: "➗", title: "Math", desc: "Algebra, geometry, trigonometry, calculus, problem solving, olympiad." },
         { icon: "🧲", title: "Physics", desc: "Mechanics, E&M, optics, experiments, real‑world intuition." },
         { icon: "⚗️", title: "Chemistry", desc: "Coming soon - organic & inorganic chemistry, laboratory work.", disabled: true },
         { icon: "🧬", title: "Biology", desc: "Coming soon - cell biology, genetics, ecology.", disabled: true },
         { icon: "🇬🇧", title: "English", desc: "Coming soon - grammar, conversation, written expression.", disabled: true },
+        { icon: "📝", title: "SAT/GRE/GMAT", desc: "American standardized test preparation - mathematics in English.", disabled: false },
       ],
     },
-    founder: {
-      title: "Founder",
-      subtitle: "Experienced mentor focused on clarity, practice, and results.",
-      blurb: "30+ years of experience in student preparation and ensuring academic success. Marat Galstyan sees education as the foundation of the future and believes that every student can reach great heights with the right guidance and support. His approach is based on finding the individual key to each student, working to discover their strengths and weaknesses and building upon them.",
-      mission: "The goal is clear: not just to transfer knowledge, but to inspire a love of learning and confidence. Marat is convinced that education should be inspiring and practical, preparing students not only for exams, but for life's challenges.",
-      cta: "Ready to learn with Marat?",
+    teachers: {
+      title: "Our Teachers",
+      subtitle: "Experienced mentors focused on clarity, practice, and results.",
+      cta: "Ready to learn with our teachers?",
       ctaLink1: "View our courses",
       ctaLink2: "get in touch",
     },
@@ -458,7 +521,7 @@ const I18N = {
         placeholderMsg:
           "Tell us the student's grade, goals, and preferred schedule",
         submit: "Send",
-        courseOptions: ["Math", "Physics", "English", "Programming"],
+        courseOptions: ["Math", "Physics", "English", "Programming", "SAT/GRE/GMAT"],
         formatOptions: ["Group", "Private", "Online", "In‑person"],
         placeholders: {
           name: "Arthur Avagyan",
@@ -484,7 +547,7 @@ const I18N = {
     banner: "✨ Бесплатный пробный урок для новых учеников — запишитесь сегодня",
     nav: {
       courses: "Курсы",
-      founder: "Основатель",
+      teachers: "Преподаватели",
       pricing: "Цены",
       faq: "Вопросы",
       contact: "Контакты",
@@ -497,7 +560,7 @@ const I18N = {
       subtitleLink: "Узнайте больше",
       primary: "Записаться на курсы",
       secondary: "Посмотреть курсы",
-      founder: "Основатель",
+      teachers: "Преподаватели",
       or: "или",
       smalls: [
         "🎯 Небольшие группы и индивидуальные",
@@ -518,14 +581,13 @@ const I18N = {
         { icon: "⚗️", title: "Химия", desc: "Скоро - органическая и неорганическая химия, лабораторные работы.", disabled: true },
         { icon: "🧬", title: "Биология", desc: "Скоро - клеточная биология, генетика, экология.", disabled: true },
         { icon: "🇬🇧", title: "Английский", desc: "Скоро - грамматика, разговорная речь, письменное выражение.", disabled: true },
+        { icon: "📝", title: "SAT/GRE/GMAT", desc: "Подготовка к американским стандартизированным тестам - математика на английском.", disabled: false },
       ],
     },
-    founder: {
-      title: "Основатель",
-      subtitle: "Опытный наставник, ориентированный на практику и результат.",
-      blurb: "30+ лет опыта в подготовке студентов и обеспечении академических успехов. Марат Галстян видит в образовании основу будущего и верит, что каждый студент может достичь больших высот при правильном руководстве и поддержке. Его подход основан на поиске индивидуального ключа к каждому ученику, работая над выявлением их сильных и слабых сторон и опираясь на них.",
-      mission: "Цель ясна: не просто передать знания, а вдохновить на любовь к учебе и уверенность в себе. Марат убежден, что образование должно быть вдохновляющим и практичным, готовя студентов не только к экзаменам, но и к жизненным вызовам.",
-      cta: "Готовы учиться с Маратом?",
+    teachers: {
+      title: "Наши преподаватели",
+      subtitle: "Опытные наставники, ориентированные на практику и результат.",
+      cta: "Готовы учиться с нашими преподавателями?",
       ctaLink1: "Посмотрите наши курсы",
       ctaLink2: "свяжитесь с нами",
     },
@@ -632,7 +694,7 @@ const I18N = {
         placeholderMsg:
           "Укажите класс, цели и предпочитаемое расписание",
         submit: "Отправить",
-        courseOptions: ["Математика", "Физика", "Английский", "Программирование"],
+        courseOptions: ["Математика", "Физика", "Английский", "Программирование", "SAT/GRE/GMAT"],
         formatOptions: ["Группа", "Индивидуальные", "Онлайн", "Очно"],
         placeholders: {
           name: "Артур Авагян",
@@ -762,11 +824,35 @@ export default function LandingPage() {
   const [selectedPlan, setSelectedPlan] = useState(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = window.localStorage.getItem("lang");
-      if (saved && I18N[saved]) setLang(saved);
-      setIsLoading(false);
-    }
+    const initializeLanguage = async () => {
+      if (typeof window !== "undefined") {
+        // First check if user has a saved language preference
+        const saved = window.localStorage.getItem("lang");
+        if (saved && I18N[saved]) {
+          setLang(saved);
+          setIsLoading(false);
+          return;
+        }
+
+        // If no saved preference, detect language based on location
+        if (isLocationDetectionSupported()) {
+          try {
+            const detectedLang = await detectUserLanguage();
+            setLang(detectedLang);
+          } catch (error) {
+            // Keep default Armenian if detection fails
+            setLang("hy");
+          }
+        } else {
+          // Fallback to Armenian if location detection is not supported
+          setLang("hy");
+        }
+        
+        setIsLoading(false);
+      }
+    };
+
+    initializeLanguage();
   }, []);
 
   useEffect(() => {
@@ -820,6 +906,7 @@ export default function LandingPage() {
     setSelectedPlan(null);
   };
 
+
   if (isLoading) {
     return <LoadingSpinner CONFIG={CONFIG} lang={lang} />;
   }
@@ -859,7 +946,7 @@ export default function LandingPage() {
         </div>
         <div className="mt-12 text-center">
           <p className="text-sky-200 mb-6">
-            {t("courses.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink1")}</a> {t("hero.or")} <a href="#founder" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink2")}</a>.
+            {t("courses.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink1")}</a> {t("hero.or")} <a href="#teachers" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink2")}</a>.
           </p>
         </div>
       </Section>
@@ -881,29 +968,43 @@ export default function LandingPage() {
         </div>
       </Section>
 
-      {/* Founder */}
-      <Section id="founder" title={t("founder.title")} subtitle={t("founder.subtitle")} variant="subtle">
-        <div className="flex justify-center">
-          <Card className="max-w-md" CONFIG={CONFIG}>
-            <div className="text-center">
-              <img 
-                src={CONFIG.owner.photo} 
-                alt={CONFIG.owner.name[lang]} 
-                className="w-96 h-96 mx-auto rounded-full mb-4 ring-4 ring-white/10 object-cover"
-                loading="lazy"
-              />
-              <div className="text-xl font-semibold text-white">{CONFIG.owner.name[lang]}</div>
-              <p className="mt-2 text-sm text-sky-200">{t("founder.blurb")}</p>
-              {t("founder.mission") && (
-                <p className="mt-4 text-sm text-sky-200 italic">{t("founder.mission")}</p>
-              )}
-              <div className="mt-6">
-                <p className="text-sm text-sky-200">
-                  {t("founder.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("founder.ctaLink1")}</a> {t("hero.or")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("founder.ctaLink2")}</a>.
-                </p>
+      {/* Teachers */}
+      <Section id="teachers" title={t("teachers.title")} subtitle={t("teachers.subtitle")} variant="subtle">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {CONFIG.teachers.map((teacher, index) => (
+            <Card key={teacher.id} className="max-w-md mx-auto" CONFIG={CONFIG}>
+              <div className="text-center">
+                <img 
+                  src={teacher.photo} 
+                  alt={teacher.name[lang]} 
+                  className="w-48 h-48 mx-auto rounded-full mb-4 ring-4 ring-white/10 object-cover"
+                  loading="lazy"
+                />
+                <div className="text-lg font-semibold text-white">{teacher.name[lang]}</div>
+                <div className="text-sm text-sky-300 mb-2">{teacher.role[lang]}</div>
+                <div className="text-sm text-sky-200 mb-2">{teacher.experience[lang]}</div>
+                <div className="flex flex-wrap justify-center gap-2 mb-4">
+                  {teacher.specialties[lang].map((specialty, idx) => (
+                    <span key={idx} className="px-2 py-1 bg-sky-800/50 text-sky-200 text-xs rounded-full">
+                      {specialty}
+                    </span>
+                  ))}
+                </div>
+                {teacher.bio && teacher.bio[lang] && (
+                  <div className="text-xs text-sky-200 text-left leading-relaxed mt-3">
+                    {teacher.bio[lang]}
+                  </div>
+                )}
               </div>
-            </div>
-          </Card>
+            </Card>
+          ))}
+        </div>
+        
+
+        <div className="mt-8 text-center">
+          <p className="text-sky-200 mb-6">
+            {t("teachers.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("teachers.ctaLink1")}</a> {t("hero.or")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("teachers.ctaLink2")}</a>.
+          </p>
         </div>
       </Section>
 
@@ -1013,6 +1114,7 @@ export default function LandingPage() {
       {/* Footer */}
       <Footer t={t} CONFIG={CONFIG} lang={lang} />
     </div>
+
 
     </Fragment>
   );
