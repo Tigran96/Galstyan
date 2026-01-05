@@ -14,6 +14,8 @@ import { ContactForm } from './components/ContactForm';
 import { Footer } from './components/Footer';
 import { Card } from './components/Card';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { Chat } from './components/Chat';
+import { ChatButton } from './components/ChatButton';
 import { trackContactClick, trackPageView } from './utils/analytics';
 import { detectUserLanguage, isLocationDetectionSupported } from './utils/locationService';
 import { Helmet } from "react-helmet-async";
@@ -365,6 +367,17 @@ const I18N = {
       ctaLink1: "Դիտեք մեր դասընթացները",
       ctaLink2: "կարդացեք մեր ՀՏՀ-ն",
     },
+    chat: {
+      title: "AI Օգնական",
+      subtitle: "Հարցրեք մեզ ցանկացած հարց",
+      welcomeMessage: "Բարև! Ես Գալստյան Ակադեմիայի AI օգնականն եմ։ Ինչպե՞ս կարող եմ օգնել ձեզ այսօր? Կարող եք հարցեր տալ մաթեմատիկայի, ֆիզիկայի կամ մեր դասընթացների մասին:",
+      placeholder: "Տվեք ձեր հարցը...",
+      send: "Ուղարկել",
+      sending: "Ուղարկվում է...",
+      clear: "Մաքրել",
+      close: "Փակել",
+      errorMessage: "Ներեցեք, տեխնիկական խնդիր է առաջացել: Խնդրում ենք փորձել ավելի ուշ կամ կապ հաստատել մեզ հետ ուղղակիորեն:",
+    },
     footer: {
       links: { enroll: "Գրանցվել", faq: "ՀՏՀ", pricing: "Գնացուցակ" },
       rights: "Բոլոր իրավունքները պաշտպանված են",
@@ -537,6 +550,17 @@ const I18N = {
       cta: "Ready to get started?",
       ctaLink1: "View our courses",
       ctaLink2: "read our FAQ",
+    },
+    chat: {
+      title: "AI Assistant",
+      subtitle: "Ask us anything",
+      welcomeMessage: "Hello! I'm the AI assistant for Galstyan Academy. How can I help you today? Feel free to ask questions about mathematics, physics, or our courses.",
+      placeholder: "Type your question...",
+      send: "Send",
+      sending: "Sending...",
+      clear: "Clear",
+      close: "Close",
+      errorMessage: "Sorry, there was a technical issue. Please try again later or contact us directly.",
     },
     footer: {
       links: { enroll: "Enroll", faq: "FAQ", pricing: "Pricing" },
@@ -711,6 +735,17 @@ const I18N = {
       ctaLink1: "Посмотрите наши курсы",
       ctaLink2: "прочитайте наши вопросы",
     },
+    chat: {
+      title: "AI Помощник",
+      subtitle: "Задайте нам любой вопрос",
+      welcomeMessage: "Привет! Я AI-помощник Академии Галстяна. Как я могу помочь вам сегодня? Вы можете задавать вопросы о математике, физике или наших курсах.",
+      placeholder: "Введите ваш вопрос...",
+      send: "Отправить",
+      sending: "Отправка...",
+      clear: "Очистить",
+      close: "Закрыть",
+      errorMessage: "Извините, произошла техническая ошибка. Пожалуйста, попробуйте позже или свяжитесь с нами напрямую.",
+    },
     footer: {
       links: { enroll: "Запись", faq: "Вопросы", pricing: "Цены" },
       rights: "Все права защищены",
@@ -822,6 +857,7 @@ export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const initializeLanguage = async () => {
@@ -1113,6 +1149,18 @@ export default function LandingPage() {
 
       {/* Footer */}
       <Footer t={t} CONFIG={CONFIG} lang={lang} />
+
+      {/* Chat Button */}
+      <ChatButton onClick={() => setIsChatOpen(true)} />
+
+      {/* Chat Modal */}
+      <Chat
+        lang={lang}
+        t={t}
+        CONFIG={CONFIG}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </div>
 
 

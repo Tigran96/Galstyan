@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Lesson Card - Export</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0c1226;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #0c4a6e 0%, #1e3a8a 100%);
+            background-image: url('https://i.imgur.com/your-image-url.png');
+            background-size: cover;
+            background-position: center center;
+            background-blend-mode: overlay;
+            border-radius: 24px;
+            padding: 32px;
+            width: 400px;
+            box-shadow: 0 20px 60px rgba(14, 116, 144, 0.3);
+            position: relative;
+            overflow: hidden;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+        
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(12, 74, 110, 0.85) 0%, rgba(30, 58, 138, 0.85) 100%);
+            z-index: 0;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background-image: url('https://i.imgur.com/your-image-url.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .accent-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #0ea5e9);
+            border-radius: 24px 24px 0 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .plan-type {
+            color: #7dd3fc;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .plan-title {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .plan-frequency {
+            color: #bae6fd;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .price-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .price-amount {
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        
+        .price-period {
+            color: #bae6fd;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .features {
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .features-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-item {
+            color: #bae6fd;
+            font-size: 14px;
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .feature-item::before {
+            content: '✓';
+            background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .cta-button {
+            width: 100%;
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+        
+        @media print {
+            body {
+                background: transparent;
+            }
+            
+            .card {
+                box-shadow: none;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="accent-border"></div>
+        
+        <div class="header">
+            <div class="plan-type">Group Plan</div>
+            <div class="plan-title">Group Lessons</div>
+            <div class="plan-frequency">2 lessons per week</div>
+        </div>
+        
+        <div class="price-section">
+            <div class="price-amount">45,000 ֏</div>
+            <div class="price-period">per month</div>
+        </div>
+        
+        <div class="features">
+            <div class="features-title">What's included:</div>
+            <ul class="feature-list">
+                <li class="feature-item">Max 5 students per group</li>
+                <li class="feature-item">8 lessons monthly</li>
+                <li class="feature-item">Practice worksheets</li>
+                <li class="feature-item">Weekly progress updates</li>
+            </ul>
+        </div>
+        
+        <button class="cta-button">
+            Choose This Plan
+        </button>
+    </div>
+</body>
+</html>
