@@ -185,3 +185,4 @@ For a school with 100 students asking 10 questions/day:
 - Monitor API usage to prevent abuse
 - Use serverless functions to keep API keys secure
 
+

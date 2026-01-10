@@ -4,6 +4,7 @@ A modern, responsive educational website built with React, Vite, and Tailwind CS
 
 ## 🚀 Features
 
+- **AI Chat Assistant**: ChatGPT-powered chat for students to ask questions (see [QUICK_START.md](./QUICK_START.md))
 - **Multi-language Support**: Armenian, English, and Russian with flag-based language switching
 - **Responsive Design**: Mobile-first approach with Tailwind CSS
 - **Modern Tech Stack**: React 18, Vite, Tailwind CSS
@@ -16,6 +17,8 @@ A modern, responsive educational website built with React, Vite, and Tailwind CS
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 18, Vite
+- **Backend**: Express.js (for AI chat)
+- **AI Integration**: OpenAI ChatGPT API
 - **Styling**: Tailwind CSS
 - **Icons**: Custom SVG flags
 - **Forms**: Formspree integration
@@ -35,9 +38,17 @@ A modern, responsive educational website built with React, Vite, and Tailwind CS
    npm install
    ```
 
-3. **Start development server**
+3. **Set up AI Chat** (Optional but recommended)
+   - See [QUICK_START.md](./QUICK_START.md) for 5-minute setup
+   - Or see [BACKEND_SETUP.md](./BACKEND_SETUP.md) for detailed instructions
+
+4. **Start development server**
    ```bash
+   # Frontend only
    npm run dev
+   
+   # Or both frontend + backend (for AI chat)
+   npm run dev:full
    ```
 
 4. **Build for production**

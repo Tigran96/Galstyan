@@ -3,14 +3,15 @@
 
 // Try different API endpoints based on deployment
 const getApiEndpoint = () => {
-  // Custom endpoint from env
+  // Custom endpoint from env (highest priority)
   if (import.meta.env.VITE_CHAT_API_ENDPOINT) {
     return import.meta.env.VITE_CHAT_API_ENDPOINT;
   }
   
   // For local development with Express server
+  // Uses Vite proxy (configured in vite.config.js)
   if (import.meta.env.DEV) {
-    return 'http://localhost:3001/api/chat';
+    return '/api/chat'; // Proxy will forward to localhost:3001
   }
   
   // For production (Vercel/Netlify)
@@ -73,20 +74,15 @@ const getMockResponse = (message, lang) => {
 
 export const sendMessage = async (message, conversationHistory, lang = 'en') => {
   try {
-    // Use mock responses in development if no API is configured
-    if (USE_MOCK && !API_KEY && !import.meta.env.VITE_CHAT_API_ENDPOINT) {
-      console.log('Using mock chat responses (development mode)');
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return getMockResponse(message, lang);
-    }
-
     // If using OpenAI directly from frontend (not recommended for production)
     if (API_KEY && (API_ENDPOINT.includes('openai') || !API_ENDPOINT.includes('/api/'))) {
+      console.log('Using direct OpenAI API');
       return await callOpenAI(message, conversationHistory, lang);
     }
 
-    // Otherwise, use backend API endpoint
+    // Try backend API endpoint
+    console.log('Attempting to connect to:', API_ENDPOINT);
+    
     const response = await fetch(API_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -101,24 +97,64 @@ export const sendMessage = async (message, conversationHistory, lang = 'en') => 
     });
 
     if (!response.ok) {
-      // If API endpoint doesn't exist, fall back to mock in development
-      if (response.status === 404 && USE_MOCK) {
-        console.log('API endpoint not found, using mock responses');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      const errorData = await response.json().catch(() => ({}));
+      const errorText = errorData.message || errorData.error || 'Unknown error';
+      console.error('API error:', response.status, errorData);
+      
+      // Handle rate limit errors (429) with helpful message
+      if (response.status === 429) {
+        const rateLimitMessage = {
+          hy: `Ներեցեք, դուք գերազանցել եք հարցումների սահմանը: Խնդրում ենք սպասել մի քանի րոպե և փորձել կրկին: Եթե խնդիրը շարունակվում է, ստուգեք ձեր OpenAI հաշիվը:`,
+          en: `Sorry, you've exceeded the rate limit. Please wait a few minutes and try again. If the problem continues, check your OpenAI account at https://platform.openai.com/usage`,
+          ru: `Извините, вы превысили лимит запросов. Пожалуйста, подождите несколько минут и попробуйте снова. Если проблема сохраняется, проверьте свой аккаунт OpenAI.`
+        };
+        
+        // In development, fall back to mock after showing rate limit message
+        if (import.meta.env.DEV) {
+          console.log('Rate limit exceeded, using mock response');
+          await new Promise(resolve => setTimeout(resolve, 800));
+          return rateLimitMessage[lang] || rateLimitMessage.en;
+        }
+        
+        throw new Error(errorText);
+      }
+      
+      // Handle other errors
+      if (import.meta.env.DEV && (response.status === 404 || response.status === 500)) {
+        console.log('Backend not available, using mock responses');
+        await new Promise(resolve => setTimeout(resolve, 800));
         return getMockResponse(message, lang);
       }
-      throw new Error(`API error: ${response.status}`);
+      
+      throw new Error(errorText || `API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Successfully received response from backend');
     return data.response || data.message || 'Sorry, I could not process your request.';
   } catch (error) {
-    console.error('Chat service error:', error);
+    console.error('Chat service error:', error.message);
     
-    // In development, provide helpful mock response instead of error
-    if (USE_MOCK && (error.message.includes('Failed to fetch') || error.message.includes('404'))) {
-      console.log('Network error, using mock response');
-      await new Promise(resolve => setTimeout(resolve, 500));
+    // In development, automatically fall back to mock responses if backend is unavailable
+    if (import.meta.env.DEV) {
+      const isNetworkError = 
+        error.message.includes('Failed to fetch') || 
+        error.message.includes('NetworkError') ||
+        error.message.includes('ERR_CONNECTION_REFUSED') ||
+        error.message.includes('404') ||
+        error.message.includes('500');
+      
+      if (isNetworkError) {
+        console.log('Backend unavailable, using mock responses for development');
+        await new Promise(resolve => setTimeout(resolve, 800));
+        return getMockResponse(message, lang);
+      }
+    }
+    
+    // If USE_MOCK is explicitly set, use mock responses
+    if (USE_MOCK) {
+      console.log('Using mock responses (VITE_USE_MOCK_CHAT=true)');
+      await new Promise(resolve => setTimeout(resolve, 800));
       return getMockResponse(message, lang);
     }
     

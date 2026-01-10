@@ -2,6 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import { sendMessage } from '../services/chatService';
 
 export const Chat = ({ lang, t, CONFIG, isOpen, onClose }) => {
+  const detectMessageLang = (text) => {
+    // Armenian range: \u0530-\u058F
+    if (/[\u0530-\u058F]/.test(text)) return 'hy';
+    // Cyrillic range: \u0400-\u04FF (covers Russian)
+    if (/[\u0400-\u04FF]/.test(text)) return 'ru';
+    // Default to English/Latin
+    return 'en';
+  };
+
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -32,18 +41,39 @@ export const Chat = ({ lang, t, CONFIG, isOpen, onClose }) => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
+    const messageLang = detectMessageLang(userMessage);
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
     try {
-      const response = await sendMessage(userMessage, messages, lang);
+      // Answer in the same language as the student's message (not the UI language)
+      const response = await sendMessage(userMessage, messages, messageLang);
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: response },
       ]);
     } catch (error) {
       console.error('Chat error:', error);
+      
+      // Handle rate limit errors with specific message
+      if (error.message && error.message.includes('rate limit')) {
+        const rateLimitMessages = {
+          hy: 'Ներեցեք, դուք գերազանցել եք հարցումների սահմանը: Խնդրում ենք սպասել մի քանի րոպե և փորձել կրկին:',
+          en: 'Sorry, you\'ve exceeded the rate limit. Please wait a few minutes and try again. Check your OpenAI account if this continues.',
+          ru: 'Извините, вы превысили лимит запросов. Пожалуйста, подождите несколько минут и попробуйте снова.'
+        };
+        
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: rateLimitMessages[messageLang] || rateLimitMessages.en,
+          },
+        ]);
+        return;
+      }
+      
       // Only show error if it's not a network error (mock will handle those)
       if (!error.message || (!error.message.includes('Failed to fetch') && !error.message.includes('404'))) {
         setMessages((prev) => [

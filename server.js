@@ -64,7 +64,36 @@ app.post('/api/chat', async (req, res) => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('OpenAI API error:', response.status, errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      
+      // Handle specific error codes with user-friendly messages
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('retry-after') || '60';
+        return res.status(429).json({
+          error: 'Rate limit exceeded',
+          message: `Too many requests. Please wait ${retryAfter} seconds before trying again.`,
+          details: errorData.error?.message || 'You have exceeded your OpenAI API rate limit. This could be due to: 1) Too many requests too quickly, 2) No credits in your account, or 3) Free tier limits. Please check your OpenAI account at https://platform.openai.com/usage',
+          retryAfter: parseInt(retryAfter),
+          code: 'RATE_LIMIT_EXCEEDED'
+        });
+      }
+      
+      if (response.status === 401) {
+        return res.status(401).json({
+          error: 'Invalid API key',
+          message: 'Your OpenAI API key is invalid or expired. Please check your .env file.',
+          code: 'INVALID_API_KEY'
+        });
+      }
+      
+      if (response.status === 402) {
+        return res.status(402).json({
+          error: 'Insufficient credits',
+          message: 'Your OpenAI account has no credits. Please add credits at https://platform.openai.com/account/billing',
+          code: 'INSUFFICIENT_CREDITS'
+        });
+      }
+      
+      throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0c1226;
+            color: white;
+        }
+        .test-item {
+            background: #1e3a8a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #0ea5e9;
+        }
+        .success { border-left-color: #10b981; }
+        .error { border-left-color: #ef4444; }
+        .loading { border-left-color: #f59e0b; }
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0284c7; }
+        pre {
+            background: #0c1226;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Chat Backend Connection Test</h1>
+    <p>This page will test if your chat backend is properly configured and running.</p>
+    
+    <button onclick="runAllTests()">Run All Tests</button>
+    <button onclick="testHealth()">Test Health</button>
+    <button onclick="testChat()">Test Chat</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:3001';
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(title, status, message) {
+            const div = document.createElement('div');
+            div.className = `test-item ${status}`;
+            div.innerHTML = `
+                <strong>${title}</strong>
+                <div style="margin-top: 10px;">${message}</div>
+            `;
+            resultsDiv.appendChild(div);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testHealth() {
+            clearResults();
+            addResult('Health Check', 'loading', 'Testing backend health endpoint...');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Health Check', 'success', 
+                        `✅ Backend is running!<br><pre>${JSON.stringify(data, null, 2)}</pre>`);
+                } else {
+                    addResult('Health Check', 'error', 
+                        `❌ Backend returned error: ${response.status}<br>💡 Make sure backend is running: <code>npm run server</code>`);
+                }
+            } catch (error) {
+                addResult('Health Check', 'error', 
+                    `❌ Cannot connect to backend: ${error.message}<br>💡 Start the backend: <code>npm run server</code>`);
+            }
+        }
+
+        async function testChat() {
+            clearResults();
+            addResult('Chat Endpoint', 'loading', 'Testing chat endpoint with OpenAI...');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Hello, this is a test message',
+                        conversationHistory: [],
+                        lang: 'en',
+                        systemPrompt: 'You are a helpful assistant for Galstyan Academy.',
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Chat Endpoint', 'success', 
+                        `✅ Chat is working!<br><strong>Response:</strong><br><pre>${data.response || 'No response'}</pre>`);
+                } else {
+                    const errorText = await response.text();
+                    addResult('Chat Endpoint', 'error', 
+                        `❌ Chat endpoint error: ${response.status}<br><pre>${errorText}</pre><br>💡 Check if OPENAI_API_KEY is set in .env file`);
+                }
+            } catch (error) {
+                addResult('Chat Endpoint', 'error', 
+                    `❌ Network error: ${error.message}<br>💡 Make sure backend is running: <code>npm run server</code>`);
+            }
+        }
+
+        async function runAllTests() {
+            clearResults();
+            addResult('Starting Tests', 'loading', 'Running all connection tests...');
+            
+            await testHealth();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testChat();
+            
+            addResult('Tests Complete', 'success', 
+                '✅ All tests finished! Check results above.<br>💡 If all tests passed, your chat should work in the main app.');
+        }
+
+        // Auto-run on page load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>
+
+
