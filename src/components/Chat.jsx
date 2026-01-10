@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { sendMessage } from '../services/chatService';
+import newtonChatLogo from '../assets/newton-chat-logo.svg';
 
 export const Chat = ({ lang, t, CONFIG, isOpen, onClose }) => {
   const detectMessageLang = (text) => {
@@ -107,19 +108,12 @@ export const Chat = ({ lang, t, CONFIG, isOpen, onClose }) => {
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-sky-900 to-indigo-900 border-b border-sky-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                />
-              </svg>
+              <img
+                src={newtonChatLogo}
+                alt=""
+                className="w-8 h-8 select-none"
+                draggable="false"
+              />
             </div>
             <div>
               <h3 className="text-white font-semibold text-lg">

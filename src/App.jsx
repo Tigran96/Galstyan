@@ -371,6 +371,9 @@ const I18N = {
       title: "Նյուտոն",
       subtitle: "Ձեր մաթեմատիկայի և ֆիզիկայի օգնականը",
       welcomeMessage: "Բարև! Ես Նյուտոնն եմ՝ Գալստյան Ակադեմիայի AI օգնականը։ Տվեք ձեր հարցը, և ես կօգնեմ քայլ առ քայլ։",
+      tooltipTitle: "Բարև, ես Նյուտոնն եմ",
+      tooltipBody: "Ես օգնում եմ մաթեմատիկայի և ֆիզիկայի հարցերում։ Եկեք սկսենք։",
+      tooltipCta: "Սկսել",
       placeholder: "Տվեք ձեր հարցը...",
       send: "Ուղարկել",
       sending: "Ուղարկվում է...",
@@ -555,6 +558,9 @@ const I18N = {
       title: "Newton",
       subtitle: "Your Math & Physics assistant",
       welcomeMessage: "Hello! I'm Newton — the AI assistant for Galstyan Academy. Ask your question and I’ll help step by step.",
+      tooltipTitle: "Hello, I'm Newton",
+      tooltipBody: "I can help with math and physics. Let’s start.",
+      tooltipCta: "Start",
       placeholder: "Type your question...",
       send: "Send",
       sending: "Sending...",
@@ -739,6 +745,9 @@ const I18N = {
       title: "Ньютон",
       subtitle: "Ваш помощник по математике и физике",
       welcomeMessage: "Привет! Я Ньютон — AI-помощник Академии Галстяна. Задайте вопрос, и я помогу шаг за шагом.",
+      tooltipTitle: "Привет, я Ньютон",
+      tooltipBody: "Я помогу с математикой и физикой. Давайте начнем.",
+      tooltipCta: "Начать",
       placeholder: "Введите ваш вопрос...",
       send: "Отправить",
       sending: "Отправка...",
@@ -1151,7 +1160,7 @@ export default function LandingPage() {
       <Footer t={t} CONFIG={CONFIG} lang={lang} />
 
       {/* Chat Button */}
-      <ChatButton onClick={() => setIsChatOpen(true)} />
+      <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
 
       {/* Chat Modal */}
       <Chat
