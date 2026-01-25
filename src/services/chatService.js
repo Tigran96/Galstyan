@@ -100,6 +100,11 @@ export const sendMessage = async (message, conversationHistory, lang = 'en') => 
       const errorData = await response.json().catch(() => ({}));
       const errorText = errorData.message || errorData.error || 'Unknown error';
       console.error('API error:', response.status, errorData);
+
+      const apiError = new Error(errorText || `API error: ${response.status}`);
+      apiError.status = response.status;
+      apiError.code = errorData.code;
+      apiError.details = errorData.details;
       
       // Handle rate limit errors (429) with helpful message
       if (response.status === 429) {
@@ -116,7 +121,8 @@ export const sendMessage = async (message, conversationHistory, lang = 'en') => 
           return rateLimitMessage[lang] || rateLimitMessage.en;
         }
         
-        throw new Error(errorText);
+        // In production, throw a structured error so the UI can show a localized message.
+        throw apiError;
       }
       
       // Handle other errors
@@ -126,7 +132,7 @@ export const sendMessage = async (message, conversationHistory, lang = 'en') => 
         return getMockResponse(message, lang);
       }
       
-      throw new Error(errorText || `API error: ${response.status}`);
+      throw apiError;
     }
 
     const data = await response.json();

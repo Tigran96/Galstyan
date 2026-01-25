@@ -69,9 +69,27 @@ export const Chat = ({ lang, t, CONFIG, isOpen, onClose }) => {
       ]);
     } catch (error) {
       console.error('Chat error:', error);
-      
+
+      const status = error?.status;
+      const code = error?.code;
+      const msg = String(error?.message || '');
+
+      const isRateLimit =
+        status === 429 ||
+        code === 'RATE_LIMIT_EXCEEDED' ||
+        /rate limit/i.test(msg) ||
+        /too many requests/i.test(msg);
+
+      const isNetworkError =
+        status == null &&
+        (msg.includes('Failed to fetch') ||
+          msg.includes('NetworkError') ||
+          msg.includes('ERR_CONNECTION') ||
+          msg.includes('ERR_NETWORK') ||
+          msg.includes('Load failed'));
+
       // Handle rate limit errors with specific message
-      if (error.message && error.message.includes('rate limit')) {
+      if (isRateLimit) {
         const rateLimitMessages = {
           hy: 'Ներեցեք, դուք գերազանցել եք հարցումների սահմանը: Խնդրում ենք սպասել մի քանի րոպե և փորձել կրկին:',
           en: 'Sorry, you\'ve exceeded the rate limit. Please wait a few minutes and try again. Check your OpenAI account if this continues.',
@@ -87,17 +105,32 @@ export const Chat = ({ lang, t, CONFIG, isOpen, onClose }) => {
         ]);
         return;
       }
-      
-      // Only show error if it's not a network error (mock will handle those)
-      if (!error.message || (!error.message.includes('Failed to fetch') && !error.message.includes('404'))) {
+
+      if (isNetworkError) {
+        const connectionMessages = {
+          hy: 'Չեմ կարող կապ հաստատել սերվերի հետ։ Խնդրում եմ փորձեք մի քիչ հետո կամ ստուգեք, որ chat backend-ը աշխատում է։',
+          en: 'I can’t connect to the server right now. Please try again in a minute or make sure the chat backend is running.',
+          ru: 'Не могу подключиться к серверу. Попробуйте чуть позже или проверьте, что backend чата работает.',
+        };
+
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            content: t('chat.errorMessage'),
+            content: connectionMessages[messageLang] || connectionMessages.en,
           },
         ]);
+        return;
       }
+
+      // Generic error (backend responded with an error)
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: t('chat.errorMessage'),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }

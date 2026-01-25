@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",
+    "server:cjs": "node server.cjs",
     "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
     "test:connection": "node test-connection.js"
   },
@@ -19,7 +20,8 @@
     "react-helmet-async": "^2.0.5",
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",

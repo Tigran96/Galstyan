@@ -967,14 +967,28 @@ export default function LandingPage() {
 
   if (currentPage === 'enroll') {
     return (
-      <EnrollPage 
-        selectedPlan={selectedPlan}
-        CONFIG={CONFIG}
-        lang={lang}
-        setLang={setLang}
-        t={t}
-        onBack={handleBackToHome}
-      />
+      <Fragment>
+        <EnrollPage 
+          selectedPlan={selectedPlan}
+          CONFIG={CONFIG}
+          lang={lang}
+          setLang={setLang}
+          t={t}
+          onBack={handleBackToHome}
+        />
+
+        {/* Chat Button */}
+        <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
+
+        {/* Chat */}
+        <Chat
+          lang={lang}
+          t={t}
+          CONFIG={CONFIG}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      </Fragment>
     );
   }
 

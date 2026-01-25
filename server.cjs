@@ -1,26 +1,19 @@
-// Simple Express backend server for AI Chat
-// Run with: node server.js
-// Make sure to set OPENAI_API_KEY in .env file
+// CommonJS entrypoint for cPanel/CloudLinux Passenger (which uses require()).
+// Use this as the Startup file in cPanel: server.cjs
+//
+// Note: This file assumes Node 18+ (built-in fetch). Your cPanel config shows Node 19.
 
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Use built-in fetch when available (Node 18+). Only fall back to node-fetch if needed.
-let fetchFn = globalThis.fetch;
-if (!fetchFn) {
-  const mod = await import('node-fetch');
-  fetchFn = mod.default;
-}
-
 // Middleware
 // Allow requests from your public site to your API subdomain (CORS).
-// This also helps with CORS preflight (OPTIONS) requests for JSON POSTs.
 const allowedOrigins = [
   'https://www.galstyanacademy.com',
   'https://galstyanacademy.com',
@@ -40,6 +33,7 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
 app.options('*', cors());
 app.use(express.json());
 
@@ -51,7 +45,7 @@ app.get('/health', (req, res) => {
 // Chat endpoint
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, conversationHistory, lang, systemPrompt } = req.body;
+    const { message, conversationHistory, systemPrompt } = req.body;
 
     // Validate input
     if (!message || !systemPrompt) {
@@ -62,6 +56,13 @@ app.post('/api/chat', async (req, res) => {
     if (!process.env.OPENAI_API_KEY) {
       console.error('OPENAI_API_KEY is not set');
       return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    if (typeof fetch !== 'function') {
+      return res.status(500).json({
+        error: 'Server runtime error',
+        message: 'Global fetch() is not available. Please use Node 18+ on cPanel.',
+      });
     }
 
     // Prepare messages for OpenAI
@@ -75,11 +76,11 @@ app.post('/api/chat', async (req, res) => {
     ];
 
     // Call OpenAI API
-    const response = await fetchFn('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
@@ -92,40 +93,45 @@ app.post('/api/chat', async (req, res) => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('OpenAI API error:', response.status, errorData);
-      
+
       // Handle specific error codes with user-friendly messages
       if (response.status === 429) {
         const retryAfter = response.headers.get('retry-after') || '60';
         return res.status(429).json({
           error: 'Rate limit exceeded',
           message: `Too many requests. Please wait ${retryAfter} seconds before trying again.`,
-          details: errorData.error?.message || 'You have exceeded your OpenAI API rate limit. This could be due to: 1) Too many requests too quickly, 2) No credits in your account, or 3) Free tier limits. Please check your OpenAI account at https://platform.openai.com/usage',
-          retryAfter: parseInt(retryAfter),
-          code: 'RATE_LIMIT_EXCEEDED'
+          details:
+            errorData.error?.message ||
+            'You have exceeded your OpenAI API rate limit. Please check your OpenAI account.',
+          retryAfter: parseInt(retryAfter, 10),
+          code: 'RATE_LIMIT_EXCEEDED',
         });
       }
-      
+
       if (response.status === 401) {
         return res.status(401).json({
           error: 'Invalid API key',
-          message: 'Your OpenAI API key is invalid or expired. Please check your .env file.',
-          code: 'INVALID_API_KEY'
+          message: 'Your OpenAI API key is invalid or expired.',
+          code: 'INVALID_API_KEY',
         });
       }
-      
+
       if (response.status === 402) {
         return res.status(402).json({
           error: 'Insufficient credits',
-          message: 'Your OpenAI account has no credits. Please add credits at https://platform.openai.com/account/billing',
-          code: 'INSUFFICIENT_CREDITS'
+          message: 'Your OpenAI account has no credits.',
+          code: 'INSUFFICIENT_CREDITS',
         });
       }
-      
-      throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+
+      throw new Error(
+        `OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`
+      );
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content || 'Sorry, I could not process your request.';
+    const aiResponse =
+      data.choices?.[0]?.message?.content || 'Sorry, I could not process your request.';
 
     return res.json({ response: aiResponse });
   } catch (error) {
@@ -137,12 +143,11 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Chat API server running on http://localhost:${PORT}`);
-  console.log(`📝 Health check: http://localhost:${PORT}/health`);
-  console.log(`💬 Chat endpoint: http://localhost:${PORT}/api/chat`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Chat API server running on port ${PORT}`);
   if (!process.env.OPENAI_API_KEY) {
-    console.warn('⚠️  WARNING: OPENAI_API_KEY is not set in .env file');
+    console.warn('⚠️  WARNING: OPENAI_API_KEY is not set');
   }
 });
+
 
