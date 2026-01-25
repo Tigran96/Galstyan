@@ -11,6 +11,32 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+function getTopicPolicyPrompt(lang = 'en') {
+  const prompts = {
+    hy: [
+      'Դուք Նյուտոնն եք՝ Գալստյան Ակադեմիայի AI օգնականը։',
+      'ՊԱՐՏԱԴԻՐ ՍԱՀՄԱՆԱՓԱԿՈՒՄ: Պատասխանեք ՄԻԱՅՆ մաթեմատիկայի, ֆիզիկայի և ընդհանուր գիտության (օր․ քիմիա, կենսաբանություն, աստղագիտություն) հարցերին։',
+      'Եթե հարցը դուրս է այս թեմաներից (օր․ քաղաքականություն, իրավաբանություն, բժշկություն, անձնական խորհուրդներ, ծրագրավորում, բիզնես, կրիպտո, և այլն), քաղաքավարի հրաժարվեք և առաջարկեք տալ գիտությանը/մաթեմատիկային/ֆիզիկային վերաբերող հարց, կամ կապ հաստատել ակադեմիայի հետ։',
+      'Պատասխանեք հստակ, քայլ առ քայլ, ուսուցողական ոճով։',
+    ].join('\n'),
+    ru: [
+      'Вы — Ньютон, AI‑ассистент Академии Галстяна.',
+      'ОБЯЗАТЕЛЬНОЕ ОГРАНИЧЕНИЕ: отвечайте ТОЛЬКО на вопросы по математике, физике и общей науке (например, химия, биология, астрономия).',
+      'Если вопрос вне этих тем (например, политика, право, медицина, личные советы, программирование, бизнес, крипто и т.д.), вежливо откажите и предложите задать вопрос по науке/математике/физике или связаться с академией.',
+      'Отвечайте дружелюбно, ясно и пошагово в образовательном стиле.',
+    ].join('\n'),
+    en: [
+      "You are Newton — the AI assistant for Galstyan Academy.",
+      'HARD TOPIC LIMIT: Answer ONLY questions about Mathematics, Physics, and general Science (e.g., Chemistry, Biology, Astronomy).',
+      'If the question is outside these topics (e.g., politics, law, medicine, personal advice, programming, business, crypto, etc.), politely refuse and suggest asking a math/physics/science question or contacting the academy.',
+      'Respond in a friendly, clear, step-by-step educational manner.',
+    ].join('\n'),
+  };
+
+  return prompts[lang] || prompts.en;
+}
 
 // Middleware
 // Allow requests from your public site to your API subdomain (CORS).
@@ -45,7 +71,8 @@ app.get('/health', (req, res) => {
 // Chat endpoint
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, conversationHistory, systemPrompt } = req.body;
+    const { message, conversationHistory, systemPrompt, lang } = req.body;
+    const resolvedLang = typeof lang === 'string' ? lang : 'en';
 
     // Validate input
     if (!message || !systemPrompt) {
@@ -66,8 +93,12 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Prepare messages for OpenAI
+    // Enforce a server-side topic policy (cannot be overridden by client input).
+    const policyPrompt = getTopicPolicyPrompt(resolvedLang);
+    const mergedSystemPrompt = `${policyPrompt}\n\n${systemPrompt}`;
+
     const messages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: mergedSystemPrompt },
       ...(conversationHistory || []).map((msg) => ({
         role: msg.role === 'assistant' ? 'assistant' : 'user',
         content: msg.content,
@@ -83,7 +114,7 @@ app.post('/api/chat', async (req, res) => {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: OPENAI_MODEL,
         messages,
         temperature: 0.7,
         max_tokens: 500,
