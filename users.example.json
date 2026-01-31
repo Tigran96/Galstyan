@@ -1,0 +1,10 @@
+[
+  {
+    "username": "demo",
+    "passwordHash": "$2a$10$REPLACE_WITH_HASH_FROM_tools_make-user",
+    "role": "user",
+    "createdAt": "2026-01-25T00:00:00.000Z"
+  }
+]
+
+

@@ -6,12 +6,284 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const mysql = require('mysql2/promise');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+const AUTH_JWT_SECRET = process.env.AUTH_JWT_SECRET;
+const AUTH_TOKEN_TTL = process.env.AUTH_TOKEN_TTL || '7d';
+
+// --- MySQL (optional) ---
+// If DB env vars are set, auth + profiles will be stored in MySQL.
+const DB_HOST = process.env.DB_HOST;
+const DB_USER = process.env.DB_USER;
+const DB_PASSWORD = process.env.DB_PASSWORD;
+const DB_NAME = process.env.DB_NAME;
+const DB_PORT = process.env.DB_PORT ? Number(process.env.DB_PORT) : undefined;
+const DB_SSL = String(process.env.DB_SSL || '').toLowerCase() === 'true';
+let dbPool = null;
+
+// --- Email (SMTP) ---
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_SECURE = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';
+const SMTP_FROM = process.env.SMTP_FROM;
+const PUBLIC_SITE_URL = (process.env.PUBLIC_SITE_URL || 'https://www.galstyanacademy.com').replace(/\/+$/, '');
+
+let mailTransporter = null;
+function getMailer() {
+  if (mailTransporter) return mailTransporter;
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_FROM) return null;
+
+  mailTransporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
+    auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
+    // cPanel SMTP often uses cert chains that can fail strict validation depending on server config.
+    // This keeps delivery working on shared hosting.
+    tls: { rejectUnauthorized: false },
+  });
+
+  return mailTransporter;
+}
+
+async function sendEmail({ to, subject, text }) {
+  const mailer = getMailer();
+  if (!mailer) {
+    const err = new Error('SMTP is not configured');
+    err.code = 'SMTP_NOT_CONFIGURED';
+    throw err;
+  }
+  await mailer.sendMail({
+    from: SMTP_FROM,
+    to,
+    subject,
+    text,
+  });
+}
+
+function getDbPool() {
+  if (dbPool) return dbPool;
+  if (!DB_HOST || !DB_USER || !DB_NAME) return null;
+
+  dbPool = mysql.createPool({
+    host: DB_HOST,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    port: DB_PORT,
+    waitForConnections: true,
+    connectionLimit: 5,
+    enableKeepAlive: true,
+    ssl: DB_SSL ? { rejectUnauthorized: false } : undefined,
+  });
+
+  return dbPool;
+}
+
+async function dbFindUserByLogin(login) {
+  const pool = getDbPool();
+  if (!pool) return null;
+  const [rows] = await pool.query(
+    'SELECT id, username, email, password_hash AS passwordHash, role FROM users WHERE LOWER(username)=LOWER(?) OR LOWER(email)=LOWER(?) LIMIT 1',
+    [String(login), String(login)]
+  );
+  return rows && rows[0] ? rows[0] : null;
+}
+
+async function dbFindUserByEmail(email) {
+  const pool = getDbPool();
+  if (!pool) return null;
+  const [rows] = await pool.query(
+    `
+      SELECT
+        u.id,
+        u.username,
+        u.email,
+        u.password_hash AS passwordHash,
+        u.role
+      FROM users u
+      LEFT JOIN profiles p ON p.user_id = u.id
+      WHERE LOWER(COALESCE(u.email, p.email)) = LOWER(?)
+      LIMIT 1
+    `,
+    [String(email)]
+  );
+  return rows && rows[0] ? rows[0] : null;
+}
+
+async function dbCreatePasswordReset(userId) {
+  const pool = getDbPool();
+  if (!pool) return null;
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  // 60 minutes expiry
+  await pool.query(
+    'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 60 MINUTE))',
+    [userId, tokenHash]
+  );
+  return token;
+}
+
+async function dbConsumePasswordReset(token, newPasswordHash) {
+  const pool = getDbPool();
+  if (!pool) return { ok: false, reason: 'NO_DB' };
+  const tokenHash = crypto.createHash('sha256').update(String(token)).digest('hex');
+
+  const [rows] = await pool.query(
+    `
+      SELECT id, user_id AS userId, expires_at AS expiresAt, used_at AS usedAt
+      FROM password_resets
+      WHERE token_hash = ?
+      LIMIT 1
+    `,
+    [tokenHash]
+  );
+  if (!rows || !rows[0]) return { ok: false, reason: 'NOT_FOUND' };
+  const row = rows[0];
+  if (row.usedAt) return { ok: false, reason: 'USED' };
+
+  // expiresAt is a Date (mysql2) or string depending on config
+  const expires = new Date(row.expiresAt);
+  if (Number.isNaN(expires.getTime()) || expires.getTime() < Date.now()) {
+    return { ok: false, reason: 'EXPIRED' };
+  }
+
+  // mark used + update password in a transaction
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query('UPDATE users SET password_hash = ? WHERE id = ?', [newPasswordHash, row.userId]);
+    await conn.query('UPDATE password_resets SET used_at = NOW() WHERE id = ?', [row.id]);
+    await conn.commit();
+    return { ok: true, userId: row.userId };
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+async function dbEnsureProfile(userId) {
+  const pool = getDbPool();
+  if (!pool) return;
+  await pool.query('INSERT IGNORE INTO profiles (user_id) VALUES (?)', [userId]);
+}
+
+async function dbGetProfile(userId) {
+  const pool = getDbPool();
+  if (!pool) return null;
+  const [rows] = await pool.query(
+    `
+      SELECT
+        u.id AS userId,
+        u.username,
+        u.role,
+        u.email AS userEmail,
+        p.first_name AS firstName,
+        p.last_name AS lastName,
+        p.age,
+        p.full_name AS fullName,
+        p.email,
+        p.phone,
+        p.grade,
+        p.updated_at AS updatedAt
+      FROM users u
+      LEFT JOIN profiles p ON p.user_id = u.id
+      WHERE u.id = ?
+      LIMIT 1
+    `,
+    [userId]
+  );
+  return rows && rows[0] ? rows[0] : null;
+}
+
+async function dbUpdateProfile(userId, patch) {
+  const pool = getDbPool();
+  if (!pool) return null;
+  await dbEnsureProfile(userId);
+
+  const firstName = patch.firstName ?? null;
+  const lastName = patch.lastName ?? null;
+  const age = patch.age ?? null;
+  const fullName = patch.fullName ?? null;
+  const email = patch.email ?? null;
+  const phone = patch.phone ?? null;
+  const grade = patch.grade ?? null;
+
+  await pool.query(
+    `
+      UPDATE profiles
+      SET first_name = ?, last_name = ?, age = ?, full_name = ?, email = ?, phone = ?, grade = ?, updated_at = NOW()
+      WHERE user_id = ?
+    `,
+    [firstName, lastName, age, fullName, email, phone, grade, userId]
+  );
+
+  return dbGetProfile(userId);
+}
+
+function loadUsers() {
+  // Option 1: provide users from env (useful on cPanel without editing files)
+  if (process.env.AUTH_USERS_JSON) {
+    try {
+      const parsed = JSON.parse(process.env.AUTH_USERS_JSON);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      console.error('Failed to parse AUTH_USERS_JSON:', e.message);
+    }
+  }
+
+  // Option 2: read from users.json in the app root
+  const usersPath = path.join(__dirname, 'users.json');
+  try {
+    if (!fs.existsSync(usersPath)) return [];
+    const raw = fs.readFileSync(usersPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error('Failed to load users.json:', e.message);
+    return [];
+  }
+}
+
+function signToken(payload) {
+  if (!AUTH_JWT_SECRET) {
+    throw new Error('AUTH_JWT_SECRET is not set');
+  }
+  return jwt.sign(payload, AUTH_JWT_SECRET, { expiresIn: AUTH_TOKEN_TTL });
+}
+
+function requireAuth(req, res, next) {
+  try {
+    const header = req.headers.authorization || '';
+    const [type, token] = header.split(' ');
+    if (type !== 'Bearer' || !token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (!AUTH_JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+    const decoded = jwt.verify(token, AUTH_JWT_SECRET);
+    req.user = decoded;
+    return next();
+  } catch (e) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+}
 
 function getTopicPolicyPrompt(lang = 'en') {
   const prompts = {
@@ -66,6 +338,387 @@ app.use(express.json());
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Chat API is running' });
+});
+
+// Quick DB connectivity check (safe: does not reveal passwords)
+app.get('/api/db/ping', (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) {
+        return res.status(400).json({
+          ok: false,
+          configured: false,
+          missing: {
+            DB_HOST: !DB_HOST,
+            DB_USER: !DB_USER,
+            DB_NAME: !DB_NAME,
+          },
+        });
+      }
+      await pool.query('SELECT 1');
+      return res.json({ ok: true, configured: true });
+    } catch (e) {
+      return res.status(500).json({
+        ok: false,
+        configured: true,
+        error: 'DB connection failed',
+        code: e.code || null,
+      });
+    }
+  })();
+});
+
+// Quick SMTP config check (safe: does not reveal passwords)
+app.get('/api/email/ping', (req, res) => {
+  const missing = {
+    SMTP_HOST: !SMTP_HOST,
+    SMTP_PORT: !SMTP_PORT,
+    SMTP_FROM: !SMTP_FROM,
+  };
+  const configured = !missing.SMTP_HOST && !missing.SMTP_PORT && !missing.SMTP_FROM;
+  return res.json({ ok: configured, configured, missing });
+});
+
+// Send a test email (protected by a shared key to avoid abuse)
+app.post('/api/email/test', (req, res) => {
+  (async () => {
+    try {
+      const key = process.env.EMAIL_TEST_KEY;
+      if (!key) return res.status(404).json({ error: 'Not found' });
+      if (req.headers['x-email-test-key'] !== key) return res.status(401).json({ error: 'Unauthorized' });
+
+      const to = (req.body && req.body.to) || SMTP_USER || SMTP_FROM;
+      if (!to) return res.status(400).json({ error: 'Missing to' });
+
+      await sendEmail({
+        to,
+        subject: 'SMTP test - Galstyan Academy',
+        text: `SMTP test email sent at ${new Date().toISOString()}`,
+      });
+      return res.json({ ok: true });
+    } catch (e) {
+      return res.status(500).json({
+        ok: false,
+        error: 'SMTP send failed',
+        code: e.code || null,
+        message: e.message || null,
+      });
+    }
+  })();
+});
+
+// --- Auth ---
+app.post('/api/auth/login', (req, res) => {
+  (async () => {
+    try {
+      const { username, password } = req.body || {};
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Missing username or password' });
+      }
+
+      // Prefer MySQL if configured; otherwise fall back to env/users.json
+      const dbUser = await dbFindUserByLogin(username);
+      if (dbUser) {
+        const ok = bcrypt.compareSync(String(password), String(dbUser.passwordHash));
+        if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+
+        await dbEnsureProfile(dbUser.id);
+        const token = signToken({ sub: dbUser.id, username: dbUser.username, email: dbUser.email || null, role: dbUser.role || 'user' });
+        return res.json({
+          token,
+          user: { id: dbUser.id, username: dbUser.username, email: dbUser.email || null, role: dbUser.role || 'user' },
+        });
+      }
+
+      const users = loadUsers();
+      const user = users.find(
+        (u) => (u.username || '').toLowerCase() === String(username).toLowerCase()
+      );
+      if (!user || !user.passwordHash) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      const ok = bcrypt.compareSync(String(password), String(user.passwordHash));
+      if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+
+      const token = signToken({ sub: user.username, role: user.role || 'user' });
+      return res.json({
+        token,
+        user: { username: user.username, role: user.role || 'user' },
+      });
+    } catch (e) {
+      console.error('Login error:', e.message);
+      return res.status(500).json({ error: 'Failed to login' });
+    }
+  })();
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+  // If JWT was issued from MySQL login, it contains numeric sub + username.
+  if (typeof req.user?.sub === 'number') {
+    return res.json({
+      user: { id: req.user.sub, username: req.user.username, email: req.user.email || null, role: req.user.role || 'user' },
+    });
+  }
+  return res.json({ user: { username: req.user.sub, role: req.user.role || 'user' } });
+});
+
+app.post('/api/auth/signup', (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const { firstName, lastName, email, age, password, passwordConfirm } = req.body || {};
+
+      if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const emailNorm = String(email).trim().toLowerCase();
+      const ageNum = age === undefined || age === null || age === '' ? null : Number(age);
+      if (ageNum !== null && (!Number.isFinite(ageNum) || ageNum < 5 || ageNum > 120)) {
+        return res.status(400).json({ error: 'Invalid age' });
+      }
+
+      if (String(password).length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+      }
+      if (passwordConfirm !== undefined && String(passwordConfirm) !== String(password)) {
+        return res.status(400).json({ error: 'Passwords do not match' });
+      }
+
+      // Check duplicates
+      const [existing] = await pool.query('SELECT id FROM users WHERE LOWER(email)=LOWER(?) LIMIT 1', [
+        emailNorm,
+      ]);
+      if (existing && existing[0]) {
+        return res.status(409).json({ error: 'Email already exists' });
+      }
+
+      // Create a username from email (must be unique)
+      let baseUsername = emailNorm.split('@')[0].replace(/[^a-z0-9._-]/g, '');
+      if (!baseUsername) baseUsername = 'user';
+      baseUsername = baseUsername.slice(0, 50);
+      let username = baseUsername;
+      for (let i = 0; i < 5; i++) {
+        const [u] = await pool.query('SELECT id FROM users WHERE username = ? LIMIT 1', [username]);
+        if (!u || !u[0]) break;
+        username = `${baseUsername}${Math.floor(Math.random() * 9000 + 1000)}`;
+      }
+
+      const passwordHash = bcrypt.hashSync(String(password), 10);
+
+      const [result] = await pool.query(
+        'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+        [username, emailNorm, passwordHash, 'user']
+      );
+      const userId = result.insertId;
+
+      await pool.query(
+        `
+          INSERT INTO profiles (user_id, first_name, last_name, age, email, full_name, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, NOW())
+        `,
+        [
+          userId,
+          String(firstName).trim(),
+          String(lastName).trim(),
+          ageNum,
+          emailNorm,
+          `${String(firstName).trim()} ${String(lastName).trim()}`.trim(),
+        ]
+      );
+
+      const token = signToken({ sub: userId, username, email: emailNorm, role: 'user' });
+
+      // Best-effort welcome email (does not block signup if SMTP is missing)
+      try {
+        await sendEmail({
+          to: emailNorm,
+          subject: 'Welcome to Galstyan Academy',
+          text:
+            `Hello ${String(firstName).trim()} ${String(lastName).trim()},\n\n` +
+            `Your account has been created successfully.\n\n` +
+            `You can sign in at: ${PUBLIC_SITE_URL}\n\n` +
+            `If you did not create this account, you can ignore this email.\n`,
+        });
+      } catch (e) {
+        console.warn('Welcome email not sent:', e.code || e.message);
+      }
+
+      return res.json({
+        token,
+        user: { id: userId, username, email: emailNorm, role: 'user' },
+      });
+    } catch (e) {
+      console.error('Signup error:', e.message);
+      // Duplicate key fallback
+      if (String(e.code || '').includes('ER_DUP_ENTRY')) {
+        return res.status(409).json({ error: 'User already exists' });
+      }
+      // Common MySQL errors -> give actionable hints (no secrets).
+      if (e.code === 'ER_NO_SUCH_TABLE') {
+        return res.status(500).json({
+          error: 'Database tables are missing',
+          hint: 'Run mysql/schema.sql in phpMyAdmin for this database.',
+        });
+      }
+      if (e.code === 'ER_BAD_FIELD_ERROR') {
+        return res.status(500).json({
+          error: 'Database schema is out of date',
+          hint: 'Run mysql/migrate-add-profile-fields.sql (and schema migrations) in phpMyAdmin.',
+        });
+      }
+      if (e.code === 'ER_ACCESS_DENIED_ERROR') {
+        return res.status(500).json({
+          error: 'Database access denied',
+          hint: 'Check DB_USER/DB_PASSWORD and that the MySQL user is added to the DB with ALL PRIVILEGES.',
+        });
+      }
+      if (e.code === 'ER_DBACCESS_DENIED_ERROR' || e.code === 'ER_TABLEACCESS_DENIED_ERROR') {
+        return res.status(500).json({
+          error: 'Database permission denied',
+          hint: 'Add the MySQL user to the database with ALL PRIVILEGES in cPanel → MySQL Databases.',
+        });
+      }
+      return res.status(500).json({
+        error: 'Failed to signup',
+        code: e.code || null,
+      });
+    }
+  })();
+});
+
+// Forgot password (send reset email)
+app.post('/api/auth/forgot', (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const { email } = req.body || {};
+      if (!email) return res.status(400).json({ error: 'Missing email' });
+
+      // Always respond OK to avoid email enumeration
+      const user = await dbFindUserByEmail(String(email).trim().toLowerCase());
+      if (!user) return res.json({ ok: true });
+
+      const token = await dbCreatePasswordReset(user.id);
+      const resetLink = `${PUBLIC_SITE_URL}/?reset=${encodeURIComponent(token)}`;
+
+      await sendEmail({
+        to: user.email,
+        subject: 'Password reset',
+        text:
+          `We received a request to reset your password.\n\n` +
+          `Reset link (valid for 60 minutes):\n${resetLink}\n\n` +
+          `If you did not request this, ignore this email.\n`,
+      });
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Forgot password error:', e.code || e.message);
+      if (e.code === 'SMTP_NOT_CONFIGURED') {
+        return res.status(500).json({
+          error: 'Email is not configured on server',
+          hint: 'Set SMTP_HOST/SMTP_PORT/SMTP_FROM (and SMTP_USER/SMTP_PASS if needed) in cPanel env vars.',
+        });
+      }
+      if (e.code === 'ER_NO_SUCH_TABLE') {
+        return res.status(500).json({
+          error: 'Password reset table is missing',
+          hint: 'Run mysql/password-resets.sql in phpMyAdmin for this database.',
+          code: e.code,
+        });
+      }
+      if (e.code === 'EAUTH') {
+        return res.status(500).json({
+          error: 'SMTP authentication failed',
+          hint: 'Check SMTP_USER/SMTP_PASS and ensure SMTP_PORT matches SMTP_SECURE (465=true, 587=false).',
+          code: e.code,
+        });
+      }
+      return res.status(500).json({
+        error: 'Failed to send reset email',
+        code: e.code || null,
+        message: e.message || null,
+      });
+    }
+  })();
+});
+
+// Reset password (token + new password)
+app.post('/api/auth/reset', (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const { token, password, passwordConfirm } = req.body || {};
+      if (!token || !password) return res.status(400).json({ error: 'Missing token or password' });
+      if (String(password).length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+      if (passwordConfirm !== undefined && String(passwordConfirm) !== String(password)) {
+        return res.status(400).json({ error: 'Passwords do not match' });
+      }
+
+      const newHash = bcrypt.hashSync(String(password), 10);
+      const result = await dbConsumePasswordReset(token, newHash);
+      if (!result.ok) {
+        const map = {
+          NOT_FOUND: 'Invalid reset link',
+          USED: 'Reset link already used',
+          EXPIRED: 'Reset link expired',
+        };
+        return res.status(400).json({ error: map[result.reason] || 'Invalid reset link' });
+      }
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Reset password error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to reset password', code: e.code || null });
+    }
+  })();
+});
+
+// --- Profile (MySQL) ---
+app.get('/api/profile/me', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const userId = typeof req.user?.sub === 'number' ? req.user.sub : null;
+      if (!userId) return res.status(400).json({ error: 'Invalid token for MySQL profile' });
+
+      await dbEnsureProfile(userId);
+      const profile = await dbGetProfile(userId);
+      return res.json({ profile });
+    } catch (e) {
+      console.error('Profile get error:', e.message);
+      return res.status(500).json({ error: 'Failed to load profile' });
+    }
+  })();
+});
+
+app.post('/api/profile/me', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const userId = typeof req.user?.sub === 'number' ? req.user.sub : null;
+      if (!userId) return res.status(400).json({ error: 'Invalid token for MySQL profile' });
+
+      const { firstName, lastName, age, fullName, email, phone, grade } = req.body || {};
+      const updated = await dbUpdateProfile(userId, { firstName, lastName, age, fullName, email, phone, grade });
+      return res.json({ profile: updated });
+    } catch (e) {
+      console.error('Profile update error:', e.message);
+      return res.status(500).json({ error: 'Failed to update profile' });
+    }
+  })();
 });
 
 // Chat endpoint

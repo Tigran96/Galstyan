@@ -16,9 +16,15 @@ import { Card } from './components/Card';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { Chat } from './components/Chat';
 import { ChatButton } from './components/ChatButton';
+import { LoginPage } from './components/LoginPage';
+import { DashboardPage } from './components/DashboardPage';
+import { SignUpPage } from './components/SignUpPage';
+import { ForgotPasswordPage } from './components/ForgotPasswordPage';
+import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { trackContactClick, trackPageView } from './utils/analytics';
 import { detectUserLanguage, isLocationDetectionSupported } from './utils/locationService';
 import { Helmet } from "react-helmet-async";
+import { getMe } from './services/authService';
 
 const CONFIG = {
   businessName: {
@@ -384,6 +390,69 @@ const I18N = {
       close: "Փակել",
       errorMessage: "Ներեցեք, տեխնիկական խնդիր է առաջացել: Խնդրում ենք փորձել ավելի ուշ կամ կապ հաստատել մեզ հետ ուղղակիորեն:",
     },
+    auth: {
+      loginNav: "Մուտք",
+      signupNav: "Գրանցվել",
+      loginTitle: "Մուտք գործել",
+      loginSubtitle: "Մուտք գործեք՝ ձեր անձնական էջը տեսնելու համար։",
+      username: "Օգտանուն կամ էլ․փոստ",
+      password: "Գաղտնաբառ",
+      login: "Մուտք",
+      loggingIn: "Մուտք...",
+      back: "Հետ",
+      loginError: "Մուտքը ձախողվեց։",
+      noAccount: "Չունե՞ք էջ։ Գրանցվեք",
+      haveAccount: "Ունե՞ք էջ։ Մուտք",
+      signupTitle: "Գրանցվել",
+      signupSubtitle: "Լրացրեք տվյալները՝ անձնական էջ ստեղծելու համար։",
+      firstName: "Անուն",
+      lastName: "Ազգանուն",
+      email: "Էլ-փոստ",
+      age: "Տարիք",
+      signup: "Գրանցվել",
+      signingUp: "Գրանցվում է...",
+      signupError: "Գրանցումը ձախողվեց։",
+      passwordHint: "Գաղտնաբառը՝ առնվազն 6 նիշ։",
+      repeatPassword: "Կրկնել գաղտնաբառը",
+      passwordsNoMatch: "Գաղտնաբառերը չեն համընկնում։",
+      forgot: "Մոռացել եք գաղտնաբառը՞",
+      forgotTitle: "Վերականգնել գաղտնաբառը",
+      forgotSubtitle: "Մուտքագրեք ձեր էլ․փոստը․ մենք կուղարկենք վերականգնման հղումը։",
+      sendReset: "Ուղարկել հղումը",
+      sending: "Ուղարկվում է...",
+      forgotSent: "Եթե այդ էլ․փոստով հաշիվ կա՝ մենք ուղարկեցինք վերականգնման հղումը։",
+      forgotError: "Չհաջողվեց ուղարկել նամակը։",
+      signIn: "Մուտք",
+      resetTitle: "Նոր գաղտնաբառ",
+      resetSubtitle: "Մուտքագրեք նոր գաղտնաբառը։",
+      resetBtn: "Փոխել գաղտնաբառը",
+      saving: "Պահպանվում է...",
+      resetOk: "Գաղտնաբառը փոխվեց։ Կարող եք մուտք գործել։",
+      resetError: "Չհաջողվեց փոխել գաղտնաբառը։",
+      resetMissingToken: "Վերականգնման հղումը անվավեր է։",
+    },
+    private: {
+      dashboardNav: "Անձնական էջ",
+      logoutNav: "Ելք",
+      title: "Անձնական էջ",
+      welcome: "Բարի գալուստ՝",
+      home: "Գլխավոր",
+      logout: "Ելք",
+      profileTitle: "Պրոֆիլ",
+      loading: "Բեռնվում է…",
+      fullName: "Ամբողջ անունը",
+      email: "Էլ-փոստ",
+      phone: "Հեռախոս",
+      grade: "Դասարան",
+      save: "Պահպանել",
+      saving: "Պահպանվում է…",
+      saved: "Պահպանվեց",
+      lastUpdated: "Վերջին թարմացումը՝",
+      card1Title: "Նյութեր (շուտով)",
+      card1Body: "Այստեղ կհայտնվեն ձեր փակ նյութերը, ֆայլերը և հղումները։",
+      card2Title: "Առաջադրանքներ (շուտով)",
+      card2Body: "Այստեղ կհայտնվեն առաջադրանքներ և առաջընթացի տվյալներ։",
+    },
     footer: {
       links: { enroll: "Գրանցվել", faq: "ՀՏՀ", pricing: "Գնացուցակ" },
       rights: "Բոլոր իրավունքները պաշտպանված են",
@@ -573,6 +642,69 @@ const I18N = {
       clear: "Clear",
       close: "Close",
       errorMessage: "Sorry, there was a technical issue. Please try again later or contact us directly.",
+    },
+    auth: {
+      loginNav: "Login",
+      signupNav: "Sign up",
+      loginTitle: "Sign in",
+      loginSubtitle: "Sign in to access your private page.",
+      username: "Username or email",
+      password: "Password",
+      login: "Login",
+      loggingIn: "Logging in...",
+      back: "Back",
+      loginError: "Login failed.",
+      noAccount: "No account? Sign up",
+      haveAccount: "Already have an account? Sign in",
+      signupTitle: "Create account",
+      signupSubtitle: "Fill the form to create your private page.",
+      firstName: "Name",
+      lastName: "Surname",
+      email: "Email",
+      age: "Age",
+      signup: "Sign up",
+      signingUp: "Signing up...",
+      signupError: "Sign up failed.",
+      passwordHint: "Password must be at least 6 characters.",
+      repeatPassword: "Repeat password",
+      passwordsNoMatch: "Passwords do not match.",
+      forgot: "Forgot password?",
+      forgotTitle: "Reset your password",
+      forgotSubtitle: "Enter your email and we’ll send you a reset link.",
+      sendReset: "Send reset link",
+      sending: "Sending...",
+      forgotSent: "If an account exists for that email, we sent a reset link.",
+      forgotError: "Failed to send reset email.",
+      signIn: "Sign in",
+      resetTitle: "New password",
+      resetSubtitle: "Enter your new password.",
+      resetBtn: "Reset password",
+      saving: "Saving...",
+      resetOk: "Password updated. You can sign in now.",
+      resetError: "Failed to reset password.",
+      resetMissingToken: "Reset link is invalid.",
+    },
+    private: {
+      dashboardNav: "Dashboard",
+      logoutNav: "Logout",
+      title: "Private Dashboard",
+      welcome: "Welcome,",
+      home: "Home",
+      logout: "Logout",
+      profileTitle: "Profile",
+      loading: "Loading…",
+      fullName: "Full name",
+      email: "Email",
+      phone: "Phone",
+      grade: "Grade",
+      save: "Save",
+      saving: "Saving…",
+      saved: "Saved",
+      lastUpdated: "Last updated:",
+      card1Title: "Resources (coming soon)",
+      card1Body: "Your private materials, files, and links will appear here.",
+      card2Title: "Assignments (coming soon)",
+      card2Body: "Assignments and progress tracking will appear here.",
     },
     footer: {
       links: { enroll: "Enroll", faq: "FAQ", pricing: "Pricing" },
@@ -764,6 +896,69 @@ const I18N = {
       close: "Закрыть",
       errorMessage: "Извините, произошла техническая ошибка. Пожалуйста, попробуйте позже или свяжитесь с нами напрямую.",
     },
+    auth: {
+      loginNav: "Вход",
+      signupNav: "Регистрация",
+      loginTitle: "Войти",
+      loginSubtitle: "Войдите, чтобы открыть личную страницу.",
+      username: "Логин или email",
+      password: "Пароль",
+      login: "Войти",
+      loggingIn: "Вход...",
+      back: "Назад",
+      loginError: "Ошибка входа.",
+      noAccount: "Нет аккаунта? Зарегистрироваться",
+      haveAccount: "Уже есть аккаунт? Войти",
+      signupTitle: "Регистрация",
+      signupSubtitle: "Заполните данные, чтобы создать личную страницу.",
+      firstName: "Имя",
+      lastName: "Фамилия",
+      email: "Email",
+      age: "Возраст",
+      signup: "Зарегистрироваться",
+      signingUp: "Регистрация...",
+      signupError: "Ошибка регистрации.",
+      passwordHint: "Пароль минимум 6 символов.",
+      repeatPassword: "Повторите пароль",
+      passwordsNoMatch: "Пароли не совпадают.",
+      forgot: "Забыли пароль?",
+      forgotTitle: "Сброс пароля",
+      forgotSubtitle: "Введите email — мы отправим ссылку для сброса.",
+      sendReset: "Отправить ссылку",
+      sending: "Отправка...",
+      forgotSent: "Если аккаунт существует, мы отправили ссылку для сброса.",
+      forgotError: "Не удалось отправить письмо.",
+      signIn: "Вход",
+      resetTitle: "Новый пароль",
+      resetSubtitle: "Введите новый пароль.",
+      resetBtn: "Сменить пароль",
+      saving: "Сохранение...",
+      resetOk: "Пароль обновлён. Теперь вы можете войти.",
+      resetError: "Не удалось сменить пароль.",
+      resetMissingToken: "Ссылка для сброса недействительна.",
+    },
+    private: {
+      dashboardNav: "Личный кабинет",
+      logoutNav: "Выход",
+      title: "Личный кабинет",
+      welcome: "Добро пожаловать,",
+      home: "Главная",
+      logout: "Выход",
+      profileTitle: "Профиль",
+      loading: "Загрузка…",
+      fullName: "Полное имя",
+      email: "Email",
+      phone: "Телефон",
+      grade: "Класс",
+      save: "Сохранить",
+      saving: "Сохранение…",
+      saved: "Сохранено",
+      lastUpdated: "Последнее обновление:",
+      card1Title: "Материалы (скоро)",
+      card1Body: "Здесь появятся ваши закрытые материалы, файлы и ссылки.",
+      card2Title: "Задания (скоро)",
+      card2Body: "Здесь появятся задания и отслеживание прогресса.",
+    },
     footer: {
       links: { enroll: "Запись", faq: "Вопросы", pricing: "Цены" },
       rights: "Все права защищены",
@@ -876,6 +1071,45 @@ export default function LandingPage() {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
+  const [authUser, setAuthUser] = useState(null);
+  const [resetToken, setResetToken] = useState(null);
+
+  // Load token from localStorage and validate it.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = window.localStorage.getItem('authToken');
+    if (!token) return;
+    setAuthToken(token);
+    getMe(token)
+      .then((data) => {
+        setAuthUser(data.user || null);
+      })
+      .catch(() => {
+        window.localStorage.removeItem('authToken');
+        setAuthToken(null);
+        setAuthUser(null);
+      });
+  }, []);
+
+  // If user opens site with ?reset=TOKEN, show reset password page.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('reset');
+    if (token) {
+      setResetToken(token);
+      setCurrentPage('reset');
+    }
+  }, []);
+
+  // Listen for LoginPage "forgot password" navigation event.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => setCurrentPage('forgot');
+    window.addEventListener('nav:forgot', handler);
+    return () => window.removeEventListener('nav:forgot', handler);
+  }, []);
 
   useEffect(() => {
     const initializeLanguage = async () => {
@@ -965,6 +1199,22 @@ export default function LandingPage() {
     return <LoadingSpinner CONFIG={CONFIG} lang={lang} />;
   }
 
+  const isAuthed = Boolean(authToken && authUser);
+
+  const goDashboard = () => {
+    if (!isAuthed) return setCurrentPage('login');
+    return setCurrentPage('dashboard');
+  };
+
+  const logout = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('authToken');
+    }
+    setAuthToken(null);
+    setAuthUser(null);
+    setCurrentPage('home');
+  };
+
   if (currentPage === 'enroll') {
     return (
       <Fragment>
@@ -992,6 +1242,101 @@ export default function LandingPage() {
     );
   }
 
+  if (currentPage === 'login') {
+    return (
+      <LoginPage
+        t={t}
+        onBack={() => setCurrentPage('home')}
+        onSignUpClick={() => setCurrentPage('signup')}
+        onLoginSuccess={({ token, user }) => {
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('authToken', token);
+          }
+          setAuthToken(token);
+          setAuthUser(user);
+          setCurrentPage('dashboard');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'signup') {
+    return (
+      <SignUpPage
+        t={t}
+        onBack={() => setCurrentPage('home')}
+        onSignInClick={() => setCurrentPage('login')}
+        onSignupSuccess={({ token, user }) => {
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('authToken', token);
+          }
+          setAuthToken(token);
+          setAuthUser(user);
+          setCurrentPage('dashboard');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'forgot') {
+    return (
+      <ForgotPasswordPage
+        t={t}
+        onBack={() => setCurrentPage('login')}
+        onSignInClick={() => setCurrentPage('login')}
+      />
+    );
+  }
+
+  if (currentPage === 'reset') {
+    return (
+      <ResetPasswordPage
+        t={t}
+        token={resetToken}
+        onBackToSignIn={() => {
+          setResetToken(null);
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('reset');
+            window.history.replaceState({}, '', url.toString());
+          }
+          setCurrentPage('login');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'dashboard') {
+    if (!isAuthed) {
+      return (
+        <LoginPage
+          t={t}
+          onBack={() => setCurrentPage('home')}
+          onSignUpClick={() => setCurrentPage('signup')}
+          onLoginSuccess={({ token, user }) => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('authToken', token);
+            }
+            setAuthToken(token);
+            setAuthUser(user);
+            setCurrentPage('dashboard');
+          }}
+        />
+      );
+    }
+    return (
+      <DashboardPage
+        t={t}
+        user={authUser}
+        token={authToken}
+        lang={lang}
+        setLang={setLang}
+        onLogout={logout}
+        onBackHome={() => setCurrentPage('home')}
+      />
+    );
+  }
+
   return (
     <Fragment>
 <SEO lang={lang} />
@@ -1000,7 +1345,18 @@ export default function LandingPage() {
     <div className={`min-h-screen ${CONFIG.color.bg} ${CONFIG.color.text} antialiased`}>
 
       {/* Header */}
-      <Header lang={lang} setLang={setLang} t={t} CONFIG={CONFIG} />
+      <Header
+        lang={lang}
+        setLang={setLang}
+        t={t}
+        CONFIG={CONFIG}
+        isAuthed={isAuthed}
+        user={authUser}
+        onLoginClick={() => setCurrentPage('login')}
+        onSignUpClick={() => setCurrentPage('signup')}
+        onDashboardClick={goDashboard}
+        onLogout={logout}
+      />
 
       {/* Hero */}
       <Hero t={t} CONFIG={CONFIG} lang={lang} />
