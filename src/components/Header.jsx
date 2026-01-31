@@ -8,6 +8,7 @@ export const Header = ({
   CONFIG,
   isAuthed,
   user,
+  onForumClick,
   onLoginClick,
   onSignUpClick,
   onDashboardClick,
@@ -29,6 +30,13 @@ export const Header = ({
         <NavLink href="#pricing">{t("nav.pricing")}</NavLink>
         <NavLink href="#faq">{t("nav.faq")}</NavLink>
         <NavLink href="#contact">{t("nav.contact")}</NavLink>
+        <button
+          type="button"
+          onClick={onForumClick}
+          className="px-3 py-2 text-sm text-sky-200 hover:text-white hover:bg-white/5 rounded-lg transition-colors whitespace-nowrap"
+        >
+          {t("nav.forum")}
+        </button>
       </nav>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 mr-2">
@@ -37,7 +45,7 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onDashboardClick}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-sky-100 hover:bg-white/10 transition-colors"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-sky-100 hover:bg-white/10 transition-colors whitespace-nowrap"
                 title={user?.username || ''}
               >
                 {t('private.dashboardNav')}
@@ -45,7 +53,7 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="rounded-lg bg-red-500/20 border border-red-500/30 px-3 py-2 text-sm text-red-100 hover:bg-red-500/25 transition-colors"
+                className="rounded-lg bg-red-500/20 border border-red-500/30 px-3 py-2 text-sm text-red-100 hover:bg-red-500/25 transition-colors whitespace-nowrap"
               >
                 {t('private.logoutNav')}
               </button>
@@ -55,14 +63,14 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onLoginClick}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-sky-100 hover:bg-white/10 transition-colors"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-sky-100 hover:bg-white/10 transition-colors whitespace-nowrap"
               >
                 {t('auth.loginNav')}
               </button>
               <button
                 type="button"
                 onClick={onSignUpClick}
-                className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-3 py-2 text-sm hover:opacity-95 transition-opacity"
+                className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-3 py-2 text-sm hover:opacity-95 transition-opacity whitespace-nowrap"
               >
                 {t('auth.signupNav')}
               </button>

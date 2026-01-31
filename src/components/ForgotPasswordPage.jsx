@@ -4,17 +4,32 @@ import { forgotPassword } from '../services/authService';
 export function ForgotPasswordPage({ t, onBack, onSignInClick }) {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState({ error: '', sent: false, hint: '' });
+  const [status, setStatus] = useState({ error: '', sent: false, hint: '', sentTo: '' });
 
   const submit = async (e) => {
     e.preventDefault();
-    setStatus({ error: '', sent: false, hint: '' });
+    setStatus({ error: '', sent: false, hint: '', sentTo: '' });
     setIsSubmitting(true);
     try {
-      await forgotPassword(email);
-      setStatus({ error: '', sent: true, hint: '' });
+      const res = await forgotPassword(email);
+      // If backend allows enumeration, it may return exists=false
+      if (res && res.exists === false) {
+        setStatus({ error: t('auth.emailNotFound'), sent: false, hint: '', sentTo: '' });
+      } else {
+        setStatus({
+          error: '',
+          sent: true,
+          hint: '',
+          sentTo: res && res.exists === true ? String(email).trim() : '',
+        });
+      }
     } catch (err) {
-      setStatus({ error: err.message || t('auth.forgotError'), sent: false, hint: err.hint || '' });
+      setStatus({
+        error: err.message || t('auth.forgotError'),
+        sent: false,
+        hint: err.hint || '',
+        sentTo: '',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -46,7 +61,13 @@ export function ForgotPasswordPage({ t, onBack, onSignInClick }) {
 
           {status.sent ? (
             <div className="mt-4 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-100">
-              {t('auth.forgotSent')}
+              {status.sentTo ? (
+                <>
+                  {t('auth.forgotSentTo')} <span className="font-semibold">{status.sentTo}</span>
+                </>
+              ) : (
+                t('auth.forgotSent')
+              )}
             </div>
           ) : null}
 

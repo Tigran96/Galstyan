@@ -21,6 +21,9 @@ import { DashboardPage } from './components/DashboardPage';
 import { SignUpPage } from './components/SignUpPage';
 import { ForgotPasswordPage } from './components/ForgotPasswordPage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
+import { ForumPage } from './components/ForumPage';
+import { ForumThreadPage } from './components/ForumThreadPage';
+import { NewThreadPage } from './components/NewThreadPage';
 import { trackContactClick, trackPageView } from './utils/analytics';
 import { detectUserLanguage, isLocationDetectionSupported } from './utils/locationService';
 import { Helmet } from "react-helmet-async";
@@ -183,6 +186,7 @@ const I18N = {
       pricing: "Գնացուցակ",
       faq: "ՀՏՀ",
       contact: "Կապ",
+      forum: "Ֆորում",
     },
     hero: {
       badge: "",
@@ -420,7 +424,9 @@ const I18N = {
       forgotSubtitle: "Մուտքագրեք ձեր էլ․փոստը․ մենք կուղարկենք վերականգնման հղումը։",
       sendReset: "Ուղարկել հղումը",
       sending: "Ուղարկվում է...",
-      forgotSent: "Եթե այդ էլ․փոստով հաշիվ կա՝ մենք ուղարկեցինք վերականգնման հղումը։",
+      forgotSent: "Վերականգնման հղումը ուղարկվեց։ Ստուգեք ձեր Inbox/Spam-ը։",
+      forgotSentTo: "Վերականգնման նամակը ուղարկվել է՝",
+      emailNotFound: "Այս էլ․փոստով հաշիվ չի գտնվել։",
       forgotError: "Չհաջողվեց ուղարկել նամակը։",
       signIn: "Մուտք",
       resetTitle: "Նոր գաղտնաբառ",
@@ -453,6 +459,33 @@ const I18N = {
       card2Title: "Առաջադրանքներ (շուտով)",
       card2Body: "Այստեղ կհայտնվեն առաջադրանքներ և առաջընթացի տվյալներ։",
     },
+    forum: {
+      title: "Ֆորում",
+      subtitle: "Ստեղծեք թեմա և քննարկեք խնդիրներ։",
+      back: "Գլխավոր",
+      newThread: "Նոր թեմա",
+      loading: "Բեռնվում է…",
+      empty: "Դեռ թեմաներ չկան։ Ստեղծեք առաջինը։",
+      by: "Հեղինակ՝",
+      replies: "Պատասխաններ",
+      backToForum: "Ֆորում",
+      replyTitle: "Պատասխանել",
+      loginToReply: "Պատասխանելու համար անհրաժեշտ է մուտք գործել։",
+      replyPlaceholder: "Գրեք ձեր պատասխանը…",
+      sendReply: "Ուղարկել",
+      sending: "Ուղարկվում է…",
+      newThreadSubtitle: "Վերնագիր և նկարագրություն (խնդիրը)։",
+      threadTitle: "Վերնագիր",
+      threadTitlePh: "Օր․ Ինտեգրալների խնդիր",
+      threadBody: "Հաղորդագրություն",
+      threadBodyPh: "Նկարագրեք խնդիրը և ինչ փորձեցիք անել…",
+      create: "Ստեղծել",
+      creating: "Ստեղծվում է…",
+      deleteThread: "Ջնջել թեման",
+      deleting: "Ջնջվում է…",
+      deleteConfirm: "Վստա՞հ եք, որ ուզում եք ջնջել թեման (բոլոր պատասխաններով)։",
+      deleteFailed: "Չհաջողվեց ջնջել թեման։",
+    },
     footer: {
       links: { enroll: "Գրանցվել", faq: "ՀՏՀ", pricing: "Գնացուցակ" },
       rights: "Բոլոր իրավունքները պաշտպանված են",
@@ -466,6 +499,7 @@ const I18N = {
       pricing: "Pricing",
       faq: "FAQ",
       contact: "Contact",
+      forum: "Forum",
     },
     hero: {
       badge: "",
@@ -673,7 +707,9 @@ const I18N = {
       forgotSubtitle: "Enter your email and we’ll send you a reset link.",
       sendReset: "Send reset link",
       sending: "Sending...",
-      forgotSent: "If an account exists for that email, we sent a reset link.",
+      forgotSent: "Password reset email sent. Check your Inbox/Spam.",
+      forgotSentTo: "Password reset email sent to:",
+      emailNotFound: "No account found with that email.",
       forgotError: "Failed to send reset email.",
       signIn: "Sign in",
       resetTitle: "New password",
@@ -706,6 +742,33 @@ const I18N = {
       card2Title: "Assignments (coming soon)",
       card2Body: "Assignments and progress tracking will appear here.",
     },
+    forum: {
+      title: "Forum",
+      subtitle: "Create a thread and discuss problems.",
+      back: "Home",
+      newThread: "New thread",
+      loading: "Loading…",
+      empty: "No threads yet. Create the first one.",
+      by: "By",
+      replies: "Replies",
+      backToForum: "Forum",
+      replyTitle: "Reply",
+      loginToReply: "You must sign in to reply.",
+      replyPlaceholder: "Write your reply…",
+      sendReply: "Send",
+      sending: "Sending…",
+      newThreadSubtitle: "Add a title and describe the problem.",
+      threadTitle: "Title",
+      threadTitlePh: "e.g., Integral question",
+      threadBody: "Message",
+      threadBodyPh: "Describe the task and what you tried…",
+      create: "Create",
+      creating: "Creating…",
+      deleteThread: "Delete thread",
+      deleting: "Deleting…",
+      deleteConfirm: "Are you sure you want to delete this thread (and all replies)?",
+      deleteFailed: "Failed to delete thread.",
+    },
     footer: {
       links: { enroll: "Enroll", faq: "FAQ", pricing: "Pricing" },
       rights: "All rights reserved",
@@ -719,6 +782,7 @@ const I18N = {
       pricing: "Цены",
       faq: "Вопросы",
       contact: "Контакты",
+      forum: "Форум",
     },
     hero: {
       badge: "",
@@ -926,7 +990,9 @@ const I18N = {
       forgotSubtitle: "Введите email — мы отправим ссылку для сброса.",
       sendReset: "Отправить ссылку",
       sending: "Отправка...",
-      forgotSent: "Если аккаунт существует, мы отправили ссылку для сброса.",
+      forgotSent: "Письмо для сброса пароля отправлено. Проверьте Входящие/Спам.",
+      forgotSentTo: "Письмо для сброса отправлено на:",
+      emailNotFound: "Аккаунт с таким email не найден.",
       forgotError: "Не удалось отправить письмо.",
       signIn: "Вход",
       resetTitle: "Новый пароль",
@@ -958,6 +1024,33 @@ const I18N = {
       card1Body: "Здесь появятся ваши закрытые материалы, файлы и ссылки.",
       card2Title: "Задания (скоро)",
       card2Body: "Здесь появятся задания и отслеживание прогресса.",
+    },
+    forum: {
+      title: "Форум",
+      subtitle: "Создайте тему и обсуждайте задачи.",
+      back: "Главная",
+      newThread: "Новая тема",
+      loading: "Загрузка…",
+      empty: "Пока нет тем. Создайте первую.",
+      by: "Автор:",
+      replies: "Ответы",
+      backToForum: "Форум",
+      replyTitle: "Ответить",
+      loginToReply: "Чтобы ответить, нужно войти.",
+      replyPlaceholder: "Напишите ответ…",
+      sendReply: "Отправить",
+      sending: "Отправка…",
+      newThreadSubtitle: "Добавьте заголовок и опишите задачу.",
+      threadTitle: "Заголовок",
+      threadTitlePh: "Напр., задача на интегралы",
+      threadBody: "Сообщение",
+      threadBodyPh: "Опишите задачу и что вы пробовали…",
+      create: "Создать",
+      creating: "Создание…",
+      deleteThread: "Удалить тему",
+      deleting: "Удаление…",
+      deleteConfirm: "Удалить тему и все ответы?",
+      deleteFailed: "Не удалось удалить тему.",
     },
     footer: {
       links: { enroll: "Запись", faq: "Вопросы", pricing: "Цены" },
@@ -1074,6 +1167,7 @@ export default function LandingPage() {
   const [authToken, setAuthToken] = useState(null);
   const [authUser, setAuthUser] = useState(null);
   const [resetToken, setResetToken] = useState(null);
+  const [forumThreadId, setForumThreadId] = useState(null);
 
   // Load token from localStorage and validate it.
   useEffect(() => {
@@ -1306,6 +1400,58 @@ export default function LandingPage() {
     );
   }
 
+  if (currentPage === 'forum') {
+    return (
+      <ForumPage
+        t={t}
+        isAuthed={isAuthed}
+        onBack={() => setCurrentPage('home')}
+        onNewThread={(mode) => {
+          if (mode === 'login') return setCurrentPage('login');
+          return setCurrentPage('newThread');
+        }}
+        onOpenThread={(id) => {
+          setForumThreadId(id);
+          setCurrentPage('thread');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'newThread') {
+    if (!isAuthed) return setCurrentPage('login');
+    return (
+      <NewThreadPage
+        t={t}
+        token={authToken}
+        onBack={() => setCurrentPage('forum')}
+        onCreated={(id) => {
+          setForumThreadId(id);
+          setCurrentPage('thread');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'thread') {
+    if (!forumThreadId) return setCurrentPage('forum');
+    return (
+      <ForumThreadPage
+        t={t}
+        threadId={forumThreadId}
+        isAuthed={isAuthed}
+        token={authToken}
+        user={authUser}
+        onBack={() => setCurrentPage('forum')}
+        onGoLogin={() => setCurrentPage('login')}
+        onDeleted={() => {
+          setForumThreadId(null);
+          setCurrentPage('forum');
+        }}
+      />
+    );
+  }
+
   if (currentPage === 'dashboard') {
     if (!isAuthed) {
       return (
@@ -1352,6 +1498,7 @@ export default function LandingPage() {
         CONFIG={CONFIG}
         isAuthed={isAuthed}
         user={authUser}
+        onForumClick={() => setCurrentPage('forum')}
         onLoginClick={() => setCurrentPage('login')}
         onSignUpClick={() => setCurrentPage('signup')}
         onDashboardClick={goDashboard}

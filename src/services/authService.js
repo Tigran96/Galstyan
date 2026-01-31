@@ -64,7 +64,7 @@ export async function forgotPassword(email) {
     err.hint = data.hint;
     throw err;
   }
-  return data; // { ok: true }
+  return data; // { ok: true, exists?: boolean }
 }
 
 export async function resetPassword({ token, password, passwordConfirm }) {

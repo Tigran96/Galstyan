@@ -285,6 +285,23 @@ function requireAuth(req, res, next) {
   }
 }
 
+function requireMysqlUserId(req, res) {
+  const userId = typeof req.user?.sub === 'number' ? req.user.sub : null;
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return null;
+  }
+  return userId;
+}
+
+function requireAdmin(req, res) {
+  if (req.user?.role !== 'admin') {
+    res.status(403).json({ error: 'Forbidden' });
+    return false;
+  }
+  return true;
+}
+
 function getTopicPolicyPrompt(lang = 'en') {
   const prompts = {
     hy: [
@@ -327,7 +344,7 @@ app.use(
       if (allowedOrigins.includes(origin)) return cb(null, true);
       return cb(new Error(`CORS blocked for origin: ${origin}`));
     },
-    methods: ['GET', 'POST', 'OPTIONS'],
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
@@ -603,7 +620,12 @@ app.post('/api/auth/forgot', (req, res) => {
 
       // Always respond OK to avoid email enumeration
       const user = await dbFindUserByEmail(String(email).trim().toLowerCase());
-      if (!user) return res.json({ ok: true });
+      if (!user) {
+        if (String(process.env.ALLOW_EMAIL_ENUMERATION || '').toLowerCase() === 'true') {
+          return res.json({ ok: true, exists: false });
+        }
+        return res.json({ ok: true });
+      }
 
       const token = await dbCreatePasswordReset(user.id);
       const resetLink = `${PUBLIC_SITE_URL}/?reset=${encodeURIComponent(token)}`;
@@ -617,6 +639,9 @@ app.post('/api/auth/forgot', (req, res) => {
           `If you did not request this, ignore this email.\n`,
       });
 
+      if (String(process.env.ALLOW_EMAIL_ENUMERATION || '').toLowerCase() === 'true') {
+        return res.json({ ok: true, exists: true });
+      }
       return res.json({ ok: true });
     } catch (e) {
       console.error('Forgot password error:', e.code || e.message);
@@ -678,6 +703,190 @@ app.post('/api/auth/reset', (req, res) => {
     } catch (e) {
       console.error('Reset password error:', e.code || e.message);
       return res.status(500).json({ error: 'Failed to reset password', code: e.code || null });
+    }
+  })();
+});
+
+// --- Forum ---
+app.get('/api/forum/threads', (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const [rows] = await pool.query(
+        `
+          SELECT
+            t.id,
+            t.title,
+            t.created_at AS createdAt,
+            t.updated_at AS updatedAt,
+            u.username AS authorUsername,
+            COUNT(p.id) AS postCount
+          FROM forum_threads t
+          JOIN users u ON u.id = t.author_user_id
+          LEFT JOIN forum_posts p ON p.thread_id = t.id
+          GROUP BY t.id
+          ORDER BY t.updated_at DESC
+          LIMIT 50
+        `
+      );
+      return res.json({ threads: rows || [] });
+    } catch (e) {
+      console.error('Forum list error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to load forum' });
+    }
+  })();
+});
+
+app.get('/api/forum/threads/:id', (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const threadId = Number(req.params.id);
+      if (!Number.isFinite(threadId)) return res.status(400).json({ error: 'Invalid thread id' });
+
+      const [trows] = await pool.query(
+        `
+          SELECT
+            t.id,
+            t.title,
+            t.created_at AS createdAt,
+            t.updated_at AS updatedAt,
+            u.username AS authorUsername
+          FROM forum_threads t
+          JOIN users u ON u.id = t.author_user_id
+          WHERE t.id = ?
+          LIMIT 1
+        `,
+        [threadId]
+      );
+      const thread = trows && trows[0] ? trows[0] : null;
+      if (!thread) return res.status(404).json({ error: 'Thread not found' });
+
+      const [prows] = await pool.query(
+        `
+          SELECT
+            p.id,
+            p.body,
+            p.created_at AS createdAt,
+            u.username AS authorUsername
+          FROM forum_posts p
+          JOIN users u ON u.id = p.author_user_id
+          WHERE p.thread_id = ?
+          ORDER BY p.created_at ASC
+        `,
+        [threadId]
+      );
+
+      return res.json({ thread, posts: prows || [] });
+    } catch (e) {
+      console.error('Forum thread error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to load thread' });
+    }
+  })();
+});
+
+app.post('/api/forum/threads', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const userId = requireMysqlUserId(req, res);
+      if (!userId) return;
+
+      const { title, body } = req.body || {};
+      const titleStr = String(title || '').trim();
+      const bodyStr = String(body || '').trim();
+      if (!titleStr || !bodyStr) return res.status(400).json({ error: 'Missing title or body' });
+      if (titleStr.length > 180) return res.status(400).json({ error: 'Title too long' });
+      if (bodyStr.length > 5000) return res.status(400).json({ error: 'Body too long' });
+
+      const conn = await pool.getConnection();
+      try {
+        await conn.beginTransaction();
+        const [tres] = await conn.query(
+          'INSERT INTO forum_threads (author_user_id, title) VALUES (?, ?)',
+          [userId, titleStr]
+        );
+        const threadId = tres.insertId;
+        await conn.query(
+          'INSERT INTO forum_posts (thread_id, author_user_id, body) VALUES (?, ?, ?)',
+          [threadId, userId, bodyStr]
+        );
+        await conn.commit();
+        return res.json({ ok: true, threadId });
+      } catch (e) {
+        await conn.rollback();
+        throw e;
+      } finally {
+        conn.release();
+      }
+    } catch (e) {
+      console.error('Forum create thread error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to create thread' });
+    }
+  })();
+});
+
+app.post('/api/forum/threads/:id/posts', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const userId = requireMysqlUserId(req, res);
+      if (!userId) return;
+
+      const threadId = Number(req.params.id);
+      if (!Number.isFinite(threadId)) return res.status(400).json({ error: 'Invalid thread id' });
+
+      const { body } = req.body || {};
+      const bodyStr = String(body || '').trim();
+      if (!bodyStr) return res.status(400).json({ error: 'Missing body' });
+      if (bodyStr.length > 5000) return res.status(400).json({ error: 'Body too long' });
+
+      // ensure thread exists
+      const [trows] = await pool.query('SELECT id FROM forum_threads WHERE id = ? LIMIT 1', [threadId]);
+      if (!trows || !trows[0]) return res.status(404).json({ error: 'Thread not found' });
+
+      await pool.query(
+        'INSERT INTO forum_posts (thread_id, author_user_id, body) VALUES (?, ?, ?)',
+        [threadId, userId, bodyStr]
+      );
+      // bump thread updated_at
+      await pool.query('UPDATE forum_threads SET updated_at = NOW() WHERE id = ?', [threadId]);
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Forum reply error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to add reply' });
+    }
+  })();
+});
+
+// Admin: delete thread (posts cascade)
+app.delete('/api/forum/threads/:id', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+      if (!requireAdmin(req, res)) return;
+
+      const threadId = Number(req.params.id);
+      if (!Number.isFinite(threadId)) return res.status(400).json({ error: 'Invalid thread id' });
+
+      const [trows] = await pool.query('SELECT id FROM forum_threads WHERE id = ? LIMIT 1', [threadId]);
+      if (!trows || !trows[0]) return res.status(404).json({ error: 'Thread not found' });
+
+      await pool.query('DELETE FROM forum_threads WHERE id = ?', [threadId]);
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Forum delete thread error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to delete thread' });
     }
   })();
 });

@@ -46,6 +46,10 @@ Set these env vars in **cPanel → Setup Node.js App → Environment Variables**
 Then, in phpMyAdmin run:
 - `mysql/password-resets.sql` (creates `password_resets` table)
 
+## Forum (optional)
+To enable the forum feature, run in phpMyAdmin:
+- `mysql/forum.sql`
+
 #### Option B (legacy): JSON users list (no real profiles)
 Choose **one** users source:
 
