@@ -1,0 +1,7 @@
+update db: admin moderate pro users user
+admin should see all members
+admin and moderate can send a notifaction to moderate and pro users..(admin can see and set usera as moderate...) also user type should wirte in private page
+add plan in bot and private profiles
+subsricption...
+
+redisegn

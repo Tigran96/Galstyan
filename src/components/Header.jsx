@@ -9,6 +9,8 @@ export const Header = ({
   isAuthed,
   user,
   onForumClick,
+  onNavigateAnchor,
+  onLogoClick,
   onLoginClick,
   onSignUpClick,
   onDashboardClick,
@@ -16,7 +18,14 @@ export const Header = ({
 }) => (
   <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-sky-950/60 border-b border-white/10">
     <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-      <a href="#home" className="flex items-center gap-2">
+      <a
+        href="#home"
+        className="flex items-center gap-2"
+        onClick={(e) => {
+          e.preventDefault();
+          onLogoClick?.();
+        }}
+      >
         <img
           src={CONFIG.logo}
           alt={CONFIG.businessName[lang] + " logo"}
@@ -25,11 +34,51 @@ export const Header = ({
         <span className="text-white font-semibold text-height-fixed">{CONFIG.businessName[lang]}</span>
       </a>
       <nav className="hidden md:flex items-center gap-1">
-        <NavLink href="#courses">{t("nav.courses")}</NavLink>
-        <NavLink href="#teachers">{t("nav.teachers")}</NavLink>
-        <NavLink href="#pricing">{t("nav.pricing")}</NavLink>
-        <NavLink href="#faq">{t("nav.faq")}</NavLink>
-        <NavLink href="#contact">{t("nav.contact")}</NavLink>
+        <NavLink
+          href="#courses"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigateAnchor?.('courses');
+          }}
+        >
+          {t("nav.courses")}
+        </NavLink>
+        <NavLink
+          href="#teachers"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigateAnchor?.('teachers');
+          }}
+        >
+          {t("nav.teachers")}
+        </NavLink>
+        <NavLink
+          href="#pricing"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigateAnchor?.('pricing');
+          }}
+        >
+          {t("nav.pricing")}
+        </NavLink>
+        <NavLink
+          href="#faq"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigateAnchor?.('faq');
+          }}
+        >
+          {t("nav.faq")}
+        </NavLink>
+        <NavLink
+          href="#contact"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigateAnchor?.('contact');
+          }}
+        >
+          {t("nav.contact")}
+        </NavLink>
         <button
           type="button"
           onClick={onForumClick}

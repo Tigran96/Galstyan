@@ -1168,6 +1168,7 @@ export default function LandingPage() {
   const [authUser, setAuthUser] = useState(null);
   const [resetToken, setResetToken] = useState(null);
   const [forumThreadId, setForumThreadId] = useState(null);
+  const [pendingAnchor, setPendingAnchor] = useState(null);
 
   // Load token from localStorage and validate it.
   useEffect(() => {
@@ -1262,6 +1263,25 @@ export default function LandingPage() {
     return parts.reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : null), I18N[lang]);
   };
 
+  const navigateToAnchor = (anchorId) => {
+    if (!anchorId) return;
+    if (currentPage !== 'home') {
+      setPendingAnchor(anchorId);
+      setCurrentPage('home');
+      return;
+    }
+    smoothScrollTo(anchorId);
+  };
+
+  useEffect(() => {
+    if (currentPage !== 'home') return;
+    if (!pendingAnchor) return;
+    // Let the home page render first, then scroll.
+    const id = pendingAnchor;
+    setPendingAnchor(null);
+    setTimeout(() => smoothScrollTo(id), 50);
+  }, [currentPage, pendingAnchor]);
+
   // Add smooth scrolling to all internal links
   useEffect(() => {
     const handleClick = (e) => {
@@ -1309,9 +1329,35 @@ export default function LandingPage() {
     setCurrentPage('home');
   };
 
+  const headerEl = (
+    <Header
+      lang={lang}
+      setLang={setLang}
+      t={t}
+      CONFIG={CONFIG}
+      isAuthed={isAuthed}
+      user={authUser}
+      onNavigateAnchor={navigateToAnchor}
+      onLogoClick={() => navigateToAnchor('home')}
+      onForumClick={() => setCurrentPage('forum')}
+      onLoginClick={() => setCurrentPage('login')}
+      onSignUpClick={() => setCurrentPage('signup')}
+      onDashboardClick={goDashboard}
+      onLogout={logout}
+    />
+  );
+
+  const withHeader = (children) => (
+    <Fragment>
+      {headerEl}
+      {children}
+    </Fragment>
+  );
+
   if (currentPage === 'enroll') {
     return (
       <Fragment>
+        {headerEl}
         <EnrollPage 
           selectedPlan={selectedPlan}
           CONFIG={CONFIG}
@@ -1337,7 +1383,7 @@ export default function LandingPage() {
   }
 
   if (currentPage === 'login') {
-    return (
+    return withHeader(
       <LoginPage
         t={t}
         onBack={() => setCurrentPage('home')}
@@ -1355,7 +1401,7 @@ export default function LandingPage() {
   }
 
   if (currentPage === 'signup') {
-    return (
+    return withHeader(
       <SignUpPage
         t={t}
         onBack={() => setCurrentPage('home')}
@@ -1373,7 +1419,7 @@ export default function LandingPage() {
   }
 
   if (currentPage === 'forgot') {
-    return (
+    return withHeader(
       <ForgotPasswordPage
         t={t}
         onBack={() => setCurrentPage('login')}
@@ -1383,7 +1429,7 @@ export default function LandingPage() {
   }
 
   if (currentPage === 'reset') {
-    return (
+    return withHeader(
       <ResetPasswordPage
         t={t}
         token={resetToken}
@@ -1401,7 +1447,7 @@ export default function LandingPage() {
   }
 
   if (currentPage === 'forum') {
-    return (
+    return withHeader(
       <ForumPage
         t={t}
         isAuthed={isAuthed}
@@ -1420,7 +1466,7 @@ export default function LandingPage() {
 
   if (currentPage === 'newThread') {
     if (!isAuthed) return setCurrentPage('login');
-    return (
+    return withHeader(
       <NewThreadPage
         t={t}
         token={authToken}
@@ -1435,7 +1481,7 @@ export default function LandingPage() {
 
   if (currentPage === 'thread') {
     if (!forumThreadId) return setCurrentPage('forum');
-    return (
+    return withHeader(
       <ForumThreadPage
         t={t}
         threadId={forumThreadId}
@@ -1454,7 +1500,7 @@ export default function LandingPage() {
 
   if (currentPage === 'dashboard') {
     if (!isAuthed) {
-      return (
+      return withHeader(
         <LoginPage
           t={t}
           onBack={() => setCurrentPage('home')}
@@ -1470,13 +1516,11 @@ export default function LandingPage() {
         />
       );
     }
-    return (
+    return withHeader(
       <DashboardPage
         t={t}
         user={authUser}
         token={authToken}
-        lang={lang}
-        setLang={setLang}
         onLogout={logout}
         onBackHome={() => setCurrentPage('home')}
       />

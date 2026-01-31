@@ -36,7 +36,7 @@ export function ForgotPasswordPage({ t, onBack, onSignInClick }) {
   };
 
   return (
-    <div className="min-h-screen bg-sky-950 text-white flex items-center justify-center px-6">
+    <div className="min-h-[calc(100vh-84px)] bg-sky-950 text-white flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-between gap-3">
           <button

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMyProfile, updateMyProfile } from '../services/profileService';
-import { LangButton } from './LangButton';
 
-export function DashboardPage({ t, user, token, lang, setLang, onLogout, onBackHome }) {
+export function DashboardPage({ t, user, token, onLogout, onBackHome }) {
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', grade: '' });
   const [status, setStatus] = useState({ loading: true, saving: false, error: '', saved: false });
@@ -58,11 +57,6 @@ export function DashboardPage({ t, user, token, lang, setLang, onLogout, onBackH
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 mr-1">
-              <LangButton code="hy" label="🇦🇲 Հայ" active={lang === "hy"} onClick={() => setLang("hy")} />
-              <LangButton code="en" label="🇬🇧 EN" active={lang === "en"} onClick={() => setLang("en")} />
-              <LangButton code="ru" label="🇷🇺 РУ" active={lang === "ru"} onClick={() => setLang("ru")} />
-            </div>
             <button
               type="button"
               onClick={onBackHome}
