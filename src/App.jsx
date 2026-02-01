@@ -29,6 +29,7 @@ import { trackContactClick, trackPageView } from './utils/analytics';
 import { detectUserLanguage, isLocationDetectionSupported } from './utils/locationService';
 import { Helmet } from "react-helmet-async";
 import { getMe } from './services/authService';
+import { getMyNotifications } from './services/notificationService';
 
 const CONFIG = {
   businessName: {
@@ -190,6 +191,9 @@ const I18N = {
         email: "Էլ. փոստ",
         role: "Դեր",
         actions: "Գործողություններ",
+        message: "Գրել",
+        sendTo: "Ուղարկել՝",
+        cancel: "Չեղարկել",
         save: "Պահպանել",
         saving: "Պահպանվում է…",
         name: "Անուն",
@@ -484,6 +488,21 @@ const I18N = {
       card1Body: "Այստեղ կհայտնվեն ձեր փակ նյութերը, ֆայլերը և հղումները։",
       card2Title: "Առաջադրանքներ (շուտով)",
       card2Body: "Այստեղ կհայտնվեն առաջադրանքներ և առաջընթացի տվյալներ։",
+      role: "Դեր",
+      notificationsTitle: "Ծանուցումներ",
+      notificationsEmpty: "Դեռ ծանուցումներ չկան։",
+      notificationsUnread: "Չկարդացված",
+      notificationsAll: "Բոլորը",
+      unread: "ՉԿԱՐԴԱՑՎԱԾ",
+      unreadCount: "չկարդացված",
+      markRead: "Նշել որպես կարդացված",
+      marking: "Նշվում է…",
+      from: "Ումից",
+      sentTitle: "Ուղարկված ծանուցումներ",
+      sentEmpty: "Դեռ ուղարկված ծանուցումներ չկան։",
+      to: "Ում",
+      recipients: "Ստացողներ",
+      read: "Կարդացել են",
     },
     forum: {
       title: "Ֆորում",
@@ -528,6 +547,9 @@ const I18N = {
         email: "Email",
         role: "Role",
         actions: "Actions",
+        message: "Message",
+        sendTo: "Send to",
+        cancel: "Cancel",
         save: "Save",
         saving: "Saving…",
         name: "Name",
@@ -792,6 +814,21 @@ const I18N = {
       card1Body: "Your private materials, files, and links will appear here.",
       card2Title: "Assignments (coming soon)",
       card2Body: "Assignments and progress tracking will appear here.",
+      role: "Role",
+      notificationsTitle: "Notifications",
+      notificationsEmpty: "No notifications yet.",
+      notificationsUnread: "Unread",
+      notificationsAll: "All",
+      unread: "UNREAD",
+      unreadCount: "unread",
+      markRead: "Mark as read",
+      marking: "Marking…",
+      from: "From",
+      sentTitle: "Sent notifications",
+      sentEmpty: "No sent notifications yet.",
+      to: "To",
+      recipients: "Recipients",
+      read: "Read",
     },
     forum: {
       title: "Forum",
@@ -836,6 +873,9 @@ const I18N = {
         email: "Email",
         role: "Роль",
         actions: "Действия",
+        message: "Сообщение",
+        sendTo: "Отправить",
+        cancel: "Отмена",
         save: "Сохранить",
         saving: "Сохранение…",
         name: "Имя",
@@ -1100,6 +1140,21 @@ const I18N = {
       card1Body: "Здесь появятся ваши закрытые материалы, файлы и ссылки.",
       card2Title: "Задания (скоро)",
       card2Body: "Здесь появятся задания и отслеживание прогресса.",
+      role: "Роль",
+      notificationsTitle: "Уведомления",
+      notificationsEmpty: "Пока нет уведомлений.",
+      notificationsUnread: "Непрочитанные",
+      notificationsAll: "Все",
+      unread: "НЕПРОЧИТАНО",
+      unreadCount: "непрочитано",
+      markRead: "Отметить как прочитанное",
+      marking: "Отмечается…",
+      from: "От",
+      sentTitle: "Отправленные уведомления",
+      sentEmpty: "Пока нет отправленных уведомлений.",
+      to: "Кому",
+      recipients: "Получатели",
+      read: "Прочитали",
     },
     forum: {
       title: "Форум",
@@ -1242,6 +1297,7 @@ export default function LandingPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [authToken, setAuthToken] = useState(null);
   const [authUser, setAuthUser] = useState(null);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [resetToken, setResetToken] = useState(null);
   const [forumThreadId, setForumThreadId] = useState(null);
   const [pendingAnchor, setPendingAnchor] = useState(null);
@@ -1262,6 +1318,27 @@ export default function LandingPage() {
         setAuthUser(null);
       });
   }, []);
+
+  const refreshUnreadNotifications = async (token) => {
+    try {
+      if (!token) return setUnreadNotificationsCount(0);
+      const rows = await getMyNotifications(token);
+      const unread = (rows || []).filter((n) => !n.isRead).length;
+      setUnreadNotificationsCount(unread);
+    } catch {
+      // Non-fatal: don't break app if notifications endpoint fails.
+      setUnreadNotificationsCount(0);
+    }
+  };
+
+  useEffect(() => {
+    if (!authToken) return;
+    refreshUnreadNotifications(authToken);
+
+    const handler = () => refreshUnreadNotifications(authToken);
+    window.addEventListener('notifications:changed', handler);
+    return () => window.removeEventListener('notifications:changed', handler);
+  }, [authToken]);
 
   // If user opens site with ?reset=TOKEN, show reset password page.
   useEffect(() => {
@@ -1413,6 +1490,7 @@ export default function LandingPage() {
       CONFIG={CONFIG}
       isAuthed={isAuthed}
       user={authUser}
+      unreadNotificationsCount={unreadNotificationsCount}
       onNavigateAnchor={navigateToAnchor}
       onLogoClick={() => navigateToAnchor('home')}
       onForumClick={() => setCurrentPage('forum')}
@@ -1606,9 +1684,14 @@ export default function LandingPage() {
 
   if (currentPage === 'adminMembers') {
     if (!isAuthed) return setCurrentPage('login');
-    if (authUser?.role !== 'admin') return setCurrentPage('dashboard');
+    if (!['admin', 'moderator'].includes(authUser?.role)) return setCurrentPage('dashboard');
     return withHeader(
-      <AdminMembersPage t={t} authToken={authToken} onBack={() => setCurrentPage('dashboard')} />
+      <AdminMembersPage
+        t={t}
+        authToken={authToken}
+        authUser={authUser}
+        onBack={() => setCurrentPage('dashboard')}
+      />
     );
   }
 
@@ -1627,6 +1710,7 @@ export default function LandingPage() {
         CONFIG={CONFIG}
         isAuthed={isAuthed}
         user={authUser}
+        unreadNotificationsCount={unreadNotificationsCount}
         onForumClick={() => setCurrentPage('forum')}
         onLoginClick={() => setCurrentPage('login')}
         onSignUpClick={() => setCurrentPage('signup')}

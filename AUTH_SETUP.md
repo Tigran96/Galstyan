@@ -50,6 +50,16 @@ Then, in phpMyAdmin run:
 To enable the forum feature, run in phpMyAdmin:
 - `mysql/forum.sql`
 
+## Notifications (admin/moderator -> moderator/pro)
+To enable notifications, run in phpMyAdmin:
+- `mysql/notifications.sql`
+- `mysql/notifications-receipts.sql`
+
+Rules:
+- Only **admin** and **moderator** can send notifications.
+- Notifications can be sent to **moderator**, **pro**, or **moderator+pro** audiences.
+- Read/unread is tracked per user in `notifications_receipts`.
+
 ## Roles (admin / moderator / pro / user)
 Your users are stored in MySQL table: `users`
 

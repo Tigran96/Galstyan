@@ -289,6 +289,12 @@ function requireMysqlUserId(req, res) {
   return userId;
 }
 
+function getJwtUserId(req) {
+  const raw = req.user?.sub ?? req.user?.id;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 function requireAdmin(req, res) {
   if (req.user?.role !== 'admin') {
     res.status(403).json({ error: 'Forbidden' });
@@ -318,6 +324,18 @@ function normalizeRole(role) {
 
 function isAllowedRole(role) {
   return ['admin', 'moderator', 'pro', 'user'].includes(role);
+}
+
+function isSenderAllowedToNotify(role) {
+  return ['admin', 'moderator'].includes(role);
+}
+
+function normalizeAudience(audience) {
+  const a = String(audience || '').trim().toLowerCase();
+  if (a === 'moderator' || a === 'pro') return a;
+  if (a === 'moderator,pro' || a === 'pro,moderator') return 'moderator,pro';
+  if (a === 'both' || a === 'all') return 'moderator,pro';
+  return '';
 }
 
 function getTopicPolicyPrompt(lang = 'en') {
@@ -887,7 +905,7 @@ app.get('/api/admin/users', requireAuth, async (req, res) => {
   try {
     const pool = getDbPool();
     if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
-    if (!requireAdminOnly(req, res)) return;
+    if (!requireRole(req, res, ['admin', 'moderator'])) return;
 
     const [rows] = await pool.query(
       `
@@ -934,7 +952,7 @@ app.post('/api/admin/users/:id/role', requireAuth, async (req, res) => {
     }
 
     // Optional safety: prevent removing your own admin role by mistake.
-    if (req.user?.id === userId && role !== 'admin') {
+    if (getJwtUserId(req) === userId && role !== 'admin') {
       return res.status(400).json({ error: 'You cannot change your own role.' });
     }
 
@@ -950,6 +968,279 @@ app.post('/api/admin/users/:id/role', requireAuth, async (req, res) => {
   } catch (e) {
     console.error('Admin role update error:', e.code || e.message);
     return res.status(500).json({ error: 'Failed to update role' });
+  }
+});
+
+// --- Notifications ---
+app.get('/api/notifications/my', requireAuth, async (req, res) => {
+  try {
+    const pool = getDbPool();
+    if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+    const role = req.user?.role;
+    const userId = getJwtUserId(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    let rows = [];
+    try {
+      const [r1] = await pool.query(
+        `
+          SELECT
+            n.id,
+            n.title,
+            n.message,
+            n.target_roles AS targetRoles,
+            n.target_user_id AS targetUserId,
+            n.created_at AS createdAt,
+            u.username AS senderUsername,
+            u.role AS senderRole,
+            r.read_at AS readAt
+          FROM notifications n
+          LEFT JOIN users u ON u.id = n.sender_user_id
+          LEFT JOIN notifications_receipts r
+            ON r.notification_id = n.id AND r.user_id = ?
+          WHERE n.target_user_id = ? OR (n.target_roles <> '' AND FIND_IN_SET(?, n.target_roles))
+          ORDER BY n.created_at DESC
+          LIMIT 100
+        `,
+        [userId, userId, role]
+      );
+      rows = r1 || [];
+    } catch (e2) {
+      if (e2.code !== 'ER_NO_SUCH_TABLE') throw e2;
+      const [r2] = await pool.query(
+        `
+          SELECT
+            n.id,
+            n.title,
+            n.message,
+            n.target_roles AS targetRoles,
+            n.target_user_id AS targetUserId,
+            n.created_at AS createdAt,
+            u.username AS senderUsername,
+            u.role AS senderRole,
+            NULL AS readAt
+          FROM notifications n
+          LEFT JOIN users u ON u.id = n.sender_user_id
+          WHERE n.target_user_id = ? OR (n.target_roles <> '' AND FIND_IN_SET(?, n.target_roles))
+          ORDER BY n.created_at DESC
+          LIMIT 100
+        `,
+        [userId, role]
+      );
+      rows = r2 || [];
+    }
+
+    const notifications = (rows || []).map((n) => ({ ...n, isRead: Boolean(n.readAt) }));
+    return res.json({ notifications });
+  } catch (e) {
+    console.error('Notifications list error:', e.code || e.message);
+    return res.status(500).json({ error: 'Failed to load notifications' });
+  }
+});
+
+app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
+  try {
+    const pool = getDbPool();
+    if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+    const userId = getJwtUserId(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const notifId = Number(req.params.id);
+    if (!Number.isFinite(notifId)) return res.status(400).json({ error: 'Invalid notification id' });
+
+    const role = req.user?.role;
+    const [nrows] = await pool.query(
+      `
+        SELECT id FROM notifications
+        WHERE id = ? AND (target_user_id = ? OR (target_roles <> '' AND FIND_IN_SET(?, target_roles)))
+        LIMIT 1
+      `,
+      [notifId, userId, role]
+    );
+    if (!nrows?.length) return res.status(404).json({ error: 'Notification not found' });
+
+    try {
+      await pool.query(
+        `
+          INSERT INTO notifications_receipts (notification_id, user_id, read_at)
+          VALUES (?, ?, CURRENT_TIMESTAMP)
+          ON DUPLICATE KEY UPDATE read_at = COALESCE(read_at, VALUES(read_at))
+        `,
+        [notifId, userId]
+      );
+    } catch (e2) {
+      if (e2.code === 'ER_NO_SUCH_TABLE') {
+        return res.status(400).json({ error: 'Read-tracking table is missing. Run mysql/notifications-receipts.sql' });
+      }
+      throw e2;
+    }
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('Notifications mark read error:', e.code || e.message);
+    return res.status(500).json({ error: 'Failed to mark read' });
+  }
+});
+
+app.get('/api/notifications/sent', requireAuth, async (req, res) => {
+  try {
+    const pool = getDbPool();
+    if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+    const senderRole = req.user?.role;
+    if (!isSenderAllowedToNotify(senderRole)) return res.status(403).json({ error: 'Forbidden' });
+
+    const senderId = getJwtUserId(req) || 0;
+    let rows = [];
+    try {
+      const [r1] = await pool.query(
+        `
+          SELECT
+            n.id,
+            n.title,
+            n.message,
+            n.target_roles AS targetRoles,
+            n.target_user_id AS targetUserId,
+            n.created_at AS createdAt,
+            tu.username AS targetUsername,
+            tu.email AS targetEmail,
+            (
+              CASE
+                WHEN n.target_user_id IS NOT NULL THEN 1
+                WHEN n.target_roles = '' THEN 0
+                ELSE (
+                  SELECT COUNT(*) FROM users u2
+                  WHERE (FIND_IN_SET('moderator', n.target_roles) AND u2.role = 'moderator')
+                     OR (FIND_IN_SET('pro', n.target_roles) AND u2.role = 'pro')
+                )
+              END
+            ) AS recipientsCount,
+            (
+              SELECT COUNT(*) FROM notifications_receipts r
+              WHERE r.notification_id = n.id AND r.read_at IS NOT NULL
+            ) AS readCount
+          FROM notifications n
+          LEFT JOIN users tu ON tu.id = n.target_user_id
+          WHERE n.sender_user_id = ?
+          ORDER BY n.created_at DESC
+          LIMIT 200
+        `,
+        [senderId]
+      );
+      rows = r1 || [];
+    } catch (e2) {
+      if (e2.code !== 'ER_NO_SUCH_TABLE') throw e2;
+      const [r2] = await pool.query(
+        `
+          SELECT
+            n.id,
+            n.title,
+            n.message,
+            n.target_roles AS targetRoles,
+            n.target_user_id AS targetUserId,
+            n.created_at AS createdAt,
+            tu.username AS targetUsername,
+            tu.email AS targetEmail,
+            (
+              CASE
+                WHEN n.target_user_id IS NOT NULL THEN 1
+                WHEN n.target_roles = '' THEN 0
+                ELSE (
+                  SELECT COUNT(*) FROM users u2
+                  WHERE (FIND_IN_SET('moderator', n.target_roles) AND u2.role = 'moderator')
+                     OR (FIND_IN_SET('pro', n.target_roles) AND u2.role = 'pro')
+                )
+              END
+            ) AS recipientsCount,
+            0 AS readCount
+          FROM notifications n
+          LEFT JOIN users tu ON tu.id = n.target_user_id
+          WHERE n.sender_user_id = ?
+          ORDER BY n.created_at DESC
+          LIMIT 200
+        `,
+        [senderId]
+      );
+      rows = r2 || [];
+    }
+
+    return res.json({ sent: rows || [] });
+  } catch (e) {
+    console.error('Notifications sent history error:', e.code || e.message);
+    return res.status(500).json({ error: 'Failed to load sent history' });
+  }
+});
+
+app.post('/api/notifications/send', requireAuth, async (req, res) => {
+  try {
+    const pool = getDbPool();
+    if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+    const senderRole = req.user?.role;
+    if (!isSenderAllowedToNotify(senderRole)) return res.status(403).json({ error: 'Forbidden' });
+
+    const userId = req.body?.userId != null ? Number(req.body.userId) : null;
+    const audience = normalizeAudience(req.body?.audience);
+    if (userId == null && !audience) {
+      return res.status(400).json({ error: 'Invalid audience. Use: moderator, pro, moderator,pro' });
+    }
+
+    const title = String(req.body?.title || '').trim();
+    const message = String(req.body?.message || '').trim();
+    if (!title || title.length < 2) return res.status(400).json({ error: 'Title must be at least 2 characters' });
+    if (!message || message.length < 2) return res.status(400).json({ error: 'Message must be at least 2 characters' });
+
+    if (userId != null) {
+      if (!Number.isFinite(userId)) return res.status(400).json({ error: 'Invalid userId' });
+      const [urows] = await pool.query(`SELECT id, role FROM users WHERE id = ? LIMIT 1`, [userId]);
+      if (!urows?.length) return res.status(404).json({ error: 'User not found' });
+      // Direct messages can target any role.
+      const [result] = await pool.query(
+        `INSERT INTO notifications (sender_user_id, target_user_id, target_roles, title, message) VALUES (?, ?, '', ?, ?)`,
+        [getJwtUserId(req), userId, title.slice(0, 190), message]
+      );
+      const notifId = result?.insertId;
+      if (notifId) {
+        try {
+          await pool.query(
+            `INSERT IGNORE INTO notifications_receipts (notification_id, user_id) VALUES (?, ?)`,
+            [notifId, userId]
+          );
+        } catch (e2) {
+          if (e2.code !== 'ER_NO_SUCH_TABLE') throw e2;
+        }
+      }
+    } else {
+      const [result] = await pool.query(
+        `INSERT INTO notifications (sender_user_id, target_roles, title, message) VALUES (?, ?, ?, ?)`,
+        [getJwtUserId(req), audience, title.slice(0, 190), message]
+      );
+      const notifId = result?.insertId;
+      if (notifId) {
+        const roles = audience.split(',').map((r) => r.trim()).filter(Boolean);
+        if (roles.length) {
+          const placeholders = roles.map(() => '?').join(',');
+          try {
+            await pool.query(
+              `
+                INSERT IGNORE INTO notifications_receipts (notification_id, user_id)
+                SELECT ?, u.id FROM users u WHERE u.role IN (${placeholders})
+              `,
+              [notifId, ...roles]
+            );
+          } catch (e2) {
+            if (e2.code !== 'ER_NO_SUCH_TABLE') throw e2;
+          }
+        }
+      }
+    }
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('Notifications send error:', e.code || e.message);
+    return res.status(500).json({ error: 'Failed to send notification' });
   }
 });
 

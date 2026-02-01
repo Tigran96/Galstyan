@@ -8,6 +8,7 @@ export const Header = ({
   CONFIG,
   isAuthed,
   user,
+  unreadNotificationsCount,
   onForumClick,
   onNavigateAnchor,
   onLogoClick,
@@ -94,10 +95,17 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onDashboardClick}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-sky-100 hover:bg-white/10 transition-colors whitespace-nowrap"
+                className="relative rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-sky-100 hover:bg-white/10 transition-colors whitespace-nowrap"
                 title={user?.username || ''}
               >
                 {t('private.dashboardNav')}
+                {unreadNotificationsCount > 0 ? (
+                  <span
+                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-sky-950"
+                    aria-label="Unread notifications"
+                    title="Unread notifications"
+                  />
+                ) : null}
               </button>
               <button
                 type="button"
