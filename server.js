@@ -310,6 +310,16 @@ function requireAdminOnly(req, res) {
   return requireRole(req, res, ['admin']);
 }
 
+function normalizeRole(role) {
+  return String(role || '')
+    .trim()
+    .toLowerCase();
+}
+
+function isAllowedRole(role) {
+  return ['admin', 'moderator', 'pro', 'user'].includes(role);
+}
+
 function getTopicPolicyPrompt(lang = 'en') {
   const prompts = {
     hy: [
@@ -906,6 +916,40 @@ app.get('/api/admin/users', requireAuth, async (req, res) => {
   } catch (e) {
     console.error('Admin users list error:', e.code || e.message);
     return res.status(500).json({ error: 'Failed to load users' });
+  }
+});
+
+app.post('/api/admin/users/:id/role', requireAuth, async (req, res) => {
+  try {
+    const pool = getDbPool();
+    if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+    if (!requireAdminOnly(req, res)) return;
+
+    const userId = Number(req.params.id);
+    if (!Number.isFinite(userId)) return res.status(400).json({ error: 'Invalid user id' });
+
+    const role = normalizeRole(req.body?.role);
+    if (!isAllowedRole(role)) {
+      return res.status(400).json({ error: 'Invalid role. Use: admin, moderator, pro, user' });
+    }
+
+    // Optional safety: prevent removing your own admin role by mistake.
+    if (req.user?.id === userId && role !== 'admin') {
+      return res.status(400).json({ error: 'You cannot change your own role.' });
+    }
+
+    await pool.query(`UPDATE users SET role = ? WHERE id = ? LIMIT 1`, [role, userId]);
+
+    const [rows] = await pool.query(
+      `SELECT id, username, email, role, created_at AS createdAt FROM users WHERE id = ? LIMIT 1`,
+      [userId]
+    );
+
+    if (!rows?.length) return res.status(404).json({ error: 'User not found' });
+    return res.json({ ok: true, user: rows[0] });
+  } catch (e) {
+    console.error('Admin role update error:', e.code || e.message);
+    return res.status(500).json({ error: 'Failed to update role' });
   }
 });
 
