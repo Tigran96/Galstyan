@@ -50,6 +50,27 @@ Then, in phpMyAdmin run:
 To enable the forum feature, run in phpMyAdmin:
 - `mysql/forum.sql`
 
+## Roles (admin / moderator / pro / user)
+Your users are stored in MySQL table: `users`
+
+- Column: `users.role`
+- Allowed values: `admin`, `moderator`, `pro`, `user`
+
+To normalize roles (recommended), run in phpMyAdmin:
+- `mysql/roles-migration.sql`
+
+To change a user role manually (example: make `admin`):
+
+```sql
+UPDATE users SET role='admin' WHERE email='your@email.com' LIMIT 1;
+```
+
+Current permissions:
+- `admin`: full access (including deleting forum threads)
+- `moderator`: can delete forum threads
+- `pro`: (reserved for future premium features)
+- `user`: normal user
+
 #### Option B (legacy): JSON users list (no real profiles)
 Choose **one** users source:
 

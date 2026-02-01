@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMyProfile, updateMyProfile } from '../services/profileService';
 
-export function DashboardPage({ t, user, token, onLogout, onBackHome }) {
+export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMembers }) {
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', grade: '' });
   const [status, setStatus] = useState({ loading: true, saving: false, error: '', saved: false });
@@ -57,6 +57,15 @@ export function DashboardPage({ t, user, token, onLogout, onBackHome }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {user?.role === 'admin' ? (
+              <button
+                type="button"
+                onClick={onAdminMembers}
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 transition-colors"
+              >
+                {t?.('admin.members.title') || 'Members'}
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={onBackHome}

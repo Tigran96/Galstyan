@@ -24,6 +24,7 @@ import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { ForumPage } from './components/ForumPage';
 import { ForumThreadPage } from './components/ForumThreadPage';
 import { NewThreadPage } from './components/NewThreadPage';
+import AdminMembersPage from './components/AdminMembersPage';
 import { trackContactClick, trackPageView } from './utils/analytics';
 import { detectUserLanguage, isLocationDetectionSupported } from './utils/locationService';
 import { Helmet } from "react-helmet-async";
@@ -180,6 +181,22 @@ const CONFIG = {
 const I18N = {
   hy: {
     banner: "✨ Անվճար փորձնական դաս նոր ուսանողների համար — գրանցվեք այսօր",
+    admin: {
+      members: {
+        title: "Անդամներ",
+        search: "Որոնել…",
+        count: "Քանակ",
+        username: "Օգտանուն",
+        email: "Էլ. փոստ",
+        role: "Դեր",
+        name: "Անուն",
+        age: "Տարիք",
+        phone: "Հեռախոս",
+        grade: "Դասարան",
+        created: "Ստեղծվել է",
+        empty: "Օգտատերեր չեն գտնվել։",
+      },
+    },
     nav: {
       courses: "Դասընթացներ",
       teachers: "Ուսուցիչներ",
@@ -493,6 +510,22 @@ const I18N = {
   },
   en: {
     banner: "✨ Free trial lesson for new students — book today",
+    admin: {
+      members: {
+        title: "Members",
+        search: "Search…",
+        count: "Count",
+        username: "Username",
+        email: "Email",
+        role: "Role",
+        name: "Name",
+        age: "Age",
+        phone: "Phone",
+        grade: "Grade",
+        created: "Created",
+        empty: "No users found.",
+      },
+    },
     nav: {
       courses: "Courses",
       teachers: "Teachers",
@@ -776,6 +809,22 @@ const I18N = {
   },
   ru: {
     banner: "✨ Бесплатный пробный урок для новых учеников — запишитесь сегодня",
+    admin: {
+      members: {
+        title: "Пользователи",
+        search: "Поиск…",
+        count: "Количество",
+        username: "Логин",
+        email: "Email",
+        role: "Роль",
+        name: "Имя",
+        age: "Возраст",
+        phone: "Телефон",
+        grade: "Класс",
+        created: "Создан",
+        empty: "Пользователи не найдены.",
+      },
+    },
     nav: {
       courses: "Курсы",
       teachers: "Преподаватели",
@@ -1523,7 +1572,16 @@ export default function LandingPage() {
         token={authToken}
         onLogout={logout}
         onBackHome={() => setCurrentPage('home')}
+        onAdminMembers={() => setCurrentPage('adminMembers')}
       />
+    );
+  }
+
+  if (currentPage === 'adminMembers') {
+    if (!isAuthed) return setCurrentPage('login');
+    if (authUser?.role !== 'admin') return setCurrentPage('dashboard');
+    return withHeader(
+      <AdminMembersPage t={t} authToken={authToken} onBack={() => setCurrentPage('dashboard')} />
     );
   }
 

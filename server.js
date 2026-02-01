@@ -297,6 +297,19 @@ function requireAdmin(req, res) {
   return true;
 }
 
+function requireRole(req, res, roles) {
+  const role = req.user?.role;
+  if (!roles.includes(role)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return false;
+  }
+  return true;
+}
+
+function requireAdminOnly(req, res) {
+  return requireRole(req, res, ['admin']);
+}
+
 function getTopicPolicyPrompt(lang = 'en') {
   const prompts = {
     hy: [
@@ -842,7 +855,8 @@ app.delete('/api/forum/threads/:id', requireAuth, async (req, res) => {
   try {
     const pool = getDbPool();
     if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
-    if (!requireAdmin(req, res)) return;
+    // Admin or moderator can delete threads.
+    if (!requireRole(req, res, ['admin', 'moderator'])) return;
 
     const threadId = Number(req.params.id);
     if (!Number.isFinite(threadId)) return res.status(400).json({ error: 'Invalid thread id' });
@@ -855,6 +869,43 @@ app.delete('/api/forum/threads/:id', requireAuth, async (req, res) => {
   } catch (e) {
     console.error('Forum delete thread error:', e.code || e.message);
     return res.status(500).json({ error: 'Failed to delete thread' });
+  }
+});
+
+// --- Admin ---
+app.get('/api/admin/users', requireAuth, async (req, res) => {
+  try {
+    const pool = getDbPool();
+    if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+    if (!requireAdminOnly(req, res)) return;
+
+    const [rows] = await pool.query(
+      `
+        SELECT
+          u.id,
+          u.username,
+          u.email,
+          u.role,
+          u.created_at AS createdAt,
+          p.first_name AS firstName,
+          p.last_name AS lastName,
+          p.age,
+          p.full_name AS fullName,
+          p.email AS profileEmail,
+          p.phone,
+          p.grade,
+          p.updated_at AS profileUpdatedAt
+        FROM users u
+        LEFT JOIN profiles p ON p.user_id = u.id
+        ORDER BY u.created_at DESC
+        LIMIT 500
+      `
+    );
+
+    return res.json({ users: rows || [] });
+  } catch (e) {
+    console.error('Admin users list error:', e.code || e.message);
+    return res.status(500).json({ error: 'Failed to load users' });
   }
 });
 
