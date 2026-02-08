@@ -21,6 +21,7 @@ import { DashboardPage } from './components/DashboardPage';
 import { SignUpPage } from './components/SignUpPage';
 import { ForgotPasswordPage } from './components/ForgotPasswordPage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
+import { ProfilePage } from './components/ProfilePage';
 import { ForumPage } from './components/ForumPage';
 import { ForumThreadPage } from './components/ForumThreadPage';
 import { NewThreadPage } from './components/NewThreadPage';
@@ -30,6 +31,7 @@ import { detectUserLanguage, isLocationDetectionSupported } from './utils/locati
 import { Helmet } from "react-helmet-async";
 import { getMe } from './services/authService';
 import { getMyNotifications } from './services/notificationService';
+import { getSupportUnreadCount } from './services/supportService';
 
 const CONFIG = {
   businessName: {
@@ -489,6 +491,8 @@ const I18N = {
       card2Title: "Առաջադրանքներ (շուտով)",
       card2Body: "Այստեղ կհայտնվեն առաջադրանքներ և առաջընթացի տվյալներ։",
       role: "Դեր",
+      profileNav: "Պրոֆիլ",
+      profileEditTitle: "Խմբագրել պրոֆիլը",
       notificationsTitle: "Ծանուցումներ",
       notificationsEmpty: "Դեռ ծանուցումներ չկան։",
       notificationsUnread: "Չկարդացված",
@@ -503,6 +507,25 @@ const I18N = {
       to: "Ում",
       recipients: "Ստացողներ",
       read: "Կարդացել են",
+
+      notificationsTab: "Ծանուցումներ",
+      supportTab: "Օգնություն",
+      supportTitle: "Օգնության չաթ",
+      supportStartTitle: "Սկսել զրույց",
+      supportStartHelp: "Գրեք ձեր հարցը։ Ադմինը կամ մոդերատորը կպատասխանի։",
+      supportStartPh: "Նկարագրեք խնդիրը…",
+      supportStartBtn: "Սկսել",
+      supportInbox: "Զրույցներ",
+      supportEmpty: "Դեռ զրույցներ չկան։",
+      refresh: "Թարմացնել",
+      status: "Կարգավիճակ",
+      supportSelect: "Ընտրեք զրույցը։",
+      conversation: "Զրույց",
+      user: "Օգտատեր",
+      writeMessage: "Գրեք հաղորդագրություն…",
+      messageTooShort: "Հաղորդագրությունը պարտադիր է",
+      supportNotAvailable: "Օգնության չաթը հասանելի է Pro օգտատերերի համար։",
+      typing: "Գրում է…",
     },
     forum: {
       title: "Ֆորում",
@@ -815,6 +838,8 @@ const I18N = {
       card2Title: "Assignments (coming soon)",
       card2Body: "Assignments and progress tracking will appear here.",
       role: "Role",
+      profileNav: "Profile",
+      profileEditTitle: "Edit profile",
       notificationsTitle: "Notifications",
       notificationsEmpty: "No notifications yet.",
       notificationsUnread: "Unread",
@@ -829,6 +854,25 @@ const I18N = {
       to: "To",
       recipients: "Recipients",
       read: "Read",
+
+      notificationsTab: "Notifications",
+      supportTab: "Support",
+      supportTitle: "Support chat",
+      supportStartTitle: "Start a conversation",
+      supportStartHelp: "Write your question. Admin/Moderator will reply.",
+      supportStartPh: "Describe your problem…",
+      supportStartBtn: "Start",
+      supportInbox: "Inbox",
+      supportEmpty: "No conversations yet.",
+      refresh: "Refresh",
+      status: "Status",
+      supportSelect: "Select a conversation.",
+      conversation: "Conversation",
+      user: "User",
+      writeMessage: "Write a message…",
+      messageTooShort: "Message is required",
+      supportNotAvailable: "Support chat is available for Pro users.",
+      typing: "Typing…",
     },
     forum: {
       title: "Forum",
@@ -1141,6 +1185,8 @@ const I18N = {
       card2Title: "Задания (скоро)",
       card2Body: "Здесь появятся задания и отслеживание прогресса.",
       role: "Роль",
+      profileNav: "Профиль",
+      profileEditTitle: "Редактировать профиль",
       notificationsTitle: "Уведомления",
       notificationsEmpty: "Пока нет уведомлений.",
       notificationsUnread: "Непрочитанные",
@@ -1155,6 +1201,25 @@ const I18N = {
       to: "Кому",
       recipients: "Получатели",
       read: "Прочитали",
+
+      notificationsTab: "Уведомления",
+      supportTab: "Поддержка",
+      supportTitle: "Чат поддержки",
+      supportStartTitle: "Начать диалог",
+      supportStartHelp: "Напишите вопрос. Админ/модератор ответит.",
+      supportStartPh: "Опишите проблему…",
+      supportStartBtn: "Начать",
+      supportInbox: "Диалоги",
+      supportEmpty: "Пока нет диалогов.",
+      refresh: "Обновить",
+      status: "Статус",
+      supportSelect: "Выберите диалог.",
+      conversation: "Диалог",
+      user: "Пользователь",
+      writeMessage: "Напишите сообщение…",
+      messageTooShort: "Сообщение обязательно",
+      supportNotAvailable: "Чат поддержки доступен для Pro пользователей.",
+      typing: "Печатает…",
     },
     forum: {
       title: "Форум",
@@ -1298,6 +1363,7 @@ export default function LandingPage() {
   const [authToken, setAuthToken] = useState(null);
   const [authUser, setAuthUser] = useState(null);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
   const [resetToken, setResetToken] = useState(null);
   const [forumThreadId, setForumThreadId] = useState(null);
   const [pendingAnchor, setPendingAnchor] = useState(null);
@@ -1331,13 +1397,32 @@ export default function LandingPage() {
     }
   };
 
+  const refreshUnreadSupport = async (token) => {
+    try {
+      if (!token) return setUnreadSupportCount(0);
+      const n = await getSupportUnreadCount(token);
+      setUnreadSupportCount(Number.isFinite(n) ? n : 0);
+    } catch {
+      setUnreadSupportCount(0);
+    }
+  };
+
   useEffect(() => {
     if (!authToken) return;
     refreshUnreadNotifications(authToken);
+    refreshUnreadSupport(authToken);
 
     const handler = () => refreshUnreadNotifications(authToken);
     window.addEventListener('notifications:changed', handler);
-    return () => window.removeEventListener('notifications:changed', handler);
+
+    const interval = window.setInterval(() => {
+      refreshUnreadNotifications(authToken);
+      refreshUnreadSupport(authToken);
+    }, 5000);
+    return () => {
+      window.removeEventListener('notifications:changed', handler);
+      window.clearInterval(interval);
+    };
   }, [authToken]);
 
   // If user opens site with ?reset=TOKEN, show reset password page.
@@ -1357,6 +1442,14 @@ export default function LandingPage() {
     const handler = () => setCurrentPage('forgot');
     window.addEventListener('nav:forgot', handler);
     return () => window.removeEventListener('nav:forgot', handler);
+  }, []);
+
+  // Navigate to profile from dashboard button.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => setCurrentPage('profile');
+    window.addEventListener('nav:profile', handler);
+    return () => window.removeEventListener('nav:profile', handler);
   }, []);
 
   useEffect(() => {
@@ -1397,12 +1490,14 @@ export default function LandingPage() {
     }
   }, [lang]);
 
-  // Update document title when language changes
+  // Update document title when language/unread changes (helps when site is in another tab)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.title = CONFIG.businessName[lang];
-    }
-  }, [lang]);
+    if (typeof window === "undefined") return;
+    const base = CONFIG.businessName[lang];
+    const totalUnread = (unreadNotificationsCount || 0) + (unreadSupportCount || 0);
+    const prefix = totalUnread > 0 ? `(${totalUnread}) ` : '';
+    document.title = `${prefix}${base}`;
+  }, [lang, unreadNotificationsCount, unreadSupportCount]);
 
   // Track page view on mount
   useEffect(() => {
@@ -1490,7 +1585,7 @@ export default function LandingPage() {
       CONFIG={CONFIG}
       isAuthed={isAuthed}
       user={authUser}
-      unreadNotificationsCount={unreadNotificationsCount}
+      unreadNotificationsCount={(unreadNotificationsCount || 0) + (unreadSupportCount || 0)}
       onNavigateAnchor={navigateToAnchor}
       onLogoClick={() => navigateToAnchor('home')}
       onForumClick={() => setCurrentPage('forum')}
@@ -1678,6 +1773,21 @@ export default function LandingPage() {
         onLogout={logout}
         onBackHome={() => setCurrentPage('home')}
         onAdminMembers={() => setCurrentPage('adminMembers')}
+      />
+    );
+  }
+
+  if (currentPage === 'profile') {
+    if (!isAuthed) return setCurrentPage('login');
+    return withHeader(
+      <ProfilePage
+        t={t}
+        user={authUser}
+        token={authToken}
+        onLogout={logout}
+        onBackHome={() => setCurrentPage('home')}
+        onGoDashboard={() => setCurrentPage('dashboard')}
+        onMembers={() => setCurrentPage('adminMembers')}
       />
     );
   }

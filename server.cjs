@@ -40,6 +40,7 @@ const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_SECURE = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';
 const SMTP_FROM = process.env.SMTP_FROM;
 const PUBLIC_SITE_URL = (process.env.PUBLIC_SITE_URL || 'https://www.galstyanacademy.com').replace(/\/+$/, '');
+const SUPPORT_NOTIFY_EMAILS = String(process.env.SUPPORT_NOTIFY_EMAILS || '').trim();
 
 let mailTransporter = null;
 function getMailer() {
@@ -72,6 +73,155 @@ async function sendEmail({ to, subject, text }) {
     subject,
     text,
   });
+}
+
+function parseEmailList(raw) {
+  return String(raw || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+}
+
+async function getSupportNotifyRecipients(pool) {
+  // Prefer explicit config, otherwise notify all admins that have an email.
+  if (SUPPORT_NOTIFY_EMAILS) return parseEmailList(SUPPORT_NOTIFY_EMAILS);
+  const [rows] = await pool.query(
+    `
+      SELECT DISTINCT COALESCE(u.email, p.email) AS email
+      FROM users u
+      LEFT JOIN profiles p ON p.user_id = u.id
+      WHERE u.role = 'admin' AND COALESCE(u.email, p.email) IS NOT NULL
+    `
+  );
+  return (rows || [])
+    .map((r) => String(r.email || '').trim())
+    .filter(Boolean)
+    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+}
+
+async function notifySupportStaff(pool, { conversationId, proUsername, proEmail, message }) {
+  try {
+    const recipients = await getSupportNotifyRecipients(pool);
+    if (!recipients.length) return;
+    await sendEmail({
+      to: recipients.join(','),
+      subject: `New support message (#${conversationId}) from ${proUsername || 'pro user'}`,
+      text:
+        `You received a new support message.\n\n` +
+        `Conversation: #${conversationId}\n` +
+        `From: ${proUsername || '-'}${proEmail ? ` (${proEmail})` : ''}\n\n` +
+        `${message}\n\n` +
+        `Open your dashboard to reply: ${PUBLIC_SITE_URL}`,
+    });
+  } catch (e) {
+    // Never break chat flow if SMTP is missing/misconfigured.
+    if (e.code === 'SMTP_NOT_CONFIGURED') return;
+    console.error('Support notify email failed:', e.code || e.message);
+  }
+}
+
+function fireAndForget(promise) {
+  try {
+    Promise.resolve(promise).catch(() => {});
+  } catch {}
+}
+
+async function createInAppNotification(pool, { senderUserId, targetUserId, targetRoles, title, message }) {
+  // Best-effort: do nothing if notifications tables aren't installed.
+  try {
+    const cleanTitle = String(title || '').trim().slice(0, 190);
+    const cleanMessage = String(message || '').trim();
+    if (!cleanTitle || !cleanMessage) return;
+
+    let insertId = null;
+    if (targetUserId != null) {
+      const [res] = await pool.query(
+        `INSERT INTO notifications (sender_user_id, target_user_id, target_roles, title, message) VALUES (?, ?, '', ?, ?)`,
+        [senderUserId || null, Number(targetUserId), cleanTitle, cleanMessage]
+      );
+      insertId = res?.insertId || null;
+      if (insertId) {
+        try {
+          await pool.query(`INSERT IGNORE INTO notifications_receipts (notification_id, user_id) VALUES (?, ?)`, [
+            insertId,
+            Number(targetUserId),
+          ]);
+        } catch (e2) {
+          if (e2.code !== 'ER_NO_SUCH_TABLE') throw e2;
+        }
+      }
+      return;
+    }
+
+    const rolesCsv = String(targetRoles || '').trim();
+    if (!rolesCsv) return;
+    const [res] = await pool.query(
+      `INSERT INTO notifications (sender_user_id, target_roles, title, message) VALUES (?, ?, ?, ?)`,
+      [senderUserId || null, rolesCsv, cleanTitle, cleanMessage]
+    );
+    insertId = res?.insertId || null;
+    if (insertId) {
+      const roles = rolesCsv.split(',').map((r) => r.trim()).filter(Boolean);
+      if (roles.length) {
+        const placeholders = roles.map(() => '?').join(',');
+        try {
+          await pool.query(
+            `
+              INSERT IGNORE INTO notifications_receipts (notification_id, user_id)
+              SELECT ?, u.id FROM users u WHERE u.role IN (${placeholders})
+            `,
+            [insertId, ...roles]
+          );
+        } catch (e2) {
+          if (e2.code !== 'ER_NO_SUCH_TABLE') throw e2;
+        }
+      }
+    }
+  } catch (e) {
+    if (e.code === 'ER_NO_SUCH_TABLE') return;
+    console.error('createInAppNotification failed:', e.code || e.message);
+  }
+}
+
+// --- Support typing indicator (in-memory, short TTL) ---
+// Map<conversationId:number, Map<userId:number, { at:number, username?:string, role?:string }>>
+const supportTypingByConversation = new Map();
+const SUPPORT_TYPING_TTL_MS = 6000;
+
+function setSupportTyping(conversationId, userId, payload) {
+  if (!conversationId || !userId) return;
+  let m = supportTypingByConversation.get(conversationId);
+  if (!m) {
+    m = new Map();
+    supportTypingByConversation.set(conversationId, m);
+  }
+  m.set(userId, { at: Date.now(), username: payload?.username, role: payload?.role });
+}
+
+function clearSupportTyping(conversationId, userId) {
+  const m = supportTypingByConversation.get(conversationId);
+  if (!m) return;
+  m.delete(userId);
+  if (m.size === 0) supportTypingByConversation.delete(conversationId);
+}
+
+function getOtherTyping(conversationId, currentUserId) {
+  const m = supportTypingByConversation.get(conversationId);
+  if (!m) return null;
+  const now = Date.now();
+  let best = null;
+  for (const [uid, info] of m.entries()) {
+    if (uid === currentUserId) continue;
+    if (!info?.at || now - info.at > SUPPORT_TYPING_TTL_MS) {
+      m.delete(uid);
+      continue;
+    }
+    if (!best || info.at > best.at) best = { userId: uid, ...info };
+  }
+  if (m.size === 0) supportTypingByConversation.delete(conversationId);
+  if (!best) return null;
+  return { userId: best.userId, username: best.username || null, role: best.role || null, at: best.at };
 }
 
 function getDbPool() {
@@ -343,6 +493,10 @@ function normalizeAudience(audience) {
   return '';
 }
 
+function canUseSupport(role) {
+  return ['admin', 'moderator', 'pro', 'user'].includes(role);
+}
+
 function getTopicPolicyPrompt(lang = 'en') {
   const prompts = {
     hy: [
@@ -500,11 +654,61 @@ app.post('/api/auth/login', (req, res) => {
       const ok = bcrypt.compareSync(String(password), String(user.passwordHash));
       if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
+      // If MySQL is configured, auto-provision legacy users into MySQL so private features work.
+      const pool = getDbPool();
+      if (pool) {
+        // Try to find by username first (case-insensitive).
+        const [rows] = await pool.query(
+          `SELECT id, username, email, password_hash AS passwordHash, role FROM users WHERE LOWER(username)=LOWER(?) LIMIT 1`,
+          [String(user.username)]
+        );
+
+        let dbUser = rows && rows[0] ? rows[0] : null;
+
+        if (!dbUser) {
+          try {
+            const [result] = await pool.query(
+              'INSERT INTO users (username, email, password_hash, role) VALUES (?, NULL, ?, ?)',
+              [String(user.username), String(user.passwordHash), String(user.role || 'user')]
+            );
+            dbUser = { id: result.insertId, username: user.username, email: null, role: user.role || 'user' };
+          } catch (e) {
+            // If already exists (race), re-fetch.
+            if (String(e.code || '') === 'ER_DUP_ENTRY') {
+              const [rows2] = await pool.query(
+                `SELECT id, username, email, password_hash AS passwordHash, role FROM users WHERE LOWER(username)=LOWER(?) LIMIT 1`,
+                [String(user.username)]
+              );
+              dbUser = rows2 && rows2[0] ? rows2[0] : null;
+            } else {
+              throw e;
+            }
+          }
+        }
+
+        if (dbUser) {
+          // Validate password against DB hash as well (in case DB has a different one).
+          const dbHash = dbUser.passwordHash || user.passwordHash;
+          const ok2 = bcrypt.compareSync(String(password), String(dbHash));
+          if (!ok2) return res.status(401).json({ error: 'Invalid credentials' });
+
+          await dbEnsureProfile(dbUser.id);
+          const token = signToken({
+            sub: dbUser.id,
+            username: dbUser.username,
+            email: dbUser.email || null,
+            role: dbUser.role || 'user',
+          });
+          return res.json({
+            token,
+            user: { id: dbUser.id, username: dbUser.username, email: dbUser.email || null, role: dbUser.role || 'user' },
+          });
+        }
+      }
+
+      // DB not configured: legacy login only (no private MySQL features like support chat).
       const token = signToken({ sub: user.username, role: user.role || 'user' });
-      return res.json({
-        token,
-        user: { username: user.username, role: user.role || 'user' },
-      });
+      return res.json({ token, user: { username: user.username, role: user.role || 'user' } });
     } catch (e) {
       console.error('Login error:', e.message);
       return res.status(500).json({ error: 'Failed to login' });
@@ -1288,6 +1492,361 @@ app.post('/api/notifications/send', requireAuth, (req, res) => {
     } catch (e) {
       console.error('Notifications send error:', e.code || e.message);
       return res.status(500).json({ error: 'Failed to send notification' });
+    }
+  })();
+});
+
+// --- Support chat (Pro <-> Admin/Moderator) ---
+app.get('/api/support/conversations', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (!canUseSupport(role)) return res.status(403).json({ error: 'Forbidden' });
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const isStaff = ['admin', 'moderator'].includes(role);
+
+      const [rows] = await pool.query(
+        `
+          SELECT
+            c.id,
+            c.pro_user_id AS proUserId,
+            c.status,
+            c.created_at AS createdAt,
+            c.last_message_at AS lastMessageAt,
+            u.username AS proUsername,
+            u.email AS proEmail
+          FROM support_conversations c
+          JOIN users u ON u.id = c.pro_user_id
+          WHERE ${isStaff ? '1=1' : 'c.pro_user_id = ?'}
+          ORDER BY c.last_message_at DESC
+          LIMIT 200
+        `,
+        isStaff ? [] : [userId]
+      );
+
+      return res.json({ conversations: rows || [] });
+    } catch (e) {
+      console.error('Support conversations list error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to load conversations' });
+    }
+  })();
+});
+
+app.post('/api/support/conversations', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (['admin', 'moderator'].includes(role)) {
+        return res.status(403).json({ error: 'Staff cannot start a conversation as a user' });
+      }
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const firstMessage = String(req.body?.message || '').trim();
+      if (firstMessage.length < 1) return res.status(400).json({ error: 'Message is required' });
+
+      const [result] = await pool.query(
+        `INSERT INTO support_conversations (pro_user_id) VALUES (?)`,
+        [userId]
+      );
+      const convId = result?.insertId;
+      if (!convId) return res.status(500).json({ error: 'Failed to create conversation' });
+
+      await pool.query(
+        `INSERT INTO support_messages (conversation_id, sender_user_id, body) VALUES (?, ?, ?)`,
+        [convId, userId, firstMessage]
+      );
+      await pool.query(
+        `UPDATE support_conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [convId]
+      );
+
+      // Respond fast; email notify runs in background (best-effort).
+      res.json({ ok: true, conversationId: convId });
+
+      fireAndForget(
+        notifySupportStaff(pool, {
+          conversationId: convId,
+          proUsername: req.user?.username,
+          proEmail: req.user?.email || null,
+          message: firstMessage,
+        })
+      );
+      return;
+    } catch (e) {
+      console.error('Support create conversation error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to start conversation' });
+    }
+  })();
+});
+
+app.get('/api/support/conversations/:id', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (!canUseSupport(role)) return res.status(403).json({ error: 'Forbidden' });
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const convId = Number(req.params.id);
+      if (!Number.isFinite(convId)) return res.status(400).json({ error: 'Invalid conversation id' });
+
+      const isStaff = ['admin', 'moderator'].includes(role);
+
+      const [crows] = await pool.query(
+        `
+          SELECT
+            c.id,
+            c.pro_user_id AS proUserId,
+            c.status,
+            c.created_at AS createdAt,
+            c.last_message_at AS lastMessageAt,
+            u.username AS proUsername,
+            u.email AS proEmail
+          FROM support_conversations c
+          JOIN users u ON u.id = c.pro_user_id
+          WHERE c.id = ? AND ${isStaff ? '1=1' : 'c.pro_user_id = ?'}
+          LIMIT 1
+        `,
+        isStaff ? [convId] : [convId, userId]
+      );
+
+      if (!crows?.length) return res.status(404).json({ error: 'Conversation not found' });
+
+      const [mrows] = await pool.query(
+        `
+          SELECT
+            m.id,
+            m.conversation_id AS conversationId,
+            m.sender_user_id AS senderUserId,
+            m.body,
+            m.created_at AS createdAt,
+            u.username AS senderUsername,
+            u.role AS senderRole
+          FROM support_messages m
+          JOIN users u ON u.id = m.sender_user_id
+          WHERE m.conversation_id = ?
+          ORDER BY m.created_at ASC
+          LIMIT 500
+        `,
+        [convId]
+      );
+
+      const typing = getOtherTyping(convId, userId);
+      return res.json({ conversation: crows[0], messages: mrows || [], typing });
+    } catch (e) {
+      console.error('Support conversation get error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to load conversation' });
+    }
+  })();
+});
+
+app.post('/api/support/conversations/:id/typing', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (!canUseSupport(role)) return res.status(403).json({ error: 'Forbidden' });
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const convId = Number(req.params.id);
+      if (!Number.isFinite(convId)) return res.status(400).json({ error: 'Invalid conversation id' });
+
+      const isStaff = ['admin', 'moderator'].includes(role);
+      const [crows] = await pool.query(
+        `SELECT id, pro_user_id AS proUserId FROM support_conversations WHERE id = ? LIMIT 1`,
+        [convId]
+      );
+      if (!crows?.length) return res.status(404).json({ error: 'Conversation not found' });
+      const conv = crows[0];
+      if (!isStaff && Number(conv.proUserId) !== Number(userId)) return res.status(403).json({ error: 'Forbidden' });
+
+      const typing = Boolean(req.body?.typing);
+      if (typing) {
+        setSupportTyping(convId, userId, { username: req.user?.username, role: req.user?.role });
+      } else {
+        clearSupportTyping(convId, userId);
+      }
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Support typing error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to set typing' });
+    }
+  })();
+});
+
+app.post('/api/support/conversations/:id/messages', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (!canUseSupport(role)) return res.status(403).json({ error: 'Forbidden' });
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const convId = Number(req.params.id);
+      if (!Number.isFinite(convId)) return res.status(400).json({ error: 'Invalid conversation id' });
+
+      const body = String(req.body?.message || '').trim();
+      if (body.length < 1) return res.status(400).json({ error: 'Message is required' });
+
+      const isStaff = ['admin', 'moderator'].includes(role);
+      const [crows] = await pool.query(
+        `SELECT id, pro_user_id AS proUserId, status FROM support_conversations WHERE id = ? LIMIT 1`,
+        [convId]
+      );
+      if (!crows?.length) return res.status(404).json({ error: 'Conversation not found' });
+      const conv = crows[0];
+      if (!isStaff && Number(conv.proUserId) !== Number(userId)) return res.status(403).json({ error: 'Forbidden' });
+      if (String(conv.status) !== 'open') return res.status(400).json({ error: 'Conversation is closed' });
+
+      await pool.query(
+        `INSERT INTO support_messages (conversation_id, sender_user_id, body) VALUES (?, ?, ?)`,
+        [convId, userId, body]
+      );
+      await pool.query(
+        `UPDATE support_conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [convId]
+      );
+
+      // Respond fast; email notify runs in background (best-effort).
+      res.json({ ok: true });
+
+      if (!['admin', 'moderator'].includes(role)) {
+        fireAndForget(
+          notifySupportStaff(pool, {
+            conversationId: convId,
+            proUsername: req.user?.username,
+            proEmail: req.user?.email || null,
+            message: body,
+          })
+        );
+      }
+      return;
+    } catch (e) {
+      console.error('Support send message error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to send message' });
+    }
+  })();
+});
+
+app.post('/api/support/conversations/:id/seen', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (!canUseSupport(role)) return res.status(403).json({ error: 'Forbidden' });
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const convId = Number(req.params.id);
+      if (!Number.isFinite(convId)) return res.status(400).json({ error: 'Invalid conversation id' });
+
+      const isStaff = ['admin', 'moderator'].includes(role);
+      const [crows] = await pool.query(
+        `SELECT id, pro_user_id AS proUserId FROM support_conversations WHERE id = ? LIMIT 1`,
+        [convId]
+      );
+      if (!crows?.length) return res.status(404).json({ error: 'Conversation not found' });
+      const conv = crows[0];
+      if (!isStaff && Number(conv.proUserId) !== Number(userId)) return res.status(403).json({ error: 'Forbidden' });
+
+      try {
+        await pool.query(
+          `
+            INSERT INTO support_reads (conversation_id, user_id, last_seen_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE last_seen_at = CURRENT_TIMESTAMP
+          `,
+          [convId, userId]
+        );
+      } catch (e2) {
+        if (e2.code === 'ER_NO_SUCH_TABLE') {
+          return res.status(400).json({ error: 'Read-tracking table is missing. Run mysql/support-reads.sql' });
+        }
+        throw e2;
+      }
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Support seen error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to mark seen' });
+    }
+  })();
+});
+
+app.get('/api/support/unread-count', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (!canUseSupport(role)) return res.status(403).json({ error: 'Forbidden' });
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const isStaff = ['admin', 'moderator'].includes(role);
+
+      // Count conversations where last message is from the "other side" and is newer than last_seen_at.
+      // Staff unread = last message from non-staff. User unread = last message from staff.
+      const [rows] = await pool.query(
+        `
+          SELECT COUNT(*) AS cnt
+          FROM support_conversations c
+          JOIN (
+            SELECT conversation_id, MAX(created_at) AS lastAt
+            FROM support_messages
+            GROUP BY conversation_id
+          ) lm ON lm.conversation_id = c.id
+          JOIN support_messages m ON m.conversation_id = c.id AND m.created_at = lm.lastAt
+          JOIN users su ON su.id = m.sender_user_id
+          LEFT JOIN support_reads r ON r.conversation_id = c.id AND r.user_id = ?
+          WHERE ${isStaff ? '1=1' : 'c.pro_user_id = ?'}
+            AND lm.lastAt > COALESCE(r.last_seen_at, '1970-01-01')
+            AND m.sender_user_id <> ?
+            AND ${
+              isStaff
+                ? "su.role NOT IN ('admin','moderator')"
+                : "su.role IN ('admin','moderator')"
+            }
+        `,
+        isStaff ? [userId, userId] : [userId, userId, userId]
+      );
+
+      return res.json({ unread: Number(rows?.[0]?.cnt || 0) });
+    } catch (e) {
+      if (e.code === 'ER_NO_SUCH_TABLE') {
+        return res.json({ unread: 0 });
+      }
+      console.error('Support unread count error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to load unread count' });
     }
   })();
 });

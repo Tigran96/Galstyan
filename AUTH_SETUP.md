@@ -43,6 +43,10 @@ Set these env vars in **cPanel → Setup Node.js App → Environment Variables**
 - `SMTP_USER` (optional if your SMTP requires auth)
 - `SMTP_PASS` (optional if your SMTP requires auth)
 
+Optional (Support chat email alerts):
+- `SUPPORT_NOTIFY_EMAILS` = comma-separated list of admin emails to notify (example: `admin1@domain.com,admin2@domain.com`)
+  - If not set, the server will email **all users with role `admin`** that have an email in `users.email` or `profiles.email` (requires SMTP configured).
+
 Then, in phpMyAdmin run:
 - `mysql/password-resets.sql` (creates `password_resets` table)
 
@@ -59,6 +63,15 @@ Rules:
 - Only **admin** and **moderator** can send notifications.
 - Notifications can be sent to **moderator**, **pro**, or **moderator+pro** audiences.
 - Read/unread is tracked per user in `notifications_receipts`.
+
+## Support Chat (Pro -> Admin/Moderator)
+To enable support chat, run in phpMyAdmin:
+- `mysql/support-chat.sql`
+- `mysql/support-reads.sql`
+
+Rules:
+- Any **logged-in user** can start conversations.
+- **admin** and **moderator** can view and reply to all conversations.
 
 ## Roles (admin / moderator / pro / user)
 Your users are stored in MySQL table: `users`

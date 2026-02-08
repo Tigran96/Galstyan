@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
-import { getMyProfile, updateMyProfile } from '../services/profileService';
+import { useEffect, useRef, useState } from 'react';
 import { getMyNotifications, getSentNotifications, markNotificationRead } from '../services/notificationService';
+import {
+  createSupportConversation,
+  getSupportConversation,
+  listSupportConversations,
+  markSupportSeen,
+  setSupportTyping,
+  sendSupportMessage,
+} from '../services/supportService';
 
 export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMembers }) {
-  const [profile, setProfile] = useState(null);
-  const [form, setForm] = useState({ fullName: '', email: '', phone: '', grade: '' });
-  const [status, setStatus] = useState({ loading: true, saving: false, error: '', saved: false });
-
   const [notifs, setNotifs] = useState([]);
   const [notifStatus, setNotifStatus] = useState({ loading: false, error: '' });
   const [notifFilter, setNotifFilter] = useState('all'); // 'unread' | 'all'
@@ -16,31 +19,23 @@ export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMem
   const [sent, setSent] = useState([]);
   const [sentStatus, setSentStatus] = useState({ loading: false, error: '' });
 
-  useEffect(() => {
-    let mounted = true;
-    const run = async () => {
-      try {
-        setStatus((s) => ({ ...s, loading: true, error: '', saved: false }));
-        const p = await getMyProfile(token);
-        if (!mounted) return;
-        setProfile(p);
-        setForm({
-          fullName: p?.fullName || '',
-          email: p?.email || '',
-          phone: p?.phone || '',
-          grade: p?.grade || '',
-        });
-        setStatus((s) => ({ ...s, loading: false }));
-      } catch (e) {
-        if (!mounted) return;
-        setStatus((s) => ({ ...s, loading: false, error: e.message || 'Failed to load profile' }));
-      }
-    };
-    if (token) run();
-    return () => {
-      mounted = false;
-    };
-  }, [token]);
+  // Support chat (left side)
+  const canUseSupport = ['admin', 'moderator', 'pro', 'user'].includes(user?.role);
+  const isStaff = ['admin', 'moderator'].includes(user?.role);
+  const [convs, setConvs] = useState([]);
+  const [convStatus, setConvStatus] = useState({ loading: false, error: '' });
+  const [activeConvId, setActiveConvId] = useState(null);
+  const [activeConv, setActiveConv] = useState(null);
+  const [convMessages, setConvMessages] = useState([]);
+  const [typing, setTyping] = useState(null);
+  const [msgInput, setMsgInput] = useState('');
+  const [msgSending, setMsgSending] = useState(false);
+  const [startMessage, setStartMessage] = useState('');
+  const [startSending, setStartSending] = useState(false);
+  const supportScrollRef = useRef(null);
+  const supportWasNearBottomRef = useRef(true);
+  const supportInputRef = useRef(null);
+
 
   useEffect(() => {
     let mounted = true;
@@ -82,17 +77,250 @@ export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMem
     };
   }, [token, canSendNotifs]);
 
-  const save = async () => {
-    setStatus((s) => ({ ...s, saving: true, error: '', saved: false }));
+  const refreshConversations = async () => {
     try {
-      const updated = await updateMyProfile(token, form);
-      setProfile(updated);
-      setStatus((s) => ({ ...s, saving: false, saved: true }));
-      setTimeout(() => setStatus((s) => ({ ...s, saved: false })), 1500);
+      setConvStatus({ loading: true, error: '' });
+      const rows = await listSupportConversations(token);
+      setConvs(rows);
+      setConvStatus({ loading: false, error: '' });
+      if (!activeConvId && rows?.length) setActiveConvId(rows[0].id);
     } catch (e) {
-      setStatus((s) => ({ ...s, saving: false, error: e.message || 'Failed to save' }));
+      setConvStatus({ loading: false, error: e.message || 'Failed to load conversations' });
     }
   };
+
+  const fireAndForgetRefreshConversations = () => {
+    Promise.resolve()
+      .then(() => refreshConversations())
+      .catch(() => {});
+  };
+
+  const silentRefreshConversations = async () => {
+    try {
+      const rows = await listSupportConversations(token);
+      setConvs(rows);
+      if ((!activeConvId || !rows.some((c) => c.id === activeConvId)) && rows?.length) {
+        setActiveConvId(rows[0].id);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    if (!canUseSupport) return;
+    refreshConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, user?.role]);
+
+  // Always keep a conversation "open" when there is at least one.
+  useEffect(() => {
+    if (!canUseSupport) return;
+    if (!convs || convs.length === 0) return;
+
+    if (!activeConvId) {
+      setActiveConvId(convs[0].id);
+      return;
+    }
+
+    const stillExists = convs.some((c) => c.id === activeConvId);
+    if (!stillExists) {
+      setActiveConvId(convs[0].id);
+    }
+  }, [canUseSupport, convs, activeConvId]);
+
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      try {
+        if (!activeConvId) {
+          setActiveConv(null);
+          setConvMessages([]);
+          setTyping(null);
+          return;
+        }
+        const data = await getSupportConversation(token, activeConvId);
+        if (!mounted) return;
+        setActiveConv(data.conversation || null);
+        setConvMessages(data.messages || []);
+        setTyping(data.typing || null);
+        // Mark this conversation as seen (best-effort) so tab unread badge clears.
+        Promise.resolve()
+          .then(() => markSupportSeen(token, activeConvId))
+          .then(() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('notifications:changed'));
+            }
+          })
+          .catch(() => {});
+      } catch (e) {
+        if (!mounted) return;
+        setConvStatus((s) => ({ ...s, error: e.message || 'Failed to load conversation' }));
+      }
+    };
+    if (token && canUseSupport) run();
+    return () => {
+      mounted = false;
+    };
+  }, [token, activeConvId, canUseSupport]);
+
+  const scrollSupportToBottom = (behavior = 'smooth') => {
+    const el = supportScrollRef.current;
+    if (!el) return;
+    const top = el.scrollHeight;
+    try {
+      if (typeof el.scrollTo === 'function') {
+        el.scrollTo({ top, behavior });
+      } else {
+        el.scrollTop = top;
+      }
+    } catch {
+      el.scrollTop = top;
+    }
+  };
+
+  const updateNearBottom = () => {
+    const el = supportScrollRef.current;
+    if (!el) return;
+    const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+    supportWasNearBottomRef.current = remaining < 120;
+  };
+
+  // Keep track of whether user is near bottom (so we don't fight when scrolling old messages).
+  useEffect(() => {
+    const el = supportScrollRef.current;
+    if (!el) return;
+    updateNearBottom();
+    const onScroll = () => updateNearBottom();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [activeConvId]);
+
+  // Auto-scroll when new messages arrive, only if user was near bottom.
+  useEffect(() => {
+    if (!activeConvId) return;
+    if (!supportWasNearBottomRef.current) return;
+    scrollSupportToBottom('auto');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConvId, convMessages?.length]);
+
+
+  // Poll for incoming support messages (simple refresh without websockets).
+  useEffect(() => {
+    if (!token) return;
+    if (!canUseSupport) return;
+    if (!activeConvId) return;
+
+    const interval = setInterval(() => {
+      if (msgSending || startSending) return;
+      Promise.resolve()
+        .then(() => getSupportConversation(token, activeConvId))
+        .then((data) => {
+          setActiveConv(data.conversation || null);
+          setConvMessages(data.messages || []);
+          setTyping(data.typing || null);
+        })
+        .catch(() => {});
+
+      // Also refresh inbox list for staff (new conversations / ordering).
+      if (isStaff) {
+        Promise.resolve()
+          .then(() => silentRefreshConversations())
+          .catch(() => {});
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [token, canUseSupport, activeConvId, isStaff, msgSending, startSending]);
+
+  const sendCurrentSupportMessage = async () => {
+    const msg = String(msgInput || '').trim();
+    if (!activeConv?.id) return;
+    if (msg.length < 1) {
+      setConvStatus((s) => ({
+        ...s,
+        error: t?.('private.messageTooShort') || 'Message is required',
+      }));
+      return;
+    }
+
+    setMsgSending(true);
+    const optimisticId = `tmp-${Date.now()}`;
+    const optimistic = {
+      id: optimisticId,
+      conversationId: activeConv.id,
+      senderUserId: user?.id,
+      senderUsername: user?.username,
+      senderRole: user?.role,
+      body: msg,
+      createdAt: new Date().toISOString(),
+    };
+    setConvMessages((prev) => [...(prev || []), optimistic]);
+    setMsgInput('');
+    // Keep focus in the input for fast consecutive messages.
+    requestAnimationFrame(() => {
+      supportInputRef.current?.focus?.();
+    });
+    scrollSupportToBottom('smooth');
+    try {
+      await sendSupportMessage(token, activeConv.id, msg);
+      // Stop typing after successful send.
+      Promise.resolve()
+        .then(() => setSupportTyping(token, activeConv.id, false))
+        .catch(() => {});
+      Promise.resolve()
+        .then(() => getSupportConversation(token, activeConv.id))
+        .then((data) => {
+          setActiveConv(data.conversation || null);
+          setConvMessages(data.messages || []);
+          setTyping(data.typing || null);
+        })
+        .catch(() => {});
+      fireAndForgetRefreshConversations();
+    } catch (e) {
+      setConvStatus((s) => ({ ...s, error: e.message || 'Failed to send message' }));
+      setConvMessages((prev) => (prev || []).filter((m) => m.id !== optimisticId));
+    } finally {
+      setMsgSending(false);
+      requestAnimationFrame(() => {
+        supportInputRef.current?.focus?.();
+      });
+    }
+  };
+
+  // Typing indicator: ping server while user is typing (debounced with inactivity timeout).
+  useEffect(() => {
+    if (!token) return;
+    if (!activeConv?.id) return;
+    if (msgSending) return;
+
+    const text = String(msgInput || '');
+    if (!text) {
+      // Stop typing quickly when input cleared.
+      Promise.resolve()
+        .then(() => setSupportTyping(token, activeConv.id, false))
+        .catch(() => {});
+      return;
+    }
+
+    const t1 = setTimeout(() => {
+      Promise.resolve()
+        .then(() => setSupportTyping(token, activeConv.id, true))
+        .catch(() => {});
+    }, 250);
+
+    const t2 = setTimeout(() => {
+      Promise.resolve()
+        .then(() => setSupportTyping(token, activeConv.id, false))
+        .catch(() => {});
+    }, 1600);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [token, activeConv?.id, msgInput, msgSending]);
 
   return (
     <div className="min-h-screen bg-sky-950 text-white px-6 py-10">
@@ -124,6 +352,13 @@ export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMem
             ) : null}
             <button
               type="button"
+              onClick={() => window.dispatchEvent(new Event('nav:profile'))}
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 transition-colors"
+            >
+              {t?.('private.profileNav') || 'Profile'}
+            </button>
+            <button
+              type="button"
               onClick={onBackHome}
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 transition-colors"
             >
@@ -141,64 +376,221 @@ export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMem
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-2xl border border-white/10 bg-sky-900/40 p-6">
-            <div className="text-white font-semibold">{t('private.profileTitle')}</div>
+            <div className="text-white font-semibold">{t?.('private.supportTitle') || 'Support'}</div>
 
-            {status.loading ? (
-              <p className="mt-3 text-sky-200 text-sm">{t('private.loading')}</p>
-            ) : status.error ? (
-              <p className="mt-3 text-red-200 text-sm">{status.error}</p>
+            {!canUseSupport ? (
+              <p className="mt-3 text-sky-200 text-sm">
+                {t?.('private.supportNotAvailable') || 'Support chat is available for Pro users.'}
+              </p>
             ) : (
-              <div className="mt-4 space-y-3">
-                <div>
-                  <label className="block text-xs text-sky-200 mb-1">{t('private.fullName')}</label>
-                  <input
-                    value={form.fullName}
-                    onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-                    className="w-full rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-sky-200 mb-1">{t('private.email')}</label>
-                  <input
-                    value={form.email}
-                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    className="w-full rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-sky-200 mb-1">{t('private.phone')}</label>
-                  <input
-                    value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    className="w-full rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-sky-200 mb-1">{t('private.grade')}</label>
-                  <input
-                    value={form.grade}
-                    onChange={(e) => setForm((f) => ({ ...f, grade: e.target.value }))}
-                    className="w-full rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
-                  />
-                </div>
+              <div className="mt-4">
+                {convStatus.error ? <p className="text-red-200 text-sm">{convStatus.error}</p> : null}
 
-                <div className="flex items-center gap-3 pt-2">
+                {!isStaff ? (
+                  <div className="rounded-xl border border-white/10 bg-sky-950/30 p-3">
+                    <div className="text-sm text-white font-semibold">
+                      {t?.('private.supportStartTitle') || 'Start a conversation'}
+                    </div>
+                    <p className="mt-1 text-xs text-sky-200">
+                      {t?.('private.supportStartHelp') || 'Write your question. Admin/Moderator will reply.'}
+                    </p>
+                    <textarea
+                      className="mt-3 w-full min-h-[90px] rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
+                      value={startMessage}
+                      onChange={(e) => setStartMessage(e.target.value)}
+                      placeholder={t?.('private.supportStartPh') || 'Describe your problem…'}
+                      disabled={startSending}
+                    />
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-4 py-2 text-sm hover:opacity-95 disabled:opacity-60"
+                        disabled={startSending}
+                        onClick={async () => {
+                          const msg = String(startMessage || '').trim();
+                          if (msg.length < 1) {
+                            return setConvStatus({
+                              loading: false,
+                              error: t?.('private.messageTooShort') || 'Message is required',
+                            });
+                          }
+                          setStartSending(true);
+                          try {
+                            const data = await createSupportConversation(token, msg);
+                            setStartMessage('');
+                            await refreshConversations();
+                            if (data?.conversationId) setActiveConvId(data.conversationId);
+                          } catch (e) {
+                            setConvStatus({ loading: false, error: e.message || 'Failed to start conversation' });
+                          } finally {
+                            setStartSending(false);
+                          }
+                        }}
+                      >
+                        {startSending ? t?.('private.sending') || 'Sending…' : t?.('private.supportStartBtn') || 'Start'}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="text-sm text-sky-200">
+                    {t?.('private.supportInbox') || 'Inbox'}: <b className="text-white">{convs.length}</b>
+                  </div>
                   <button
                     type="button"
-                    onClick={save}
-                    disabled={status.saving}
-                    className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-4 py-2 text-sm hover:opacity-95 disabled:opacity-60"
+                    className="px-3 py-1.5 rounded-lg text-sm border border-white/10 bg-white/5 hover:bg-white/10"
+                    onClick={refreshConversations}
+                    disabled={convStatus.loading}
                   >
-                    {status.saving ? t('private.saving') : t('private.save')}
+                    {convStatus.loading ? t?.('private.loading') || 'Loading…' : t?.('private.refresh') || 'Refresh'}
                   </button>
-                  {status.saved ? <span className="text-sky-200 text-sm">{t('private.saved')}</span> : null}
                 </div>
 
-                {profile?.updatedAt ? (
-                  <p className="mt-3 text-sky-300/80 text-xs">
-                    {t('private.lastUpdated')} {String(profile.updatedAt)}
-                  </p>
-                ) : null}
+                {convs.length === 0 ? (
+                  <p className="mt-3 text-sky-200 text-sm">{t?.('private.supportEmpty') || 'No conversations yet.'}</p>
+                ) : (
+                  <div className="mt-3 grid grid-cols-1 gap-3">
+                    <div className="rounded-xl border border-white/10 bg-sky-950/20 overflow-hidden">
+                      <div className="max-h-40 overflow-auto divide-y divide-white/10">
+                        {convs.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => setActiveConvId(c.id)}
+                            className={`w-full text-left px-3 py-2 hover:bg-white/5 ${activeConvId === c.id ? 'bg-white/10' : ''}`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-sm text-white font-medium">
+                                {isStaff ? (
+                                  <>
+                                    #{c.id}{' '}
+                                    {c.proUsername || (t?.('private.user') || 'User')}
+                                    <span className="text-sky-200 font-normal">
+                                      {c.proEmail ? ` • ${c.proEmail}` : ''}
+                                    </span>
+                                  </>
+                                ) : (
+                                  t?.('private.supportTitle') || 'Support chat'
+                                )}
+                              </div>
+                              <div className="text-[11px] text-sky-300 whitespace-nowrap">
+                                {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString() : ''}
+                              </div>
+                            </div>
+                            <div className="mt-0.5 text-xs text-sky-300">
+                              {t?.('private.status') || 'Status'}: {c.status || 'open'}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-white/10 bg-sky-950/30 p-3">
+                      {!activeConv ? (
+                        <p className="text-sky-200 text-sm">{t?.('private.supportSelect') || 'Select a conversation.'}</p>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="text-sm text-white font-semibold">
+                              {isStaff ? (
+                                <>
+                                  #{activeConv.id}{' '}
+                                  {t?.('private.user') || 'User'}: {activeConv.proUsername || ''}
+                                </>
+                              ) : (
+                                t?.('private.supportTitle') || 'Support chat'
+                              )}
+                            </div>
+                            <div className="text-xs text-sky-300">
+                              {isStaff && activeConv.proUsername ? `${t?.('private.user') || 'User'}: ${activeConv.proUsername}` : ''}
+                            </div>
+                          </div>
+
+                            <div ref={supportScrollRef} className="mt-3 max-h-52 overflow-auto space-y-2 pr-1">
+                            {convMessages.map((m, idx) => {
+                              const isMe = Number(m.senderUserId) === Number(user?.id);
+                              const prev = idx > 0 ? convMessages[idx - 1] : null;
+                              const showName = !isMe && (!prev || prev.senderUserId !== m.senderUserId);
+                              return (
+                                <div
+                                  key={m.id}
+                                  className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                                >
+                                  <div
+                                    className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+                                      isMe
+                                        ? 'bg-sky-500 text-sky-950'
+                                        : 'bg-sky-950/30 border border-white/10 text-sky-100'
+                                    }`}
+                                  >
+                                    {showName ? (
+                                      <div className="mb-1 text-[11px] text-sky-300">
+                                        {m.senderUsername || (t?.('private.user') || 'User')}
+                                      </div>
+                                    ) : null}
+                                    <div className="text-sm whitespace-pre-wrap leading-relaxed">{m.body}</div>
+                                    <div className={`mt-1 text-[10px] ${isMe ? 'text-sky-900/70' : 'text-sky-300'}`}>
+                                      {m.createdAt ? new Date(m.createdAt).toLocaleString() : ''}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {typing?.userId ? (
+                            <div className="mt-2 flex items-center gap-2 text-xs text-sky-300">
+                              <span className="inline-flex items-center gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-sky-300/80 animate-bounce" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-sky-300/80 animate-bounce [animation-delay:120ms]" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-sky-300/80 animate-bounce [animation-delay:240ms]" />
+                              </span>
+                              <span>{t?.('private.typing') || 'Typing…'}</span>
+                            </div>
+                          ) : null}
+
+                          <div className="mt-3 flex items-end gap-2">
+                            <textarea
+                              ref={supportInputRef}
+                              className="flex-1 min-h-[44px] max-h-[120px] rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
+                              value={msgInput}
+                              onChange={(e) => setMsgInput(e.target.value)}
+                              placeholder={t?.('private.writeMessage') || 'Write a message…'}
+                              disabled={msgSending}
+                              onKeyDown={(e) => {
+                                if (e.key !== 'Enter') return;
+                                if (e.shiftKey) return; // newline
+                                e.preventDefault();
+                                if (!msgSending) sendCurrentSupportMessage();
+                              }}
+                              onFocus={() => {
+                                if (!activeConv?.id) return;
+                                Promise.resolve()
+                                  .then(() => setSupportTyping(token, activeConv.id, true))
+                                  .catch(() => {});
+                              }}
+                              onBlur={() => {
+                                if (!activeConv?.id) return;
+                                Promise.resolve()
+                                  .then(() => setSupportTyping(token, activeConv.id, false))
+                                  .catch(() => {});
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-4 py-2 text-sm hover:opacity-95 disabled:opacity-60"
+                              disabled={msgSending}
+                              onClick={sendCurrentSupportMessage}
+                            >
+                              {msgSending ? t?.('private.sending') || 'Sending…' : t?.('private.send') || 'Send'}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -206,6 +598,8 @@ export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMem
           <div className="rounded-2xl border border-white/10 bg-sky-900/40 p-6">
             <div className="text-white font-semibold">{t?.('private.notificationsTitle') || 'Notifications'}</div>
 
+            {(
+              <>
             <div className="mt-3 flex items-center gap-2">
               <button
                 type="button"
@@ -338,6 +732,8 @@ export function DashboardPage({ t, user, token, onLogout, onBackHome, onAdminMem
                 )}
               </div>
             ) : null}
+              </>
+            )}
           </div>
         </div>
       </div>
