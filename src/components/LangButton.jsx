@@ -12,7 +12,7 @@ export const LangButton = ({ code, label, active, onClick }) => {
     <button
       onClick={handleClick}
       aria-label={`Change language to ${label}`}
-      className={`inline-flex items-center justify-center rounded-xl p-1.5 ring-1 transition ${
+      className={`inline-flex items-center justify-center rounded-xl p-1 ring-1 transition sm:p-1.5 ${
         active
           ? "bg-white/15 ring-white/30"
           : "bg-white/5 ring-white/10 hover:bg-white/10"
@@ -21,7 +21,7 @@ export const LangButton = ({ code, label, active, onClick }) => {
       <img 
         src={`./flags/${code === "hy" ? "am" : code === "en" ? "gb" : "ru"}.svg`}
         alt={`${label} flag`}
-        className="w-6 h-4 object-cover rounded-sm"
+        className="w-5 h-3.5 sm:w-6 sm:h-4 object-cover rounded-sm"
       />
     </button>
   );

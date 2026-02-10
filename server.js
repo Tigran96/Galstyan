@@ -17,6 +17,7 @@ import nodemailer from 'nodemailer';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', true);
 const PORT = process.env.PORT || 3001;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const AUTH_JWT_SECRET = process.env.AUTH_JWT_SECRET;
@@ -546,7 +547,99 @@ app.use(
   })
 );
 app.options('*', cors());
-app.use(express.json());
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '6mb' }));
+
+// --- Static uploads (support chat attachments, etc.) ---
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+const SUPPORT_UPLOADS_DIR = path.join(UPLOADS_DIR, 'support');
+try {
+  fs.mkdirSync(SUPPORT_UPLOADS_DIR, { recursive: true });
+} catch {
+  // ignore
+}
+app.use(
+  '/uploads',
+  express.static(UPLOADS_DIR, {
+    fallthrough: true,
+    maxAge: '7d',
+    setHeaders(res) {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  })
+);
+
+function getReqBaseUrl(req) {
+  const xfProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const proto = xfProto || req.protocol || 'https';
+  const host = req.get('host');
+  return `${proto}://${host}`;
+}
+
+function parseDataUrlImage(dataUrl) {
+  const raw = String(dataUrl || '');
+  const m = raw.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
+  if (!m) return null;
+  return { mime: m[1].toLowerCase(), b64: m[2] };
+}
+
+function extForMime(mime) {
+  if (mime === 'image/png') return 'png';
+  if (mime === 'image/jpeg') return 'jpg';
+  if (mime === 'image/webp') return 'webp';
+  if (mime === 'image/gif') return 'gif';
+  return null;
+}
+
+async function saveSupportAttachmentFromDataUrl({ dataUrl, originalName }) {
+  const parsed = parseDataUrlImage(dataUrl);
+  if (!parsed) {
+    const err = new Error('Invalid image data');
+    err.code = 'INVALID_IMAGE_DATA';
+    throw err;
+  }
+
+  const allowed = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+  if (!allowed.has(parsed.mime)) {
+    const err = new Error('Unsupported image type');
+    err.code = 'UNSUPPORTED_IMAGE_TYPE';
+    throw err;
+  }
+
+  const buf = Buffer.from(parsed.b64, 'base64');
+  const maxBytes = process.env.SUPPORT_MAX_UPLOAD_BYTES
+    ? Number(process.env.SUPPORT_MAX_UPLOAD_BYTES)
+    : 2 * 1024 * 1024;
+  if (!Number.isFinite(maxBytes) || maxBytes < 10_000) {
+    const err = new Error('Server upload limit is invalid');
+    err.code = 'UPLOAD_LIMIT_INVALID';
+    throw err;
+  }
+  if (buf.length > maxBytes) {
+    const err = new Error('Image is too large');
+    err.code = 'IMAGE_TOO_LARGE';
+    err.maxBytes = maxBytes;
+    throw err;
+  }
+
+  const ext = extForMime(parsed.mime);
+  if (!ext) {
+    const err = new Error('Unsupported image type');
+    err.code = 'UNSUPPORTED_IMAGE_TYPE';
+    throw err;
+  }
+
+  const safeName = String(originalName || '').replace(/[^\w.\- ()]/g, '').slice(0, 180);
+  const rand = crypto.randomBytes(8).toString('hex');
+  const fileName = `${Date.now()}-${rand}.${ext}`;
+  const abs = path.join(SUPPORT_UPLOADS_DIR, fileName);
+  await fs.promises.writeFile(abs, buf);
+  return {
+    attachmentPath: `/uploads/support/${fileName}`,
+    attachmentMime: parsed.mime,
+    attachmentName: safeName || fileName,
+    attachmentSize: buf.length,
+  };
+}
 
 // Health check
 app.get('/health', (req, res) => {
@@ -1450,15 +1543,35 @@ app.post('/api/support/conversations', requireAuth, async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const firstMessage = String(req.body?.message || '').trim();
-    if (firstMessage.length < 1) return res.status(400).json({ error: 'Message is required' });
+    const imageDataUrl = req.body?.imageDataUrl || null;
+    const imageName = req.body?.imageName || null;
+    if (firstMessage.length < 1 && !imageDataUrl) return res.status(400).json({ error: 'Message is required' });
 
     const [result] = await pool.query(`INSERT INTO support_conversations (pro_user_id) VALUES (?)`, [userId]);
     const convId = result?.insertId;
     if (!convId) return res.status(500).json({ error: 'Failed to create conversation' });
 
+    let attachment = null;
+    if (imageDataUrl) {
+      attachment = await saveSupportAttachmentFromDataUrl({ dataUrl: imageDataUrl, originalName: imageName });
+    }
+
     await pool.query(
-      `INSERT INTO support_messages (conversation_id, sender_user_id, body) VALUES (?, ?, ?)`,
-      [convId, userId, firstMessage]
+      `
+        INSERT INTO support_messages
+          (conversation_id, sender_user_id, body, attachment_path, attachment_mime, attachment_name, attachment_size)
+        VALUES
+          (?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        convId,
+        userId,
+        firstMessage,
+        attachment?.attachmentPath || null,
+        attachment?.attachmentMime || null,
+        attachment?.attachmentName || null,
+        attachment?.attachmentSize || null,
+      ]
     );
     await pool.query(`UPDATE support_conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?`, [convId]);
 
@@ -1470,7 +1583,7 @@ app.post('/api/support/conversations', requireAuth, async (req, res) => {
         conversationId: convId,
         proUsername: req.user?.username,
         proEmail: req.user?.email || null,
-        message: firstMessage,
+        message: firstMessage || '[image]',
       })
     );
     return;
@@ -1521,6 +1634,10 @@ app.get('/api/support/conversations/:id', requireAuth, async (req, res) => {
           m.conversation_id AS conversationId,
           m.sender_user_id AS senderUserId,
           m.body,
+          m.attachment_path AS attachmentPath,
+          m.attachment_mime AS attachmentMime,
+          m.attachment_name AS attachmentName,
+          m.attachment_size AS attachmentSize,
           m.created_at AS createdAt,
           u.username AS senderUsername,
           u.role AS senderRole
@@ -1534,7 +1651,12 @@ app.get('/api/support/conversations/:id', requireAuth, async (req, res) => {
     );
 
     const typing = getOtherTyping(convId, userId);
-    return res.json({ conversation: crows[0], messages: mrows || [], typing });
+    const baseUrl = getReqBaseUrl(req);
+    const messages = (mrows || []).map((m) => ({
+      ...m,
+      attachmentUrl: m.attachmentPath ? `${baseUrl}${m.attachmentPath}` : null,
+    }));
+    return res.json({ conversation: crows[0], messages, typing });
   } catch (e) {
     console.error('Support conversation get error:', e.code || e.message);
     return res.status(500).json({ error: 'Failed to load conversation' });
@@ -1592,7 +1714,9 @@ app.post('/api/support/conversations/:id/messages', requireAuth, async (req, res
     if (!Number.isFinite(convId)) return res.status(400).json({ error: 'Invalid conversation id' });
 
     const body = String(req.body?.message || '').trim();
-    if (body.length < 1) return res.status(400).json({ error: 'Message is required' });
+    const imageDataUrl = req.body?.imageDataUrl || null;
+    const imageName = req.body?.imageName || null;
+    if (body.length < 1 && !imageDataUrl) return res.status(400).json({ error: 'Message is required' });
 
     const isStaff = ['admin', 'moderator'].includes(role);
     const [crows] = await pool.query(
@@ -1604,9 +1728,27 @@ app.post('/api/support/conversations/:id/messages', requireAuth, async (req, res
     if (!isStaff && Number(conv.proUserId) !== Number(userId)) return res.status(403).json({ error: 'Forbidden' });
     if (String(conv.status) !== 'open') return res.status(400).json({ error: 'Conversation is closed' });
 
+    let attachment = null;
+    if (imageDataUrl) {
+      attachment = await saveSupportAttachmentFromDataUrl({ dataUrl: imageDataUrl, originalName: imageName });
+    }
+
     await pool.query(
-      `INSERT INTO support_messages (conversation_id, sender_user_id, body) VALUES (?, ?, ?)`,
-      [convId, userId, body]
+      `
+        INSERT INTO support_messages
+          (conversation_id, sender_user_id, body, attachment_path, attachment_mime, attachment_name, attachment_size)
+        VALUES
+          (?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        convId,
+        userId,
+        body,
+        attachment?.attachmentPath || null,
+        attachment?.attachmentMime || null,
+        attachment?.attachmentName || null,
+        attachment?.attachmentSize || null,
+      ]
     );
     await pool.query(`UPDATE support_conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?`, [convId]);
 
@@ -1619,7 +1761,7 @@ app.post('/api/support/conversations/:id/messages', requireAuth, async (req, res
           conversationId: convId,
           proUsername: req.user?.username,
           proEmail: req.user?.email || null,
-          message: body,
+          message: body || '[image]',
         })
       );
     }

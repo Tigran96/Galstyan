@@ -20,12 +20,16 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
   const [typing, setTyping] = useState(null);
   const [msgInput, setMsgInput] = useState('');
   const [msgSending, setMsgSending] = useState(false);
+  const [msgFile, setMsgFile] = useState(null);
   const [startMessage, setStartMessage] = useState('');
   const [startSending, setStartSending] = useState(false);
+  const [startFile, setStartFile] = useState(null);
 
   const supportScrollRef = useRef(null);
   const supportWasNearBottomRef = useRef(true);
   const supportInputRef = useRef(null);
+  const msgFileInputRef = useRef(null);
+  const startFileInputRef = useRef(null);
 
   const refreshConversations = async () => {
     try {
@@ -168,7 +172,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
   const sendCurrentSupportMessage = async () => {
     const msg = String(msgInput || '').trim();
     if (!activeConv?.id) return;
-    if (msg.length < 1) {
+    if (msg.length < 1 && !msgFile) {
       setConvStatus((s) => ({ ...s, error: t?.('private.messageTooShort') || 'Message is required' }));
       return;
     }
@@ -186,10 +190,12 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
     };
     setConvMessages((prev) => [...(prev || []), optimistic]);
     setMsgInput('');
+    setMsgFile(null);
+    if (msgFileInputRef.current) msgFileInputRef.current.value = '';
     requestAnimationFrame(() => supportInputRef.current?.focus?.());
     scrollSupportToBottom('smooth');
     try {
-      await sendSupportMessage(token, activeConv.id, msg);
+      await sendSupportMessage(token, activeConv.id, { message: msg }, msgFile);
       Promise.resolve()
         .then(() => setSupportTyping(token, activeConv.id, false))
         .catch(() => {});
@@ -205,7 +211,12 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
         .then(() => silentRefreshConversations())
         .catch(() => {});
     } catch (e) {
-      setConvStatus((s) => ({ ...s, error: e.message || 'Failed to send message' }));
+      const raw = String(e?.message || '');
+      const friendly =
+        raw === 'Failed to fetch'
+          ? 'Failed to upload image. Please try a smaller image or check your connection.'
+          : raw || 'Failed to send message';
+      setConvStatus((s) => ({ ...s, error: friendly }));
       setConvMessages((prev) => (prev || []).filter((m) => m.id !== optimisticId));
     } finally {
       setMsgSending(false);
@@ -282,6 +293,53 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                     placeholder={t?.('private.supportStartPh') || 'Describe your problem…'}
                     disabled={startSending}
                   />
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <input
+                      ref={startFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setStartFile(e.target.files?.[0] || null)}
+                      disabled={startSending}
+                    />
+                    <button
+                      type="button"
+                      className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"
+                      onClick={() => startFileInputRef.current?.click?.()}
+                      disabled={startSending}
+                      title="Attach image"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4 text-sky-100"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21.44 11.05l-8.49 8.49a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                      </svg>
+                    </button>
+                    {startFile ? (
+                      <div className="flex-1 min-w-0 text-xs text-sky-200 truncate">
+                        {startFile.name}
+                        <button
+                          type="button"
+                          className="ml-2 text-sky-300 hover:text-white"
+                          onClick={() => {
+                            setStartFile(null);
+                            if (startFileInputRef.current) startFileInputRef.current.value = '';
+                          }}
+                          title="Remove"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex-1" />
+                    )}
+                  </div>
                   <div className="mt-3 flex justify-end">
                     <button
                       type="button"
@@ -289,7 +347,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                       disabled={startSending}
                       onClick={async () => {
                         const msg = String(startMessage || '').trim();
-                        if (msg.length < 1) {
+                        if (msg.length < 1 && !startFile) {
                           return setConvStatus({
                             loading: false,
                             error: t?.('private.messageTooShort') || 'Message is required',
@@ -297,8 +355,10 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                         }
                         setStartSending(true);
                         try {
-                          const data = await createSupportConversation(token, msg);
+                          const data = await createSupportConversation(token, { message: msg }, startFile);
                           setStartMessage('');
+                          setStartFile(null);
+                          if (startFileInputRef.current) startFileInputRef.current.value = '';
                           await refreshConversations();
                           if (data?.conversationId) setActiveConvId(data.conversationId);
                         } catch (e) {
@@ -406,6 +466,16 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                                     </div>
                                   ) : null}
                                   <div className="text-sm whitespace-pre-wrap leading-relaxed">{m.body}</div>
+                                  {m.attachmentUrl ? (
+                                    <a href={m.attachmentUrl} target="_blank" rel="noreferrer">
+                                      <img
+                                        src={m.attachmentUrl}
+                                        alt={m.attachmentName || 'attachment'}
+                                        className="mt-2 max-h-56 rounded-lg border border-white/10 object-contain bg-black/10"
+                                        loading="lazy"
+                                      />
+                                    </a>
+                                  ) : null}
                                   <div className={`mt-1 text-[10px] ${isMe ? 'text-sky-900/70' : 'text-sky-300'}`}>
                                     {m.createdAt ? new Date(m.createdAt).toLocaleString() : ''}
                                   </div>
@@ -427,9 +497,37 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                         ) : null}
 
                         <div className="mt-3 flex items-end gap-2">
+                          <input
+                            ref={msgFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => setMsgFile(e.target.files?.[0] || null)}
+                            disabled={msgSending}
+                          />
+                          <button
+                            type="button"
+                            className="h-10 w-10 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"
+                            onClick={() => msgFileInputRef.current?.click?.()}
+                            disabled={msgSending}
+                            title="Attach image"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="h-5 w-5 text-sky-100"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M21.44 11.05l-8.49 8.49a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                          </button>
                           <textarea
                             ref={supportInputRef}
-                            className="flex-1 min-h-[44px] max-h-[120px] rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
+                            rows={1}
+                            className="flex-1 min-h-10 h-10 max-h-[120px] resize-none rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40 leading-5"
                             value={msgInput}
                             onChange={(e) => setMsgInput(e.target.value)}
                             placeholder={t?.('private.writeMessage') || 'Write a message…'}
@@ -443,13 +541,29 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                           />
                           <button
                             type="button"
-                            className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-4 py-2 text-sm hover:opacity-95 disabled:opacity-60"
+                            className="h-10 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-4 py-2 text-sm hover:opacity-95 disabled:opacity-60"
                             disabled={msgSending}
                             onClick={sendCurrentSupportMessage}
                           >
                             {msgSending ? t?.('private.sending') || 'Sending…' : t?.('private.send') || 'Send'}
                           </button>
                         </div>
+                        {msgFile ? (
+                          <div className="mt-2 text-xs text-sky-200 truncate">
+                            {msgFile.name}
+                            <button
+                              type="button"
+                              className="ml-2 text-sky-300 hover:text-white"
+                              onClick={() => {
+                                setMsgFile(null);
+                                if (msgFileInputRef.current) msgFileInputRef.current.value = '';
+                              }}
+                              title="Remove"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : null}
                       </>
                     )}
                   </div>

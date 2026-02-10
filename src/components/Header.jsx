@@ -22,10 +22,10 @@ export const Header = ({
   onLogout,
 }) => (
   <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-sky-950/60 border-b border-white/10">
-    <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+    <div className="mx-auto flex max-w-6xl items-center justify-between px-3 sm:px-6 py-2 sm:py-3">
       <a
         href="#home"
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 min-w-0"
         onClick={(e) => {
           e.preventDefault();
           onLogoClick?.();
@@ -34,9 +34,14 @@ export const Header = ({
         <img
           src={CONFIG.logo}
           alt={CONFIG.businessName[lang] + " logo"}
-          className="h-12 w-auto md:h-16"
+          className="h-10 w-auto sm:h-12 md:h-16"
         />
-        <span className="text-white font-semibold text-height-fixed">{CONFIG.businessName[lang]}</span>
+        {/* Always keep brand name for accessibility */}
+        <span className="sr-only">{CONFIG.businessName[lang]}</span>
+        {/* Show brand name only when there's enough space (desktop) */}
+        <span className="hidden xl:inline text-white font-semibold text-height-fixed truncate max-w-[240px]">
+          {CONFIG.businessName[lang]}
+        </span>
       </a>
       <nav className="hidden md:flex items-center gap-1">
         <NavLink
@@ -92,19 +97,19 @@ export const Header = ({
           {t("nav.forum")}
         </button>
       </nav>
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 mr-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 mr-0 sm:mr-2">
           {isAuthed ? (
             <>
               <button
                 type="button"
                 onClick={onMessagesClick}
-                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-9 w-9 sm:h-10 sm:w-10 hover:bg-white/10 transition-colors"
                 aria-label={t?.('private.supportTab') || 'Messages'}
                 title={t?.('private.supportTab') || 'Messages'}
               >
                 {/* Chat bubble icon */}
-                <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 12c0 4.418-4.03 8-9 8a11 11 0 0 1-3.7-.64L3 20l1.7-4.08A7.6 7.6 0 0 1 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
                   <path d="M8 12h.01M12 12h.01M16 12h.01" />
                 </svg>
@@ -122,12 +127,12 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onNotificationsClick}
-                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-9 w-9 sm:h-10 sm:w-10 hover:bg-white/10 transition-colors"
                 aria-label={t?.('private.notificationsTab') || 'Notifications'}
                 title={t?.('private.notificationsTab') || 'Notifications'}
               >
                 {/* Bell icon */}
-                <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 17H9" />
                   <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7Z" />
                   <path d="M10 21a2 2 0 0 0 4 0" />
@@ -146,12 +151,12 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onProfileClick}
-                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-9 w-9 sm:h-10 sm:w-10 hover:bg-white/10 transition-colors"
                 aria-label={t?.('private.profileNav') || 'Profile'}
                 title={t?.('private.profileNav') || 'Profile'}
               >
                 {/* User icon */}
-                <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21a8 8 0 1 0-16 0" />
                   <path d="M12 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
                 </svg>
@@ -163,12 +168,12 @@ export const Header = ({
                 <button
                   type="button"
                   onClick={onMembersClick}
-                  className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                  className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-9 w-9 sm:h-10 sm:w-10 hover:bg-white/10 transition-colors"
                   aria-label={t?.('admin.members.title') || 'Members'}
                   title={t?.('admin.members.title') || 'Members'}
                 >
                   {/* Users icon */}
-                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17 21a7 7 0 0 0-14 0" />
                     <path d="M10 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
                     <path d="M22 21a6 6 0 0 0-7-5.6" />
@@ -182,12 +187,12 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="group relative inline-flex items-center justify-center rounded-lg bg-red-500/20 border border-red-500/30 h-10 w-10 text-red-100 hover:bg-red-500/25 transition-colors"
+                className="group relative inline-flex items-center justify-center rounded-lg bg-red-500/20 border border-red-500/30 h-9 w-9 sm:h-10 sm:w-10 text-red-100 hover:bg-red-500/25 transition-colors"
                 aria-label={t?.('private.logoutNav') || 'Logout'}
                 title={t?.('private.logoutNav') || 'Logout'}
               >
                 {/* Arrow-only logout icon */}
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h12" />
                   <path d="M13 6l6 6-6 6" />
                 </svg>
