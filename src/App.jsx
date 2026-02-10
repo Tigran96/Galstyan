@@ -17,11 +17,12 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { Chat } from './components/Chat';
 import { ChatButton } from './components/ChatButton';
 import { LoginPage } from './components/LoginPage';
-import { DashboardPage } from './components/DashboardPage';
 import { SignUpPage } from './components/SignUpPage';
 import { ForgotPasswordPage } from './components/ForgotPasswordPage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { ProfilePage } from './components/ProfilePage';
+import { MessagesPage } from './components/MessagesPage';
+import { NotificationsPage } from './components/NotificationsPage';
 import { ForumPage } from './components/ForumPage';
 import { ForumThreadPage } from './components/ForumThreadPage';
 import { NewThreadPage } from './components/NewThreadPage';
@@ -1563,9 +1564,25 @@ export default function LandingPage() {
 
   const isAuthed = Boolean(authToken && authUser);
 
-  const goDashboard = () => {
+  const goMessages = () => {
     if (!isAuthed) return setCurrentPage('login');
-    return setCurrentPage('dashboard');
+    return setCurrentPage('messages');
+  };
+
+  const goNotifications = () => {
+    if (!isAuthed) return setCurrentPage('login');
+    return setCurrentPage('notifications');
+  };
+
+  const goProfile = () => {
+    if (!isAuthed) return setCurrentPage('login');
+    return setCurrentPage('profile');
+  };
+
+  const goMembers = () => {
+    if (!isAuthed) return setCurrentPage('login');
+    if (!['admin', 'moderator'].includes(authUser?.role)) return setCurrentPage('messages');
+    return setCurrentPage('adminMembers');
   };
 
   const logout = () => {
@@ -1585,13 +1602,17 @@ export default function LandingPage() {
       CONFIG={CONFIG}
       isAuthed={isAuthed}
       user={authUser}
-      unreadNotificationsCount={(unreadNotificationsCount || 0) + (unreadSupportCount || 0)}
+      unreadNotificationsCount={unreadNotificationsCount || 0}
+      unreadSupportCount={unreadSupportCount || 0}
       onNavigateAnchor={navigateToAnchor}
       onLogoClick={() => navigateToAnchor('home')}
       onForumClick={() => setCurrentPage('forum')}
       onLoginClick={() => setCurrentPage('login')}
       onSignUpClick={() => setCurrentPage('signup')}
-      onDashboardClick={goDashboard}
+      onMessagesClick={goMessages}
+      onNotificationsClick={goNotifications}
+      onProfileClick={goProfile}
+      onMembersClick={goMembers}
       onLogout={logout}
     />
   );
@@ -1643,7 +1664,7 @@ export default function LandingPage() {
           }
           setAuthToken(token);
           setAuthUser(user);
-          setCurrentPage('dashboard');
+          setCurrentPage('messages');
         }}
       />
     );
@@ -1661,7 +1682,7 @@ export default function LandingPage() {
           }
           setAuthToken(token);
           setAuthUser(user);
-          setCurrentPage('dashboard');
+          setCurrentPage('messages');
         }}
       />
     );
@@ -1747,36 +1768,6 @@ export default function LandingPage() {
     );
   }
 
-  if (currentPage === 'dashboard') {
-    if (!isAuthed) {
-      return withHeader(
-        <LoginPage
-          t={t}
-          onBack={() => setCurrentPage('home')}
-          onSignUpClick={() => setCurrentPage('signup')}
-          onLoginSuccess={({ token, user }) => {
-            if (typeof window !== 'undefined') {
-              window.localStorage.setItem('authToken', token);
-            }
-            setAuthToken(token);
-            setAuthUser(user);
-            setCurrentPage('dashboard');
-          }}
-        />
-      );
-    }
-    return withHeader(
-      <DashboardPage
-        t={t}
-        user={authUser}
-        token={authToken}
-        onLogout={logout}
-        onBackHome={() => setCurrentPage('home')}
-        onAdminMembers={() => setCurrentPage('adminMembers')}
-      />
-    );
-  }
-
   if (currentPage === 'profile') {
     if (!isAuthed) return setCurrentPage('login');
     return withHeader(
@@ -1786,21 +1777,43 @@ export default function LandingPage() {
         token={authToken}
         onLogout={logout}
         onBackHome={() => setCurrentPage('home')}
-        onGoDashboard={() => setCurrentPage('dashboard')}
         onMembers={() => setCurrentPage('adminMembers')}
+      />
+    );
+  }
+
+  if (currentPage === 'messages') {
+    if (!isAuthed) return setCurrentPage('login');
+    return withHeader(
+      <MessagesPage
+        t={t}
+        user={authUser}
+        token={authToken}
+        onAdminMembers={() => setCurrentPage('adminMembers')}
+      />
+    );
+  }
+
+  if (currentPage === 'notifications') {
+    if (!isAuthed) return setCurrentPage('login');
+    return withHeader(
+      <NotificationsPage
+        t={t}
+        user={authUser}
+        token={authToken}
       />
     );
   }
 
   if (currentPage === 'adminMembers') {
     if (!isAuthed) return setCurrentPage('login');
-    if (!['admin', 'moderator'].includes(authUser?.role)) return setCurrentPage('dashboard');
+    if (!['admin', 'moderator'].includes(authUser?.role)) return setCurrentPage('messages');
     return withHeader(
       <AdminMembersPage
         t={t}
         authToken={authToken}
         authUser={authUser}
-        onBack={() => setCurrentPage('dashboard')}
+        onBack={() => setCurrentPage('messages')}
       />
     );
   }
@@ -1813,20 +1826,7 @@ export default function LandingPage() {
     <div className={`min-h-screen ${CONFIG.color.bg} ${CONFIG.color.text} antialiased`}>
 
       {/* Header */}
-      <Header
-        lang={lang}
-        setLang={setLang}
-        t={t}
-        CONFIG={CONFIG}
-        isAuthed={isAuthed}
-        user={authUser}
-        unreadNotificationsCount={unreadNotificationsCount}
-        onForumClick={() => setCurrentPage('forum')}
-        onLoginClick={() => setCurrentPage('login')}
-        onSignUpClick={() => setCurrentPage('signup')}
-        onDashboardClick={goDashboard}
-        onLogout={logout}
-      />
+      {headerEl}
 
       {/* Hero */}
       <Hero t={t} CONFIG={CONFIG} lang={lang} />

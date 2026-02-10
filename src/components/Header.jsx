@@ -9,12 +9,16 @@ export const Header = ({
   isAuthed,
   user,
   unreadNotificationsCount,
+  unreadSupportCount,
   onForumClick,
   onNavigateAnchor,
   onLogoClick,
   onLoginClick,
   onSignUpClick,
-  onDashboardClick,
+  onMessagesClick,
+  onNotificationsClick,
+  onProfileClick,
+  onMembersClick,
   onLogout,
 }) => (
   <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-sky-950/60 border-b border-white/10">
@@ -94,11 +98,40 @@ export const Header = ({
             <>
               <button
                 type="button"
-                onClick={onDashboardClick}
-                className="relative rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-sky-100 hover:bg-white/10 transition-colors whitespace-nowrap"
-                title={user?.username || ''}
+                onClick={onMessagesClick}
+                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                aria-label={t?.('private.supportTab') || 'Messages'}
+                title={t?.('private.supportTab') || 'Messages'}
               >
-                {t('private.dashboardNav')}
+                {/* Chat bubble icon */}
+                <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12c0 4.418-4.03 8-9 8a11 11 0 0 1-3.7-.64L3 20l1.7-4.08A7.6 7.6 0 0 1 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
+                  <path d="M8 12h.01M12 12h.01M16 12h.01" />
+                </svg>
+                {unreadSupportCount > 0 ? (
+                  <span
+                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-sky-950"
+                    aria-label="Unread messages"
+                    title="Unread messages"
+                  />
+                ) : null}
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                  {t?.('private.supportTab') || 'Messages'}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={onNotificationsClick}
+                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                aria-label={t?.('private.notificationsTab') || 'Notifications'}
+                title={t?.('private.notificationsTab') || 'Notifications'}
+              >
+                {/* Bell icon */}
+                <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 17H9" />
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7Z" />
+                  <path d="M10 21a2 2 0 0 0 4 0" />
+                </svg>
                 {unreadNotificationsCount > 0 ? (
                   <span
                     className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-sky-950"
@@ -106,13 +139,61 @@ export const Header = ({
                     title="Unread notifications"
                   />
                 ) : null}
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                  {t?.('private.notificationsTab') || 'Notifications'}
+                </span>
               </button>
               <button
                 type="button"
-                onClick={onLogout}
-                className="rounded-lg bg-red-500/20 border border-red-500/30 px-3 py-2 text-sm text-red-100 hover:bg-red-500/25 transition-colors whitespace-nowrap"
+                onClick={onProfileClick}
+                className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                aria-label={t?.('private.profileNav') || 'Profile'}
+                title={t?.('private.profileNav') || 'Profile'}
               >
-                {t('private.logoutNav')}
+                {/* User icon */}
+                <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21a8 8 0 1 0-16 0" />
+                  <path d="M12 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
+                </svg>
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                  {t?.('private.profileNav') || 'Profile'}
+                </span>
+              </button>
+              {['admin', 'moderator'].includes(user?.role) ? (
+                <button
+                  type="button"
+                  onClick={onMembersClick}
+                  className="group relative inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 h-10 w-10 hover:bg-white/10 transition-colors"
+                  aria-label={t?.('admin.members.title') || 'Members'}
+                  title={t?.('admin.members.title') || 'Members'}
+                >
+                  {/* Users icon */}
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21a7 7 0 0 0-14 0" />
+                    <path d="M10 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
+                    <path d="M22 21a6 6 0 0 0-7-5.6" />
+                    <path d="M17 11a3.5 3.5 0 1 0-2.3-6.1" />
+                  </svg>
+                  <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                    {t?.('admin.members.title') || 'Members'}
+                  </span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={onLogout}
+                className="group relative inline-flex items-center justify-center rounded-lg bg-red-500/20 border border-red-500/30 h-10 w-10 text-red-100 hover:bg-red-500/25 transition-colors"
+                aria-label={t?.('private.logoutNav') || 'Logout'}
+                title={t?.('private.logoutNav') || 'Logout'}
+              >
+                {/* Arrow-only logout icon */}
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h12" />
+                  <path d="M13 6l6 6-6 6" />
+                </svg>
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                  {t?.('private.logoutNav') || 'Logout'}
+                </span>
               </button>
             </>
           ) : (

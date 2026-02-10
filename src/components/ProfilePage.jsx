@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getMyProfile, updateMyProfile } from '../services/profileService';
 // Profile page is only for editing user details.
 
-export function ProfilePage({ t, user, token, onLogout, onBackHome, onMembers, onGoDashboard }) {
+export function ProfilePage({ t, user, token, onLogout, onBackHome, onMembers }) {
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', grade: '' });
   const [status, setStatus] = useState({ loading: true, saving: false, error: '', saved: false });
@@ -76,13 +76,6 @@ export function ProfilePage({ t, user, token, onLogout, onBackHome, onMembers, o
                 {t?.('admin.members.title') || 'Members'}
               </button>
             ) : null}
-            <button
-              type="button"
-              onClick={onGoDashboard}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 transition-colors"
-            >
-              {t?.('private.dashboardNav') || 'Dashboard'}
-            </button>
             <button
               type="button"
               onClick={onBackHome}
