@@ -38,10 +38,7 @@ export const Header = ({
         />
         {/* Always keep brand name for accessibility */}
         <span className="sr-only">{CONFIG.businessName[lang]}</span>
-        {/* Show brand name only when there's enough space (desktop) */}
-        <span className="hidden xl:inline text-white font-semibold text-height-fixed truncate max-w-[240px]">
-          {CONFIG.businessName[lang]}
-        </span>
+        {/* Intentionally no visible brand text (icons need space). */}
       </a>
       <nav className="hidden md:flex items-center gap-1">
         <NavLink

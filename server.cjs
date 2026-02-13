@@ -92,7 +92,7 @@ async function getSupportNotifyRecipients(pool) {
       SELECT DISTINCT COALESCE(u.email, p.email) AS email
       FROM users u
       LEFT JOIN profiles p ON p.user_id = u.id
-      WHERE u.role = 'admin' AND COALESCE(u.email, p.email) IS NOT NULL
+      WHERE u.role IN ('admin','moderator') AND COALESCE(u.email, p.email) IS NOT NULL
     `
   );
   return (rows || [])
@@ -113,7 +113,7 @@ async function notifySupportStaff(pool, { conversationId, proUsername, proEmail,
         `Conversation: #${conversationId}\n` +
         `From: ${proUsername || '-'}${proEmail ? ` (${proEmail})` : ''}\n\n` +
         `${message}\n\n` +
-        `Open your dashboard to reply: ${PUBLIC_SITE_URL}`,
+        `Open Messages to reply: ${PUBLIC_SITE_URL}`,
     });
   } catch (e) {
     // Never break chat flow if SMTP is missing/misconfigured.
