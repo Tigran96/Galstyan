@@ -16,16 +16,18 @@ import { Card } from './components/Card';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { Chat } from './components/Chat';
 import { ChatButton } from './components/ChatButton';
-import { LoginPage } from './components/LoginPage';
-import { SignUpPage } from './components/SignUpPage';
+import { LoginPage } from './page/LoginPage';
+import { SignUpPage } from './page/SignUpPage';
 import { ForgotPasswordPage } from './components/ForgotPasswordPage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { ProfilePage } from './components/ProfilePage';
 import { MessagesPage } from './components/MessagesPage';
 import { NotificationsPage } from './components/NotificationsPage';
-import { ForumPage } from './components/ForumPage';
+import { ForumPage } from './page/ForumPage';
 import { ForumThreadPage } from './components/ForumThreadPage';
 import { NewThreadPage } from './components/NewThreadPage';
+import { TeachersPage } from './page/TeachersPage';
+import { PrivacyPolicyPage } from './page/PrivacyPolicyPage';
 import AdminMembersPage from './components/AdminMembersPage';
 import { trackContactClick, trackPageView } from './utils/analytics';
 import { detectUserLanguage, isLocationDetectionSupported } from './utils/locationService';
@@ -33,6 +35,7 @@ import { Helmet } from "react-helmet-async";
 import { getMe } from './services/authService';
 import { getMyNotifications } from './services/notificationService';
 import { getSupportUnreadCount } from './services/supportService';
+import { ContactSection } from "./components/ContactSection";
 
 const CONFIG = {
   businessName: {
@@ -535,6 +538,7 @@ const I18N = {
       newThread: "Նոր թեմա",
       loading: "Բեռնվում է…",
       empty: "Դեռ թեմաներ չկան։ Ստեղծեք առաջինը։",
+      emptyTitle: "Քննարկումներ չկան",
       by: "Հեղինակ՝",
       replies: "Պատասխաններ",
       backToForum: "Ֆորում",
@@ -556,8 +560,31 @@ const I18N = {
       deleteFailed: "Չհաջողվեց ջնջել թեման։",
     },
     footer: {
-      links: { enroll: "Գրանցվել", faq: "ՀՏՀ", pricing: "Գնացուցակ" },
+      links: { enroll: "Գրանցվել", faq: "ՀՏՀ", pricing: "Գնացուցակ", privacy: "Գաղտնիություն" },
       rights: "Բոլոր իրավունքները պաշտպանված են",
+    },
+    privacy: {
+      title: "Գաղտնիության քաղաքականություն",
+      subtitle: "Մենք հոգ ենք տանում ձեր տվյալների պաշտպանության մասին",
+      lastUpdated: "Վերջին թարմացումը՝ Փետրվար 2024",
+      sections: [
+        {
+          title: "1. Տեղեկությունների հավաքագրում",
+          content: "Մենք հավաքում ենք տեղեկություններ, որոնք դուք տրամադրում եք մեզ անմիջապես, օրինակ՝ երբ գրանցվում եք դասընթացների կամ հաղորդագրություն եք ուղարկում մեզ:"
+        },
+        {
+          title: "2. Տվյալների օգտագործում",
+          content: "Ձեր տվյալներն օգտագործվում են դասընթացների կազմակերպման, ձեզ հետ կապ հաստատելու և մեր ծառայությունների որակը բարելավելու համար:"
+        },
+        {
+          title: "3. Տվյալների պաշտպանություն",
+          content: "Մենք կիրառում ենք անվտանգության ժամանակակից միջոցներ ձեր անձնական տվյալները չարտոնված մուտքից պաշտպանելու համար:"
+        },
+        {
+          title: "4. Cookies",
+          content: "Մենք օգտագործում ենք cookies՝ կայքի աշխատանքը բարելավելու և ձեր փորձառությունն ավելի հարմարավետ դարձնելու համար:"
+        }
+      ]
     },
   },
   en: {
@@ -881,8 +908,9 @@ const I18N = {
       back: "Home",
       newThread: "New thread",
       loading: "Loading…",
-      empty: "No threads yet. Create the first one.",
-      by: "By",
+      empty: "No threads yet. Be the first to start a conversation.",
+      emptyTitle: "No discussions yet",
+      by: "By:",
       replies: "Replies",
       backToForum: "Forum",
       replyTitle: "Reply",
@@ -903,8 +931,31 @@ const I18N = {
       deleteFailed: "Failed to delete thread.",
     },
     footer: {
-      links: { enroll: "Enroll", faq: "FAQ", pricing: "Pricing" },
+      links: { enroll: "Enroll", faq: "FAQ", pricing: "Pricing", privacy: "Privacy" },
       rights: "All rights reserved",
+    },
+    privacy: {
+      title: "Privacy Policy",
+      subtitle: "We care about the protection of your data",
+      lastUpdated: "Last updated: February 2024",
+      sections: [
+        {
+          title: "1. Information Collection",
+          content: "We collect information that you provide to us directly, such as when you enroll in courses or send us a message."
+        },
+        {
+          title: "2. Use of Information",
+          content: "Your data is used to organize courses, communicate with you, and improve the quality of our services."
+        },
+        {
+          title: "3. Data Protection",
+          content: "We implement modern security measures to protect your personal data from unauthorized access."
+        },
+        {
+          title: "4. Cookies",
+          content: "We use cookies to improve site performance and make your experience more comfortable."
+        }
+      ]
     },
   },
   ru: {
@@ -1229,6 +1280,7 @@ const I18N = {
       newThread: "Новая тема",
       loading: "Загрузка…",
       empty: "Пока нет тем. Создайте первую.",
+      emptyTitle: "Нет обсуждений",
       by: "Автор:",
       replies: "Ответы",
       backToForum: "Форум",
@@ -1250,8 +1302,31 @@ const I18N = {
       deleteFailed: "Не удалось удалить тему.",
     },
     footer: {
-      links: { enroll: "Запись", faq: "Вопросы", pricing: "Цены" },
+      links: { enroll: "Запись", faq: "Вопросы", pricing: "Цены", privacy: "Конфиденциальность" },
       rights: "Все права защищены",
+    },
+    privacy: {
+      title: "Политика конфиденциальности",
+      subtitle: "Мы заботимся о защите ваших данных",
+      lastUpdated: "Последнее обновление: Февраль 2024",
+      sections: [
+        {
+          title: "1. Сбор информации",
+          content: "Мы собираем информацию, которую вы предоставляете нам напрямую, например, при записи на курсы или отправке нам сообщения."
+        },
+        {
+          title: "2. Использование информации",
+          content: "Ваши данные используются для организации курсов, связи с вами и повышения качества наших услуг."
+        },
+        {
+          title: "3. Защита данных",
+          content: "Мы применяем современные меры безопасности для защиты ваших личных данных от несанкционированного доступа."
+        },
+        {
+          title: "4. Cookies",
+          content: "Мы используем cookies для улучшения работы сайта и того, чтобы сделать ваше пребывание на нем более комфортным."
+        }
+      ]
     },
   },
 };
@@ -1262,8 +1337,8 @@ const I18N = {
 const formatPrice = (pricePath, lang) => {
   const pathParts = pricePath.split('.');
   const prices = pathParts.reduce((obj, key) => obj[key], CONFIG.pricing);
-  
-  switch(lang) {
+
+  switch (lang) {
     case 'hy': return `֏${prices.amd.toLocaleString()}`;
     case 'en': return `$${prices.usd}`;
     case 'ru': return `₽${prices.rub.toLocaleString()}`;
@@ -1280,6 +1355,13 @@ const smoothScrollTo = (elementId) => {
 };
 
 export const SEO = ({ lang = "hy" }) => {
+
+  /**
+   * SEO best practices implemented:
+   * - Unique title and description for each language
+   * - Open Graph tags 
+  */
+
   const meta = {
     hy: {
       title: "Գալստյան Ակադեմիա | Մաթեմատիկա և Ֆիզիկա Երևանում",
@@ -1327,35 +1409,42 @@ export const SEO = ({ lang = "hy" }) => {
       {/* Google Analyse */}
 
       <script type="application/ld+json">
-    {JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      name: "Galstyan Academy",
-      url: "https://www.galstyanacademy.com",
-      logo: "https://galstyanacademy.com/logo.png",
-      founder: "Marat Galstyan",
-      sameAs: [
-        "https://www.facebook.com/galstyanacademy", 
-        "https://www.instagram.com/galstyanacademy/"
-      ],
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Yerevan",
-        addressCountry: "Armenia",
-      },
-      contactPoint: {
-        "@type": "ContactPoint",
-        telephone: "+37494766409",
-        contactType: "customer service",
-        availableLanguage: ["hy", "en", "ru"],
-      },
-    })}
-  </script>
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "EducationalOrganization",
+          name: "Galstyan Academy",
+          url: "https://www.galstyanacademy.com",
+          logo: "https://galstyanacademy.com/logo.png",
+          founder: "Marat Galstyan",
+          sameAs: [
+            "https://www.facebook.com/galstyanacademy",
+            "https://www.instagram.com/galstyanacademy/"
+          ],
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Yerevan",
+            addressCountry: "Armenia",
+          },
+          contactPoint: {
+            "@type": "ContactPoint",
+            telephone: "+37494766409",
+            contactType: "customer service",
+            availableLanguage: ["hy", "en", "ru"],
+          },
+        })}
+      </script>
     </Helmet>
   );
 };
 
 export default function LandingPage() {
+
+  /**
+   * State management and effects:
+   * - Language selection and persistence
+   * - Authentication state and user data
+   */
+
   const [lang, setLang] = useState("hy");
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('home');
@@ -1426,23 +1515,55 @@ export default function LandingPage() {
     };
   }, [authToken]);
 
-  // If user opens site with ?reset=TOKEN, show reset password page.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('reset');
-    if (token) {
-      setResetToken(token);
-      setCurrentPage('reset');
-    }
-  }, []);
-
   // Listen for LoginPage "forgot password" navigation event.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handler = () => setCurrentPage('forgot');
     window.addEventListener('nav:forgot', handler);
     return () => window.removeEventListener('nav:forgot', handler);
+  }, []);
+
+  // --- URL Routing Logic ---
+  // Sync state to URL
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (currentPage === 'home') {
+      url.searchParams.delete('page');
+    } else {
+      url.searchParams.set('page', currentPage);
+    }
+    // Only push if it's different from current search to avoid history bloat
+    if (window.location.search !== url.search) {
+      window.history.pushState({ page: currentPage }, '', url.toString());
+    }
+    // Always scroll to top on page change
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
+  // Sync URL to state on load and popstate
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const page = params.get('page');
+      const resetTokenParam = params.get('reset');
+
+      if (resetTokenParam) {
+        setResetToken(resetTokenParam);
+        setCurrentPage('reset');
+      } else if (page && ['home', 'enroll', 'login', 'signup', 'teachers', 'forum', 'profile', 'messages', 'notifications', 'adminMembers', 'forgot', 'privacy'].includes(page)) {
+        setCurrentPage(page);
+      } else {
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', syncFromUrl);
+    syncFromUrl(); // Initial sync
+
+    return () => window.removeEventListener('popstate', syncFromUrl);
   }, []);
 
   // Navigate to profile from dashboard button.
@@ -1477,7 +1598,7 @@ export default function LandingPage() {
           // Fallback to Armenian if location detection is not supported
           setLang("hy");
         }
-        
+
         setIsLoading(false);
       }
     };
@@ -1604,9 +1725,12 @@ export default function LandingPage() {
       user={authUser}
       unreadNotificationsCount={unreadNotificationsCount || 0}
       unreadSupportCount={unreadSupportCount || 0}
+      currentPage={currentPage}
       onNavigateAnchor={navigateToAnchor}
       onLogoClick={() => navigateToAnchor('home')}
       onForumClick={() => setCurrentPage('forum')}
+      onTeachersClick={() => setCurrentPage('teachers')}
+      onPrivacyClick={() => setCurrentPage('privacy')}
       onLoginClick={() => setCurrentPage('login')}
       onSignUpClick={() => setCurrentPage('signup')}
       onMessagesClick={goMessages}
@@ -1628,7 +1752,7 @@ export default function LandingPage() {
     return (
       <Fragment>
         {headerEl}
-        <EnrollPage 
+        <EnrollPage
           selectedPlan={selectedPlan}
           CONFIG={CONFIG}
           lang={lang}
@@ -1805,6 +1929,27 @@ export default function LandingPage() {
     );
   }
 
+  if (currentPage === 'teachers') {
+    return withHeader(
+      <TeachersPage
+        t={t}
+        CONFIG={CONFIG}
+        lang={lang}
+        onBack={() => setCurrentPage('home')}
+      />
+    );
+  }
+
+  if (currentPage === 'privacy') {
+    return withHeader(
+      <PrivacyPolicyPage
+        t={t}
+        lang={lang}
+        onBack={() => setCurrentPage('home')}
+      />
+    );
+  }
+
   if (currentPage === 'adminMembers') {
     if (!isAuthed) return setCurrentPage('login');
     if (!['admin', 'moderator'].includes(authUser?.role)) return setCurrentPage('messages');
@@ -1820,206 +1965,159 @@ export default function LandingPage() {
 
   return (
     <Fragment>
-<SEO lang={lang} />
+      <SEO lang={lang} />
 
-    
-    <div className={`min-h-screen ${CONFIG.color.bg} ${CONFIG.color.text} antialiased`}>
 
-      {/* Header */}
-      {headerEl}
+      <div className={`min-h-screen ${CONFIG.color.bg} ${CONFIG.color.text} antialiased`}>
 
-      {/* Hero */}
-      <Hero t={t} CONFIG={CONFIG} lang={lang} />
+        {/* Header */}
+        {headerEl}
 
-      {/* Courses */}
-      <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")} variant="subtle">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {t("courses.items").map((c, i) => (
-            <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} />
-          ))}
-        </div>
-        <div className="mt-12 text-center">
-          <p className="text-sky-200 mb-6">
-            {t("courses.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink1")}</a> {t("hero.or")} <a href="#teachers" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink2")}</a>.
-          </p>
-        </div>
-      </Section>
+        {/* Hero */}
+        <Hero t={t} CONFIG={CONFIG} lang={lang} />
 
-      {/* Results */}
-      <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")} variant="minimal">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {t("results.kpis").map((c, i) => (
-            <Card key={i} CONFIG={CONFIG}>
-              <div className="text-4xl font-bold text-white">{c.kpi}</div>
-              <p className="mt-2 text-sky-200">{c.label}</p>
-            </Card>
-          ))}
-        </div>
-        <div className="mt-12 text-center">
-          <p className="text-sky-200 mb-6">
-            {t("results.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("results.ctaLink1")}</a> {t("hero.or")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("results.ctaLink2")}</a> {t("results.ctaEnd")}
-          </p>
-        </div>
-      </Section>
-
-      {/* Teachers */}
-      <Section id="teachers" title={t("teachers.title")} subtitle={t("teachers.subtitle")} variant="subtle">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {CONFIG.teachers.map((teacher, index) => (
-            <Card key={teacher.id} className="max-w-md mx-auto" CONFIG={CONFIG}>
-              <div className="text-center">
-                <img 
-                  src={teacher.photo} 
-                  alt={teacher.name[lang]} 
-                  className="w-48 h-48 mx-auto rounded-full mb-4 ring-4 ring-white/10 object-cover"
-                  loading="lazy"
-                />
-                <div className="text-lg font-semibold text-white">{teacher.name[lang]}</div>
-                <div className="text-sm text-sky-300 mb-2">{teacher.role[lang]}</div>
-                <div className="text-sm text-sky-200 mb-2">{teacher.experience[lang]}</div>
-                <div className="flex flex-wrap justify-center gap-2 mb-4">
-                  {teacher.specialties[lang].map((specialty, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-sky-800/50 text-sky-200 text-xs rounded-full">
-                      {specialty}
-                    </span>
-                  ))}
-                </div>
-                {teacher.bio && teacher.bio[lang] && (
-                  <div className="text-xs text-sky-200 text-left leading-relaxed mt-3">
-                    {teacher.bio[lang]}
-                  </div>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
-        
-
-        <div className="mt-8 text-center">
-          <p className="text-sky-200 mb-6">
-            {t("teachers.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("teachers.ctaLink1")}</a> {t("hero.or")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("teachers.ctaLink2")}</a>.
-          </p>
-        </div>
-      </Section>
-
-      {/* Pricing */}
-      <Section id="pricing" title={t("pricing.title")} subtitle={t("pricing.subtitle")} variant="default">
-        <PricingAccordion 
-          t={t} 
-          CONFIG={CONFIG} 
-              lang={lang}
-          formatPrice={formatPrice}
-          onPlanSelect={handlePlanSelect}
-            />
-      </Section>
-
-      {/* FAQ */}
-      <Section id="faq" title={t("faq.title")} subtitle={t("faq.subtitle")} variant="minimal">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {t("faq.items").map((f, i) => (
-            <FAQItem key={i} q={f.q} a={f.a} />
-          ))}
-        </div>
-        <div className="mt-12 text-center">
-          <p className="text-sky-200 mb-6">
-            {t("faq.cta")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("faq.ctaLink1")}</a> {t("hero.or")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("faq.ctaLink2")}</a> {t("faq.ctaEnd")}
-          </p>
-        </div>
-      </Section>
-
-      {/* Contact Info */}
-      <Section id="contact" title={t("contact.title")} subtitle={t("contact.subtitle")} variant="subtle">
-        <div className="max-w-4xl mx-auto">
-          <Card CONFIG={CONFIG}>
-            <div className="text-center">
-              <p className="text-lg text-sky-200 mb-6">
-                {t("contact.lead")}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="max-w-md">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <i className="fa-solid fa-envelope text-2xl text-sky-400 w-8"></i>
-                      <a 
-                        href={`mailto:${CONFIG.email}`} 
-                        className="text-sky-200 hover:text-white transition-colors text-lg"
-                        onClick={() => trackContactClick('email')}
-                      >
-                  {CONFIG.email}
-                </a>
-                </div>
-                    <div className="flex items-center gap-3">
-                      <i className="fa-solid fa-phone text-2xl text-sky-400 w-8"></i>
-                      <a 
-                        href={`tel:${CONFIG.phone}`} 
-                        className="text-sky-200 hover:text-white transition-colors text-lg"
-                        onClick={() => trackContactClick('phone')}
-                      >
-                        {CONFIG.phone}
-                      </a>
-                  </div>
-                    <div className="flex items-center gap-3">
-                      <i className="fa-solid fa-location-dot text-2xl text-sky-400 w-8"></i>
-                      <span className="text-sky-200">{CONFIG.address[lang]}</span>
-                  </div>
-                </div>
-                </div>
-                <div className="space-y-4 text-center">
-                  <div className="text-sky-200">
-                    <h4 className="text-white font-semibold mb-3 text-center">
-                      {lang === "hy" ? "Մեր սոցիալական ցանցերը" : 
-                       lang === "en" ? "Follow us" : "Мы в соцсетях"}
-                    </h4>
-                    <div className="flex justify-center gap-6">
-                      <a 
-                        className="text-sky-200 hover:text-white hover:scale-110 transition-all duration-200" 
-                        href={CONFIG.social.facebook} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        onClick={() => trackContactClick('facebook')}
-                        title="Facebook"
-                      >
-                        <i className="fa-brands fa-facebook text-3xl"></i>
-                      </a>
-                      <a 
-                        className="text-sky-200 hover:text-white hover:scale-110 transition-all duration-200" 
-                        href={CONFIG.social.instagram} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        onClick={() => trackContactClick('instagram')}
-                        title="Instagram"
-                      >
-                        <i className="fa-brands fa-instagram text-3xl"></i>
-                      </a>
-                </div>
-              </div>
-              </div>
+        {/* Courses */}
+        <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")} variant="subtle">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {t("courses.items").map((c, i) => (
+              <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} />
+            ))}
           </div>
-            </div>
-          </Card>
-          <div className="mt-8 text-center">
-            <p className="text-sky-200 mb-4">
-              {t("contact.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("contact.ctaLink1")}</a> {t("hero.or")} <a href="#faq" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("contact.ctaLink2")}</a>.
+          <div className="mt-12 text-center">
+            <p className="text-sky-200 mb-6">
+              {t("courses.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink1")}</a> {t("hero.or")} <a href="#teachers" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("courses.ctaLink2")}</a>.
             </p>
           </div>
-        </div>
-      </Section>
+        </Section>
 
-      {/* Footer */}
-      <Footer t={t} CONFIG={CONFIG} lang={lang} />
+        {/* Results */}
+        <Section id="results" title={t("results.title")} subtitle={t("results.subtitle")} variant="minimal">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {t("results.kpis").map((c, i) => (
+              <Card key={i} CONFIG={CONFIG}>
+                <div className="text-4xl font-bold text-white">{c.kpi}</div>
+                <p className="mt-2 text-sky-200">{c.label}</p>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-12 text-center">
+            <p className="text-sky-200 mb-6">
+              {t("results.cta")} <a href="#pricing" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("results.ctaLink1")}</a> {t("hero.or")} <a href="#contact" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("results.ctaLink2")}</a> {t("results.ctaEnd")}
+            </p>
+          </div>
+        </Section>
 
-      {/* Chat Button */}
-      <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
+        {/* Teachers Section - Compact Preview */}
+        <Section id="teachers" title={t("teachers.title")} subtitle={t("teachers.subtitle")} variant="subtle">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {CONFIG.teachers.map((teacher) => (
+              <Card key={teacher.id} className="max-w-md mx-auto group cursor-pointer" CONFIG={CONFIG} onClick={() => setCurrentPage('teachers')}>
+                <div className="flex items-center gap-6">
+                  <img
+                    src={teacher.photo}
+                    alt={teacher.name[lang]}
+                    className="w-24 h-24 rounded-full ring-2 ring-white/10 object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                  />
+                  <div className="text-left">
+                    <div className="text-xl font-bold text-white group-hover:text-sky-300 transition-colors">{teacher.name[lang]}</div>
+                    <div className="text-sm text-sky-400 font-medium">{teacher.role[lang]}</div>
+                    <button className="mt-3 text-xs font-bold text-sky-300/60 uppercase tracking-widest flex items-center gap-2 group-hover:text-sky-300 transition-colors">
+                      {t("hero.subtitleLink")}
+                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
 
-      {/* Chat Modal */}
-      <Chat
-        lang={lang}
-        t={t}
-        CONFIG={CONFIG}
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-      />
-    </div>
+          <div className="mt-12 text-center">
+            <button
+              onClick={() => setCurrentPage('teachers')}
+              className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all backdrop-blur-xl group flex items-center gap-3 mx-auto"
+            >
+              {lang === "hy" ? "Տեսնել բոլոր ուսուցիչներին" : lang === "en" ? "View All Teachers" : "Посмотреть всех учителей"}
+              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+          </div>
+        </Section>
+
+        {/* Pricing */}
+        <Section id="pricing" title={t("pricing.title")} subtitle={t("pricing.subtitle")} variant="default">
+          <PricingAccordion
+            t={t}
+            CONFIG={CONFIG}
+            lang={lang}
+            formatPrice={formatPrice}
+            onPlanSelect={handlePlanSelect}
+          />
+        </Section>
+
+        {/* FAQ */}
+        <Section id="faq" title={t("faq.title")} subtitle={t("faq.subtitle")} variant="subtle">
+          <div className="relative">
+            {/* Decorative Background Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-sky-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              {t("faq.items").map((f, i) => (
+                <FAQItem key={i} q={f.q} a={f.a} />
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-20 text-center relative z-10">
+            <div className="inline-block p-1 rounded-3xl bg-gradient-to-r from-sky-500/20 via-white/5 to-indigo-500/20 border border-white/5">
+              <div className="px-8 py-6 rounded-[1.25rem] bg-slate-950/80 backdrop-blur-3xl">
+                <p className="text-xl text-sky-100/90 font-medium">
+                  {t("faq.cta")}
+                  <a href="#contact" className="mx-2 text-sky-400 hover:text-white underline underline-offset-8 decoration-2 decoration-sky-400/30 hover:decoration-white transition-all font-bold">
+                    {t("faq.ctaLink1")}
+                  </a>
+                  {t("hero.or")}
+                  <a href="#pricing" className="mx-2 text-sky-400 hover:text-white underline underline-offset-8 decoration-2 decoration-sky-400/30 hover:decoration-white transition-all font-bold">
+                    {t("faq.ctaLink2")}
+                  </a>
+                  {t("faq.ctaEnd")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* Contact Info */}
+
+        <ContactSection
+          lang={lang}
+          t={t}
+          CONFIG={CONFIG}
+        />
+
+
+        {/* Footer */}
+        <Footer
+          t={t}
+          CONFIG={CONFIG}
+          lang={lang}
+          onPrivacyClick={() => setCurrentPage('privacy')}
+        />
+
+        {/* Chat Button */}
+        <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
+
+        {/* Chat Modal */}
+        <Chat
+          lang={lang}
+          t={t}
+          CONFIG={CONFIG}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      </div>
 
 
     </Fragment>

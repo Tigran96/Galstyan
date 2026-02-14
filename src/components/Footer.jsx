@@ -1,4 +1,4 @@
-export const Footer = ({ t, CONFIG, lang }) => (
+export const Footer = ({ t, CONFIG, lang, onPrivacyClick }) => (
   <footer className="border-t border-white/10">
     <div className="mx-auto max-w-6xl px-6 py-10 text-sm text-sky-200">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -13,9 +13,12 @@ export const Footer = ({ t, CONFIG, lang }) => (
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <a href="#enroll" className="underline decoration-white/20 hover:decoration-white/40 transition-colors">
-            {t("footer.links.enroll")}
-          </a>
+          <button 
+            onClick={() => onPrivacyClick?.()}
+            className="underline decoration-white/20 hover:decoration-white/40 transition-colors"
+          >
+            {t("footer.links.privacy")}
+          </button>
           <a href="#faq" className="underline decoration-white/20 hover:decoration-white/40 transition-colors">
             {t("footer.links.faq")}
           </a>

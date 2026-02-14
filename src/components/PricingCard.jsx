@@ -1,6 +1,17 @@
 import { Card } from './Card';
 
 export const PricingCard = ({ name, price, period, features, cta, ctaHref = "#enroll", lang, CONFIG, formatPrice, onSelect, popular = false }) => (
+
+  /**
+   * 
+   * PricingCard component features:
+   * - Responsive design: Adapts to different screen sizes with flexible layouts and scalable typography.
+   * - Accessibility: Proper use of semantic HTML, ARIA attributes, and keyboard navigation support.
+   * - Visual feedback: Hover effects and animations to enhance user experience.
+   * - Analytics: Track which pricing plans are most popular and which CTAs are clicked for insights into user preferences.
+   */
+
+
   <Card 
     CONFIG={CONFIG} 
     variant={popular ? "premium" : "glass"}

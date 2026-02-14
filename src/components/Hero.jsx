@@ -1,12 +1,21 @@
-import { Badge } from './Badge';
-import { AnimatedBackground } from './AnimatedBackground';
+import { Badge } from "./Badge";
+import { AnimatedBackground } from "./AnimatedBackground";
 
 export const Hero = ({ t, CONFIG, lang }) => (
+  /**
+   *
+   * Hero component features:
+   * - Responsive design: Adapts to different screen sizes with flexible layouts and scalable typography.
+   * - Accessibility: Proper use of semantic HTML, ARIA attributes, and keyboard navigation support.
+   *
+   */
 
-
-  <section id="home" className="relative overflow-hidden min-h-screen flex items-center">
+  <section
+    id="home"
+    className="relative overflow-hidden min-h-screen flex items-center"
+  >
     <AnimatedBackground variant="default" />
-    
+
     <div className="mx-auto max-w-6xl px-6 py-20 md:py-28 relative z-10">
       <div className="max-w-3xl mx-auto text-center">
         {/* Large Logo */}
@@ -27,7 +36,13 @@ export const Hero = ({ t, CONFIG, lang }) => (
           {t("hero.tagline")}
         </div>
         <p className="mt-6 text-lg text-sky-200 font-sans leading-relaxed text-center">
-          {t("hero.subtitle")} <a href="#courses" className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors">{t("hero.subtitleLink")}</a>
+          {t("hero.subtitle")}{" "}
+          <a
+            href="#courses"
+            className="text-sky-300 hover:text-white underline decoration-sky-300/50 hover:decoration-white transition-colors"
+          >
+            {t("hero.subtitleLink")}
+          </a>
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <a
@@ -36,8 +51,18 @@ export const Hero = ({ t, CONFIG, lang }) => (
           >
             <span className="relative z-10 flex items-center gap-2">
               {t("hero.primary")}
-              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+                className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
               </svg>
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-indigo-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -48,8 +73,18 @@ export const Hero = ({ t, CONFIG, lang }) => (
           >
             <span className="relative z-10 flex items-center gap-2">
               {t("hero.secondary")}
-              <svg className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <svg
+                className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
               </svg>
             </span>
             <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -60,8 +95,18 @@ export const Hero = ({ t, CONFIG, lang }) => (
           >
             <span className="relative z-10 flex items-center gap-2">
               {t("hero.teachers")}
-              <svg className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                className="w-4 h-4 group-hover:scale-110 transition-transform duration-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
             </span>
             <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
