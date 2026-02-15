@@ -41,7 +41,12 @@ const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_SECURE = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';
 const SMTP_FROM = process.env.SMTP_FROM;
 const PUBLIC_SITE_URL = (process.env.PUBLIC_SITE_URL || 'https://www.galstyanacademy.com').replace(/\/+$/, '');
-const SUPPORT_NOTIFY_EMAILS = String(process.env.SUPPORT_NOTIFY_EMAILS || '').trim();
+const SUPPORT_NOTIFY_EMAILS = String(
+  process.env.SUPPORT_NOTIFY_EMAILS || 'maratgalstyan1967@gmail.com,tikogal96@gmail.com'
+).trim();
+const SIGNUP_NOTIFY_EMAILS = String(
+  process.env.SIGNUP_NOTIFY_EMAILS || 'maratgalstyan1967@gmail.com,tikogal96@gmail.com'
+).trim();
 
 let mailTransporter = null;
 function getMailer() {
@@ -122,10 +127,117 @@ async function notifySupportStaff(pool, { conversationId, proUsername, proEmail,
   }
 }
 
+async function notifyAdminOnSignup({ username, email, firstName, lastName, age, userId, ip, userAgent }) {
+  try {
+    const recipients = parseEmailList(SIGNUP_NOTIFY_EMAILS);
+    if (!recipients.length) return;
+    await sendEmail({
+      to: recipients.join(','),
+      subject: `New signup: ${email || username || 'user'}`,
+      text:
+        `A new user signed up.\n\n` +
+        `User ID: ${userId || '-'}\n` +
+        `Username: ${username || '-'}\n` +
+        `Name: ${String(firstName || '').trim()} ${String(lastName || '').trim()}`.trim() +
+        `\n` +
+        `Email: ${email || '-'}\n` +
+        `Age: ${age === null || age === undefined ? '-' : String(age)}\n` +
+        `IP: ${ip || '-'}\n` +
+        `User-Agent: ${userAgent || '-'}\n\n` +
+        `Site: ${PUBLIC_SITE_URL}\n`,
+    });
+  } catch (e) {
+    if (e.code === 'SMTP_NOT_CONFIGURED') return;
+    console.error('Signup notify email failed:', e.code || e.message);
+  }
+}
+
 function fireAndForget(promise) {
   try {
     Promise.resolve(promise).catch(() => {});
   } catch {}
+}
+
+// --- Support reminders (15 min no staff reply) ---
+async function runSupportNoReplyReminders() {
+  try {
+    const pool = getDbPool();
+    if (!pool) return;
+
+    // If SMTP isn't configured, there is no point in checking.
+    if (!getMailer()) return;
+
+    const remindAfterMin = process.env.SUPPORT_REMIND_AFTER_MIN
+      ? Number(process.env.SUPPORT_REMIND_AFTER_MIN)
+      : 15;
+    if (!Number.isFinite(remindAfterMin) || remindAfterMin < 1) return;
+
+    // Find conversations where the latest message is from a non-staff user and is older than N minutes,
+    // and we haven't sent a reminder for that latest user message yet.
+    const [rows] = await pool.query(
+      `
+        SELECT
+          c.id AS conversationId,
+          c.pro_user_id AS proUserId,
+          c.status,
+          c.last_reminder_msg_id AS lastReminderMsgId,
+          c.last_reminder_at AS lastReminderAt,
+          m.id AS lastMsgId,
+          m.body AS lastBody,
+          m.created_at AS lastCreatedAt,
+          u.username AS proUsername,
+          u.email AS proEmail
+        FROM support_conversations c
+        JOIN (
+          SELECT conversation_id, MAX(created_at) AS lastAt
+          FROM support_messages
+          GROUP BY conversation_id
+        ) lm ON lm.conversation_id = c.id
+        JOIN support_messages m ON m.conversation_id = c.id AND m.created_at = lm.lastAt
+        JOIN users su ON su.id = m.sender_user_id
+        JOIN users u ON u.id = c.pro_user_id
+        WHERE c.status = 'open'
+          AND su.role NOT IN ('admin','moderator')
+          AND TIMESTAMPDIFF(MINUTE, m.created_at, NOW()) >= ?
+          AND (c.last_reminder_msg_id IS NULL OR c.last_reminder_msg_id < m.id)
+        ORDER BY m.created_at ASC
+        LIMIT 25
+      `,
+      [remindAfterMin]
+    );
+
+    if (!rows || rows.length === 0) return;
+
+    for (const r of rows) {
+      // Best-effort: update first to avoid double-send in case of concurrent ticks.
+      try {
+        await pool.query(
+          `
+            UPDATE support_conversations
+            SET last_reminder_msg_id = ?, last_reminder_at = NOW()
+            WHERE id = ?
+              AND (last_reminder_msg_id IS NULL OR last_reminder_msg_id < ?)
+          `,
+          [r.lastMsgId, r.conversationId, r.lastMsgId]
+        );
+      } catch {
+        // If update fails, skip sending to avoid spamming.
+        continue;
+      }
+
+      const snippet = String(r.lastBody || '').trim().slice(0, 500) || '(no text)';
+      await notifySupportStaff(pool, {
+        conversationId: r.conversationId,
+        proUsername: r.proUsername,
+        proEmail: r.proEmail || null,
+        message:
+          `[Reminder] No staff reply for ${remindAfterMin} minutes.\n\n` +
+          `Last message:\n${snippet}`,
+      });
+    }
+  } catch (e) {
+    console.error('Support reminder tick failed:', e.code || e.message);
+  }
 }
 
 async function createInAppNotification(pool, { senderUserId, targetUserId, targetRoles, title, message }) {
@@ -902,6 +1014,24 @@ app.post('/api/auth/signup', (req, res) => {
       } catch (e) {
         console.warn('Welcome email not sent:', e.code || e.message);
       }
+
+      // Fire-and-forget admin notification email (never blocks signup)
+      fireAndForget(
+        notifyAdminOnSignup({
+          username,
+          email: emailNorm,
+          firstName,
+          lastName,
+          age: ageNum,
+          userId,
+          ip:
+            String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+            req.ip ||
+            req.connection?.remoteAddress ||
+            null,
+          userAgent: req.headers['user-agent'] || null,
+        })
+      );
 
       return res.json({
         token,
@@ -1876,16 +2006,8 @@ app.post('/api/support/conversations/:id/messages', requireAuth, (req, res) => {
       // Respond fast; email notify runs in background (best-effort).
       res.json({ ok: true });
 
-      if (!['admin', 'moderator'].includes(role)) {
-        fireAndForget(
-          notifySupportStaff(pool, {
-            conversationId: convId,
-            proUsername: req.user?.username,
-            proEmail: req.user?.email || null,
-            message: body || '[image]',
-          })
-        );
-      }
+      // NOTE: We do NOT email on every message. Email is sent only for the first message
+      // (conversation creation) and for the 15-minute no-reply reminder.
       return;
     } catch (e) {
       console.error('Support send message error:', e.code || e.message);
@@ -2142,6 +2264,15 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Chat API server running on port ${PORT}`);
   if (!process.env.OPENAI_API_KEY) {
     console.warn('⚠️  WARNING: OPENAI_API_KEY is not set');
+  }
+  // Background reminder loop (best-effort, safe to run in a single Node process on cPanel)
+  const intervalMs = process.env.SUPPORT_REMINDER_INTERVAL_MS
+    ? Number(process.env.SUPPORT_REMINDER_INTERVAL_MS)
+    : 60_000;
+  if (Number.isFinite(intervalMs) && intervalMs >= 15_000) {
+    setInterval(() => {
+      fireAndForget(runSupportNoReplyReminders());
+    }, intervalMs);
   }
 });
 

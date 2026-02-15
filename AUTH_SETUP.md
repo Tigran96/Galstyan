@@ -45,7 +45,11 @@ Set these env vars in **cPanel → Setup Node.js App → Environment Variables**
 
 Optional (Support chat email alerts):
 - `SUPPORT_NOTIFY_EMAILS` = comma-separated list of admin emails to notify (example: `admin1@domain.com,admin2@domain.com`)
-  - If not set, the server will email **all users with role `admin`** that have an email in `users.email` or `profiles.email` (requires SMTP configured).
+  - If not set, the server will email **all users with role `admin` or `moderator`** that have an email in `users.email` or `profiles.email` (requires SMTP configured).
+
+Optional (Signup alerts):
+- `SIGNUP_NOTIFY_EMAILS` = comma-separated list of emails to notify when a new user signs up (example: `owner@domain.com,manager@domain.com`)
+  - If not set, defaults to `maratgalstyan1967@gmail.com,tikogal96@gmail.com`
 
 Then, in phpMyAdmin run:
 - `mysql/password-resets.sql` (creates `password_resets` table)
