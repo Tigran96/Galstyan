@@ -752,6 +752,21 @@ async function saveSupportAttachmentFromDataUrl({ dataUrl, originalName }) {
   };
 }
 
+async function deleteSupportAttachmentByPath(attachmentPath) {
+  const rel = String(attachmentPath || '');
+  if (!rel.startsWith('/uploads/support/')) return;
+  const fileName = path.basename(rel);
+  if (!fileName) return;
+  const abs = path.join(SUPPORT_UPLOADS_DIR, fileName);
+  try {
+    await fs.promises.unlink(abs);
+  } catch (e) {
+    if (e?.code !== 'ENOENT') {
+      console.error('Support attachment delete error:', e.code || e.message);
+    }
+  }
+}
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Chat API is running' });
@@ -1903,6 +1918,50 @@ app.get('/api/support/conversations/:id', requireAuth, (req, res) => {
     } catch (e) {
       console.error('Support conversation get error:', e.code || e.message);
       return res.status(500).json({ error: 'Failed to load conversation' });
+    }
+  })();
+});
+
+app.delete('/api/support/conversations/:id', requireAuth, (req, res) => {
+  (async () => {
+    try {
+      const pool = getDbPool();
+      if (!pool) return res.status(400).json({ error: 'MySQL is not configured' });
+
+      const role = req.user?.role;
+      if (!canUseSupport(role)) return res.status(403).json({ error: 'Forbidden' });
+
+      const userId = getJwtUserId(req);
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const convId = Number(req.params.id);
+      if (!Number.isFinite(convId)) return res.status(400).json({ error: 'Invalid conversation id' });
+
+      const isStaff = ['admin', 'moderator'].includes(role);
+      const [crows] = await pool.query(
+        `SELECT id, pro_user_id AS proUserId FROM support_conversations WHERE id = ? LIMIT 1`,
+        [convId]
+      );
+      if (!crows?.length) return res.status(404).json({ error: 'Conversation not found' });
+      const conv = crows[0];
+      if (!isStaff && Number(conv.proUserId) !== Number(userId)) return res.status(403).json({ error: 'Forbidden' });
+
+      // Collect attachment paths before deleting rows (for best-effort file cleanup).
+      const [arows] = await pool.query(
+        `SELECT attachment_path AS attachmentPath FROM support_messages WHERE conversation_id = ? AND attachment_path IS NOT NULL`,
+        [convId]
+      );
+
+      await pool.query(`DELETE FROM support_conversations WHERE id = ?`, [convId]);
+      supportTypingByConversation.delete(convId);
+
+      const uniquePaths = [...new Set((arows || []).map((r) => r.attachmentPath).filter(Boolean))];
+      await Promise.allSettled(uniquePaths.map((p) => deleteSupportAttachmentByPath(p)));
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Support conversation delete error:', e.code || e.message);
+      return res.status(500).json({ error: 'Failed to delete conversation' });
     }
   })();
 });

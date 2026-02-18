@@ -186,4 +186,14 @@ export async function getSupportUnreadCount(token) {
   return Number(data.unread || 0);
 }
 
+export async function deleteSupportConversation(token, id) {
+  const res = await fetch(`${API_BASE}/api/support/conversations/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Failed to delete conversation');
+  return data;
+}
+
 

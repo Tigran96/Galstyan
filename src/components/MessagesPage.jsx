@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   createSupportConversation,
+  deleteSupportConversation,
   getSupportConversation,
   listSupportConversations,
   markSupportSeen,
@@ -22,6 +23,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
   const [msgInput, setMsgInput] = useState('');
   const [msgSending, setMsgSending] = useState(false);
   const [msgFile, setMsgFile] = useState(null);
+  const [deletingConvId, setDeletingConvId] = useState(null);
 
   const supportScrollRef = useRef(null);
   const supportWasNearBottomRef = useRef(true);
@@ -255,6 +257,37 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
     }
   };
 
+  const deleteCurrentConversation = async () => {
+    if (activeConvId === NEW_CHAT_ID) return;
+    const convId = Number(activeConvId);
+    if (!Number.isFinite(convId)) return;
+
+    const question = t?.('private.deleteChatConfirm') || 'Delete this chat? This action cannot be undone.';
+    if (typeof window !== 'undefined' && !window.confirm(question)) return;
+
+    setDeletingConvId(convId);
+    setConvStatus((s) => ({ ...s, error: '' }));
+    try {
+      await deleteSupportConversation(token, convId);
+      const rows = await listSupportConversations(token);
+      setConvs(rows || []);
+      const nextId = rows?.[0]?.id || null;
+      setActiveConvId(nextId);
+      if (!nextId) {
+        setActiveConv(null);
+        setConvMessages([]);
+        setTyping(null);
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('notifications:changed'));
+      }
+    } catch (e) {
+      setConvStatus((s) => ({ ...s, error: e.message || 'Failed to delete conversation' }));
+    } finally {
+      setDeletingConvId(null);
+    }
+  };
+
   // Typing indicator
   useEffect(() => {
     if (!token) return;
@@ -414,6 +447,36 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                                 : t?.('private.supportTitle') || 'Support chat'
                             )}
                           </div>
+                          {activeConvId !== NEW_CHAT_ID && activeConv?.id ? (
+                            <button
+                              type="button"
+                              className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-red-300/30 bg-red-500/10 text-red-200 hover:bg-red-500/20 disabled:opacity-60"
+                              onClick={deleteCurrentConversation}
+                              disabled={msgSending || deletingConvId === activeConv.id}
+                              title={t?.('private.deleteChat') || 'Delete chat'}
+                              aria-label={t?.('private.deleteChat') || 'Delete chat'}
+                            >
+                              {deletingConvId === activeConv.id ? (
+                                <span className="text-sm">…</span>
+                              ) : (
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M3 6h18" />
+                                  <path d="M8 6V4h8v2" />
+                                  <path d="M19 6l-1 14H6L5 6" />
+                                  <path d="M10 11v6" />
+                                  <path d="M14 11v6" />
+                                </svg>
+                              )}
+                            </button>
+                          ) : null}
                         </div>
 
                         <div ref={supportScrollRef} className="mt-3 flex-1 min-h-0 overflow-auto space-y-2 pr-1">
