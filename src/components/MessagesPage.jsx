@@ -516,11 +516,28 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                           />
                           <button
                             type="button"
-                            className="h-10 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-4 py-2 text-sm hover:opacity-95 disabled:opacity-60"
+                            className="h-10 w-10 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 hover:opacity-95 disabled:opacity-60"
                             disabled={msgSending}
                             onClick={sendCurrentSupportMessage}
+                            aria-label={t?.('private.send') || 'Send'}
+                            title={t?.('private.send') || 'Send'}
                           >
-                            {msgSending ? t?.('private.sending') || 'Sending…' : t?.('private.send') || 'Send'}
+                            {msgSending ? (
+                              <span className="text-sm font-semibold">…</span>
+                            ) : (
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="block h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M22 2L11 13" />
+                                <path d="M22 2l-7 20-4-9-9-4 20-7Z" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                         {msgFile ? (
