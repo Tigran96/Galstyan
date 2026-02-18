@@ -686,6 +686,22 @@ function getReqBaseUrl(req) {
   return `${proto}://${host}`;
 }
 
+function deriveSupportConversationTitle(message, attachmentName) {
+  const compact = String(message || '')
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  let title = compact || '';
+  if (!title) {
+    const name = String(attachmentName || '').trim();
+    title = name ? `Image: ${name}` : 'New conversation';
+  }
+  if (title.length > 72) {
+    title = `${title.slice(0, 69).trimEnd()}...`;
+  }
+  return title;
+}
+
 function parseDataUrlImage(dataUrl) {
   const raw = String(dataUrl || '');
   const m = raw.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
@@ -1767,8 +1783,38 @@ app.get('/api/support/conversations', requireAuth, (req, res) => {
         `,
         isStaff ? [] : [userId]
       );
+      const convIds = (rows || []).map((r) => Number(r.id)).filter((x) => Number.isFinite(x));
+      const firstByConv = new Map();
+      if (convIds.length) {
+        const placeholders = convIds.map(() => '?').join(',');
+        const [frows] = await pool.query(
+          `
+            SELECT
+              m.conversation_id AS conversationId,
+              m.body AS firstBody,
+              m.attachment_name AS firstAttachmentName
+            FROM support_messages m
+            JOIN (
+              SELECT conversation_id, MIN(id) AS firstId
+              FROM support_messages
+              WHERE conversation_id IN (${placeholders})
+              GROUP BY conversation_id
+            ) fm ON fm.firstId = m.id
+          `,
+          convIds
+        );
+        (frows || []).forEach((r) => firstByConv.set(Number(r.conversationId), r));
+      }
 
-      return res.json({ conversations: rows || [] });
+      const conversations = (rows || []).map((r) => {
+        const first = firstByConv.get(Number(r.id));
+        return {
+          ...r,
+          title: deriveSupportConversationTitle(first?.firstBody, first?.firstAttachmentName),
+        };
+      });
+
+      return res.json({ conversations });
     } catch (e) {
       console.error('Support conversations list error:', e.code || e.message);
       return res.status(500).json({ error: 'Failed to load conversations' });
@@ -1914,7 +1960,12 @@ app.get('/api/support/conversations/:id', requireAuth, (req, res) => {
         ...m,
         attachmentUrl: m.attachmentPath ? `${baseUrl}${m.attachmentPath}` : null,
       }));
-      return res.json({ conversation: crows[0], messages, typing });
+      const first = mrows?.[0];
+      const conversation = {
+        ...crows[0],
+        title: deriveSupportConversationTitle(first?.body, first?.attachmentName),
+      };
+      return res.json({ conversation, messages, typing });
     } catch (e) {
       console.error('Support conversation get error:', e.code || e.message);
       return res.status(500).json({ error: 'Failed to load conversation' });

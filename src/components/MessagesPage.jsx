@@ -409,13 +409,10 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                               {isStaff ? (
                                 <>
                                   #{c.id}{' '}
-                                  {c.proUsername || (t?.('private.user') || 'User')}
-                                  <span className="text-sky-200 font-normal">
-                                    {c.proEmail ? ` • ${c.proEmail}` : ''}
-                                  </span>
+                                  {c.title || (t?.('private.supportTitle') || 'Support chat')}
                                 </>
                               ) : (
-                                t?.('private.supportTitle') || 'Support chat'
+                                c.title || t?.('private.supportTitle') || 'Support chat'
                               )}
                             </div>
                             <div className="text-[11px] text-sky-300 whitespace-nowrap">
@@ -423,6 +420,13 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                             </div>
                           </div>
                           <div className="mt-0.5 text-xs text-sky-300">
+                            {isStaff ? (
+                              <>
+                                {c.proUsername || (t?.('private.user') || 'User')}
+                                <span className="text-sky-200">{c.proEmail ? ` • ${c.proEmail}` : ''}</span>
+                                <span> • </span>
+                              </>
+                            ) : null}
                             {t?.('private.status') || 'Status'}: {c.status || 'open'}
                           </div>
                         </button>
@@ -439,12 +443,13 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                           <div className="text-sm text-white font-semibold">
                             {isStaff ? (
                               <>
-                                #{activeConv.id} {t?.('private.user') || 'User'}: {activeConv.proUsername || ''}
+                                #{activeConv.id}{' '}
+                                {activeConv.title || `${t?.('private.user') || 'User'}: ${activeConv.proUsername || ''}`}
                               </>
                             ) : (
                               activeConvId === NEW_CHAT_ID
                                 ? t?.('private.supportStartTitle') || 'New chat'
-                                : t?.('private.supportTitle') || 'Support chat'
+                                : activeConv.title || t?.('private.supportTitle') || 'Support chat'
                             )}
                           </div>
                           {activeConvId !== NEW_CHAT_ID && activeConv?.id ? (
