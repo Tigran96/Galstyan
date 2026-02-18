@@ -11,6 +11,7 @@ import {
 export function MessagesPage({ t, user, token, onAdminMembers }) {
   const canUseSupport = ['admin', 'moderator', 'pro', 'user'].includes(user?.role);
   const isStaff = ['admin', 'moderator'].includes(user?.role);
+  const NEW_CHAT_ID = '__new_chat__';
 
   const [convs, setConvs] = useState([]);
   const [convStatus, setConvStatus] = useState({ loading: false, error: '' });
@@ -21,15 +22,23 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
   const [msgInput, setMsgInput] = useState('');
   const [msgSending, setMsgSending] = useState(false);
   const [msgFile, setMsgFile] = useState(null);
-  const [startMessage, setStartMessage] = useState('');
-  const [startSending, setStartSending] = useState(false);
-  const [startFile, setStartFile] = useState(null);
 
   const supportScrollRef = useRef(null);
   const supportWasNearBottomRef = useRef(true);
   const supportInputRef = useRef(null);
   const msgFileInputRef = useRef(null);
-  const startFileInputRef = useRef(null);
+
+  const focusSupportInputSafe = () => {
+    const el = supportInputRef.current;
+    if (!el) return;
+    const y = typeof window !== 'undefined' ? window.scrollY : 0;
+    try {
+      el.focus({ preventScroll: true });
+    } catch {
+      el.focus();
+      if (typeof window !== 'undefined') window.scrollTo({ top: y, left: 0, behavior: 'auto' });
+    }
+  };
 
   const refreshConversations = async () => {
     try {
@@ -64,6 +73,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
 
   useEffect(() => {
     if (!canUseSupport) return;
+    if (activeConvId === NEW_CHAT_ID) return;
     if (!convs || convs.length === 0) return;
     if (!activeConvId) {
       setActiveConvId(convs[0].id);
@@ -71,7 +81,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
     }
     const stillExists = convs.some((c) => c.id === activeConvId);
     if (!stillExists) setActiveConvId(convs[0].id);
-  }, [canUseSupport, convs, activeConvId]);
+  }, [canUseSupport, convs, activeConvId, NEW_CHAT_ID]);
 
   useEffect(() => {
     let mounted = true;
@@ -79,6 +89,12 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
       try {
         if (!activeConvId) {
           setActiveConv(null);
+          setConvMessages([]);
+          setTyping(null);
+          return;
+        }
+        if (activeConvId === NEW_CHAT_ID) {
+          setActiveConv({ id: null, status: 'open' });
           setConvMessages([]);
           setTyping(null);
           return;
@@ -105,7 +121,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
     return () => {
       mounted = false;
     };
-  }, [token, activeConvId, canUseSupport]);
+  }, [token, activeConvId, canUseSupport, NEW_CHAT_ID]);
 
   const scrollSupportToBottom = (behavior = 'smooth') => {
     const el = supportScrollRef.current;
@@ -147,9 +163,10 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
     if (!token) return;
     if (!canUseSupport) return;
     if (!activeConvId) return;
+    if (activeConvId === NEW_CHAT_ID) return;
 
     const interval = setInterval(() => {
-      if (msgSending || startSending) return;
+      if (msgSending) return;
       Promise.resolve()
         .then(() => getSupportConversation(token, activeConvId))
         .then((data) => {
@@ -167,41 +184,53 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [token, canUseSupport, activeConvId, isStaff, msgSending, startSending]);
+  }, [token, canUseSupport, activeConvId, isStaff, msgSending, NEW_CHAT_ID]);
 
   const sendCurrentSupportMessage = async () => {
     const msg = String(msgInput || '').trim();
-    if (!activeConv?.id) return;
     if (msg.length < 1 && !msgFile) {
       setConvStatus((s) => ({ ...s, error: t?.('private.messageTooShort') || 'Message is required' }));
       return;
     }
 
+    const isDraftChat = activeConvId === NEW_CHAT_ID || !activeConv?.id;
     setMsgSending(true);
-    const optimisticId = `tmp-${Date.now()}`;
-    const optimistic = {
-      id: optimisticId,
-      conversationId: activeConv.id,
-      senderUserId: user?.id,
-      senderUsername: user?.username,
-      senderRole: user?.role,
-      body: msg,
-      createdAt: new Date().toISOString(),
-    };
-    setConvMessages((prev) => [...(prev || []), optimistic]);
     setMsgInput('');
     setMsgFile(null);
     if (msgFileInputRef.current) msgFileInputRef.current.value = '';
-    requestAnimationFrame(() => supportInputRef.current?.focus?.());
-    scrollSupportToBottom('smooth');
+    requestAnimationFrame(() => focusSupportInputSafe());
+    let optimisticId = null;
+    if (!isDraftChat) {
+      optimisticId = `tmp-${Date.now()}`;
+      const optimistic = {
+        id: optimisticId,
+        conversationId: activeConv.id,
+        senderUserId: user?.id,
+        senderUsername: user?.username,
+        senderRole: user?.role,
+        body: msg,
+        createdAt: new Date().toISOString(),
+      };
+      setConvMessages((prev) => [...(prev || []), optimistic]);
+      scrollSupportToBottom('smooth');
+    }
+
     try {
-      await sendSupportMessage(token, activeConv.id, { message: msg }, msgFile);
+      if (isDraftChat) {
+        const data = await createSupportConversation(token, { message: msg }, msgFile);
+        const newId = data?.conversationId;
+        await refreshConversations();
+        if (newId) setActiveConvId(newId);
+      } else {
+        await sendSupportMessage(token, activeConv.id, { message: msg }, msgFile);
+      }
       Promise.resolve()
-        .then(() => setSupportTyping(token, activeConv.id, false))
+        .then(() => (activeConv?.id ? setSupportTyping(token, activeConv.id, false) : null))
         .catch(() => {});
       Promise.resolve()
-        .then(() => getSupportConversation(token, activeConv.id))
+        .then(() => (activeConv?.id ? getSupportConversation(token, activeConv.id) : null))
         .then((data) => {
+          if (!data) return;
           setActiveConv(data.conversation || null);
           setConvMessages(data.messages || []);
           setTyping(data.typing || null);
@@ -217,10 +246,12 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
           ? 'Failed to upload image. Please try a smaller image or check your connection.'
           : raw || 'Failed to send message';
       setConvStatus((s) => ({ ...s, error: friendly }));
-      setConvMessages((prev) => (prev || []).filter((m) => m.id !== optimisticId));
+      if (optimisticId) {
+        setConvMessages((prev) => (prev || []).filter((m) => m.id !== optimisticId));
+      }
     } finally {
       setMsgSending(false);
-      requestAnimationFrame(() => supportInputRef.current?.focus?.());
+      requestAnimationFrame(() => focusSupportInputSafe());
     }
   };
 
@@ -277,123 +308,60 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
           ) : (
             <div>
               {convStatus.error ? <p className="text-red-200 text-sm">{convStatus.error}</p> : null}
-
-              {!isStaff ? (
-                <div className="rounded-xl border border-white/10 bg-sky-950/30 p-3">
-                  <div className="text-sm text-white font-semibold">
-                    {t?.('private.supportStartTitle') || 'Start a conversation'}
-                  </div>
-                  <p className="mt-1 text-xs text-sky-200">
-                    {t?.('private.supportStartHelp') || 'Write your question. Admin/Moderator will reply.'}
-                  </p>
-                  <textarea
-                    className="mt-3 w-full min-h-[90px] rounded-lg bg-sky-950/40 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500/40"
-                    value={startMessage}
-                    onChange={(e) => setStartMessage(e.target.value)}
-                    placeholder={t?.('private.supportStartPh') || 'Describe your problem…'}
-                    disabled={startSending}
-                  />
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <input
-                      ref={startFileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => setStartFile(e.target.files?.[0] || null)}
-                      disabled={startSending}
-                    />
-                    <button
-                      type="button"
-                      className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"
-                      onClick={() => startFileInputRef.current?.click?.()}
-                      disabled={startSending}
-                      title="Attach image"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4 text-sky-100"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M21.44 11.05l-8.49 8.49a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                      </svg>
-                    </button>
-                    {startFile ? (
-                      <div className="flex-1 min-w-0 text-xs text-sky-200 truncate">
-                        {startFile.name}
-                        <button
-                          type="button"
-                          className="ml-2 text-sky-300 hover:text-white"
-                          onClick={() => {
-                            setStartFile(null);
-                            if (startFileInputRef.current) startFileInputRef.current.value = '';
-                          }}
-                          title="Remove"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex-1" />
-                    )}
-                  </div>
-                  <div className="mt-3 flex justify-end">
-                    <button
-                      type="button"
-                      className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-4 py-2 text-sm hover:opacity-95 disabled:opacity-60"
-                      disabled={startSending}
-                      onClick={async () => {
-                        const msg = String(startMessage || '').trim();
-                        if (msg.length < 1 && !startFile) {
-                          return setConvStatus({
-                            loading: false,
-                            error: t?.('private.messageTooShort') || 'Message is required',
-                          });
-                        }
-                        setStartSending(true);
-                        try {
-                          const data = await createSupportConversation(token, { message: msg }, startFile);
-                          setStartMessage('');
-                          setStartFile(null);
-                          if (startFileInputRef.current) startFileInputRef.current.value = '';
-                          await refreshConversations();
-                          if (data?.conversationId) setActiveConvId(data.conversationId);
-                        } catch (e) {
-                          setConvStatus({ loading: false, error: e.message || 'Failed to start conversation' });
-                        } finally {
-                          setStartSending(false);
-                        }
-                      }}
-                    >
-                      {startSending ? t?.('private.sending') || 'Sending…' : t?.('private.supportStartBtn') || 'Start'}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
               <div className="mt-4 flex items-center justify-between gap-3">
                 <div className="text-sm text-sky-200">
                   {t?.('private.supportInbox') || 'Inbox'}: <b className="text-white">{convs.length}</b>
                 </div>
-                <button
-                  type="button"
-                  className="px-3 py-1.5 rounded-lg text-sm border border-white/10 bg-white/5 hover:bg-white/10"
-                  onClick={refreshConversations}
-                  disabled={convStatus.loading}
-                >
-                  {convStatus.loading ? t?.('private.loading') || 'Loading…' : t?.('private.refresh') || 'Refresh'}
-                </button>
+                <div className="flex items-center gap-2">
+                  {!isStaff ? (
+                    <button
+                      type="button"
+                      className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"
+                      onClick={() => {
+                        setConvStatus((s) => ({ ...s, error: '' }));
+                        setActiveConvId(NEW_CHAT_ID);
+                        setConvMessages([]);
+                        setTyping(null);
+                        setMsgInput('');
+                        setMsgFile(null);
+                        if (msgFileInputRef.current) msgFileInputRef.current.value = '';
+                        requestAnimationFrame(() => focusSupportInputSafe());
+                      }}
+                      title={t?.('private.supportStartBtn') || 'New chat'}
+                      aria-label={t?.('private.supportStartBtn') || 'New chat'}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-5 w-5 text-sky-100" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 5v14" />
+                        <path d="M5 12h14" />
+                      </svg>
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 rounded-lg text-sm border border-white/10 bg-white/5 hover:bg-white/10"
+                    onClick={refreshConversations}
+                    disabled={convStatus.loading}
+                  >
+                    {convStatus.loading ? t?.('private.loading') || 'Loading…' : t?.('private.refresh') || 'Refresh'}
+                  </button>
+                </div>
               </div>
 
-              {convs.length === 0 ? (
-                <p className="mt-3 text-sky-200 text-sm">{t?.('private.supportEmpty') || 'No conversations yet.'}</p>
-              ) : (
-                <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-white/10 bg-sky-950/20 overflow-hidden">
-                    <div className="max-h-[480px] overflow-auto divide-y divide-white/10">
+              <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="h-[540px] rounded-xl border border-white/10 bg-sky-950/20 overflow-hidden">
+                    <div className="h-full overflow-auto divide-y divide-white/10">
+                      {!isStaff && activeConvId === NEW_CHAT_ID ? (
+                        <button
+                          type="button"
+                          onClick={() => setActiveConvId(NEW_CHAT_ID)}
+                          className="w-full text-left px-3 py-2 bg-white/10"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-sm text-white font-medium">{t?.('private.supportStartTitle') || 'New chat'}</div>
+                            <div className="text-[11px] text-sky-300 whitespace-nowrap">{t?.('private.status') || 'Status'}: draft</div>
+                          </div>
+                        </button>
+                      ) : null}
                       {convs.map((c) => (
                         <button
                           key={c.id}
@@ -429,7 +397,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-sky-950/30 p-3 flex flex-col">
+                  <div className="h-[540px] rounded-xl border border-white/10 bg-sky-950/30 p-3 flex flex-col">
                     {!activeConv ? (
                       <p className="text-sky-200 text-sm">{t?.('private.supportSelect') || 'Select a conversation.'}</p>
                     ) : (
@@ -441,12 +409,19 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                                 #{activeConv.id} {t?.('private.user') || 'User'}: {activeConv.proUsername || ''}
                               </>
                             ) : (
-                              t?.('private.supportTitle') || 'Support chat'
+                              activeConvId === NEW_CHAT_ID
+                                ? t?.('private.supportStartTitle') || 'New chat'
+                                : t?.('private.supportTitle') || 'Support chat'
                             )}
                           </div>
                         </div>
 
-                        <div ref={supportScrollRef} className="mt-3 flex-1 min-h-[220px] max-h-[420px] overflow-auto space-y-2 pr-1">
+                        <div ref={supportScrollRef} className="mt-3 flex-1 min-h-0 overflow-auto space-y-2 pr-1">
+                          {activeConvId === NEW_CHAT_ID ? (
+                            <div className="text-sm text-sky-200">
+                              {t?.('private.supportStartHelp') || 'Write your question. We will reply.'}
+                            </div>
+                          ) : null}
                           {convMessages.map((m, idx) => {
                             const isMe = Number(m.senderUserId) === Number(user?.id);
                             const prev = idx > 0 ? convMessages[idx - 1] : null;
@@ -567,8 +542,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
                       </>
                     )}
                   </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </div>
