@@ -42,6 +42,39 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
     }
   };
 
+  const applyConversationSnapshot = (data) => {
+    if (!data) return;
+    const nextConv = data.conversation || null;
+    const nextMsgs = data.messages || [];
+    const nextTyping = data.typing || null;
+
+    setActiveConv((prev) => {
+      const prevId = prev?.id ?? null;
+      const nextId = nextConv?.id ?? null;
+      const same =
+        prevId === nextId &&
+        String(prev?.status || '') === String(nextConv?.status || '') &&
+        String(prev?.title || '') === String(nextConv?.title || '') &&
+        String(prev?.lastMessageAt || '') === String(nextConv?.lastMessageAt || '');
+      return same ? prev : nextConv;
+    });
+
+    setConvMessages((prev) => {
+      const prevLen = prev?.length || 0;
+      const nextLen = nextMsgs?.length || 0;
+      const prevLast = prevLen ? prev[prevLen - 1]?.id : null;
+      const nextLast = nextLen ? nextMsgs[nextLen - 1]?.id : null;
+      if (prevLen === nextLen && prevLast === nextLast) return prev;
+      return nextMsgs;
+    });
+
+    setTyping((prev) => {
+      const prevUser = prev?.userId ?? null;
+      const nextUser = nextTyping?.userId ?? null;
+      return prevUser === nextUser ? prev : nextTyping;
+    });
+  };
+
   const refreshConversations = async () => {
     try {
       setConvStatus({ loading: true, error: '' });
@@ -103,9 +136,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
         }
         const data = await getSupportConversation(token, activeConvId);
         if (!mounted) return;
-        setActiveConv(data.conversation || null);
-        setConvMessages(data.messages || []);
-        setTyping(data.typing || null);
+        applyConversationSnapshot(data);
         Promise.resolve()
           .then(() => markSupportSeen(token, activeConvId))
           .then(() => {
@@ -171,11 +202,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
       if (msgSending) return;
       Promise.resolve()
         .then(() => getSupportConversation(token, activeConvId))
-        .then((data) => {
-          setActiveConv(data.conversation || null);
-          setConvMessages(data.messages || []);
-          setTyping(data.typing || null);
-        })
+        .then((data) => applyConversationSnapshot(data))
         .catch(() => {});
 
       if (isStaff) {
@@ -229,15 +256,7 @@ export function MessagesPage({ t, user, token, onAdminMembers }) {
       Promise.resolve()
         .then(() => (activeConv?.id ? setSupportTyping(token, activeConv.id, false) : null))
         .catch(() => {});
-      Promise.resolve()
-        .then(() => (activeConv?.id ? getSupportConversation(token, activeConv.id) : null))
-        .then((data) => {
-          if (!data) return;
-          setActiveConv(data.conversation || null);
-          setConvMessages(data.messages || []);
-          setTyping(data.typing || null);
-        })
-        .catch(() => {});
+      // Keep optimistic message; polling will refresh in background.
       Promise.resolve()
         .then(() => silentRefreshConversations())
         .catch(() => {});
