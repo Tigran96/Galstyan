@@ -1,4 +1,4 @@
-export const Card = ({ children, className = "", CONFIG, variant = "default" }) => {
+export const Card = ({ children, className = "", CONFIG, variant = "default", onClick }) => {
   const variants = {
     default: "bg-white/5 backdrop-blur-md border border-white/10 shadow-xl shadow-sky-900/20",
     glass: "bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl shadow-sky-900/30",
@@ -6,8 +6,20 @@ export const Card = ({ children, className = "", CONFIG, variant = "default" }) 
     dark: "bg-slate-900/80 backdrop-blur-md border border-slate-700/50 shadow-2xl shadow-slate-900/50"
   };
 
+  const interactiveProps = onClick
+    ? {
+        onClick,
+        role: "button",
+        tabIndex: 0,
+        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(e); } },
+      }
+    : {};
+
   return (
-    <div className={`${variants[variant]} rounded-2xl p-6 transition-all duration-300 hover:shadow-3xl hover:scale-[1.02] group ${className}`}>
+    <div
+      {...interactiveProps}
+      className={`${variants[variant]} rounded-2xl p-6 transition-all duration-300 hover:shadow-3xl hover:scale-[1.02] group ${onClick ? 'cursor-pointer' : ''} ${className}`}
+    >
       {children}
     </div>
   );

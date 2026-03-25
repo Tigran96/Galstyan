@@ -10,7 +10,6 @@ import { PricingCard } from './components/PricingCard';
 import { PricingAccordion } from './components/PricingAccordion';
 import { EnrollPage } from './components/EnrollPage';
 import { FAQItem } from './components/FAQItem';
-import { ContactForm } from './components/ContactForm';
 import { Footer } from './components/Footer';
 import { Card } from './components/Card';
 import { LoadingSpinner } from './components/LoadingSpinner';
@@ -1538,6 +1537,7 @@ export default function LandingPage() {
   const [resetToken, setResetToken] = useState(null);
   const [forumThreadId, setForumThreadId] = useState(null);
   const [pendingAnchor, setPendingAnchor] = useState(null);
+  const [activeAnchor, setActiveAnchor] = useState('');
 
   // Load token from localStorage and validate it.
   useEffect(() => {
@@ -1733,6 +1733,23 @@ export default function LandingPage() {
     setTimeout(() => smoothScrollTo(id), 50);
   }, [currentPage, pendingAnchor]);
 
+  // Track which section is visible to highlight the correct nav link
+  useEffect(() => {
+    if (currentPage !== 'home') return;
+    const sectionIds = ['courses', 'results', 'testimonials', 'teachers', 'pricing', 'faq', 'contact'];
+    const observers = sectionIds.map((id) => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const observer = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveAnchor(id); },
+        { threshold: 0.3 }
+      );
+      observer.observe(el);
+      return observer;
+    });
+    return () => observers.forEach((o) => o?.disconnect());
+  }, [currentPage]);
+
   // Add smooth scrolling to all internal links
   useEffect(() => {
     const handleClick = (e) => {
@@ -1807,6 +1824,7 @@ export default function LandingPage() {
       unreadNotificationsCount={unreadNotificationsCount || 0}
       unreadSupportCount={unreadSupportCount || 0}
       currentPage={currentPage}
+      activeAnchor={activeAnchor}
       onNavigateAnchor={navigateToAnchor}
       onLogoClick={() => navigateToAnchor('home')}
       onForumClick={() => setCurrentPage('forum')}
@@ -2105,12 +2123,12 @@ export default function LandingPage() {
                   <div className="text-left">
                     <div className="text-xl font-bold text-white group-hover:text-sky-300 transition-colors">{teacher.name[lang]}</div>
                     <div className="text-sm text-sky-400 font-medium">{teacher.role[lang]}</div>
-                    <button className="mt-3 text-xs font-bold text-sky-300/60 uppercase tracking-widest flex items-center gap-2 group-hover:text-sky-300 transition-colors">
+                    <span className="mt-3 text-xs font-bold text-sky-300/60 uppercase tracking-widest flex items-center gap-2 group-hover:text-sky-300 transition-colors">
                       {t("hero.subtitleLink")}
                       <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
-                    </button>
+                    </span>
                   </div>
                 </div>
               </Card>
