@@ -1864,7 +1864,7 @@ export default function LandingPage() {
         />
 
         {/* Chat Button */}
-        <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
+        <ChatButton onClick={() => setIsChatOpen(true)} t={t} raised={stickyBarActive} />
 
         {/* Chat */}
         <Chat
@@ -2221,7 +2221,7 @@ export default function LandingPage() {
         <StickyTrialBar lang={lang} phone={CONFIG.phone} onActiveChange={setStickyBarActive} />
 
         {/* Chat Button */}
-        <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
+        <ChatButton onClick={() => setIsChatOpen(true)} t={t} raised={stickyBarActive} />
 
         {/* Chat Modal */}
         <Chat

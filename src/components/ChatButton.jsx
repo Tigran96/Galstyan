@@ -1,13 +1,13 @@
 import newtonChatLogo from '../assets/newton-chat-logo.svg';
 
-export const ChatButton = ({ onClick, unreadCount = 0, t }) => {
+export const ChatButton = ({ onClick, unreadCount = 0, t, raised }) => {
   const tooltipTitle = t ? t('chat.tooltipTitle') : "Hello, I'm Newton";
   const tooltipBody =
     t ? t('chat.tooltipBody') : "I can help with math and physics. Let's start!";
   const tooltipCta = t ? t('chat.tooltipCta') : 'Start';
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 group">
+    <div className={`fixed ${raised ? 'bottom-[88px]' : 'bottom-6'} right-6 z-40 group transition-all duration-300`}>
       {/* Hover card */}
       <div
         role="tooltip"
