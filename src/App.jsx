@@ -37,6 +37,8 @@ import { getSupportUnreadCount } from './services/supportService';
 import { ContactSection } from "./components/ContactSection";
 import { Testimonials } from './components/Testimonials';
 import { TelegramButton } from './components/TelegramButton';
+import { WhatsAppButton } from './components/WhatsAppButton';
+import { StickyTrialBar } from './components/StickyTrialBar';
 
 const CONFIG = {
   businessName: {
@@ -2208,8 +2210,14 @@ export default function LandingPage() {
           onPrivacyClick={() => setCurrentPage('privacy')}
         />
 
+        {/* WhatsApp Button */}
+        <WhatsAppButton phoneRaw={CONFIG.telegramPhone} label={lang === 'hy' ? 'WhatsApp-ով գրեք մեզ' : lang === 'ru' ? 'Написать в WhatsApp' : 'Chat on WhatsApp'} />
+
         {/* Telegram Button */}
         <TelegramButton phoneRaw={CONFIG.telegramPhone} label={lang === 'hy' ? 'Telegram-ով գրեք մեզ' : lang === 'ru' ? 'Написать в Telegram' : 'Chat on Telegram'} />
+
+        {/* Sticky Free Trial Bar */}
+        <StickyTrialBar lang={lang} phone={CONFIG.phone} />
 
         {/* Chat Button */}
         <ChatButton onClick={() => setIsChatOpen(true)} t={t} />

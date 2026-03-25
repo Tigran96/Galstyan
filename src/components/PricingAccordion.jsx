@@ -91,6 +91,7 @@ export const PricingAccordion = ({ t, CONFIG, lang, formatPrice, onPlanSelect })
             formatPrice={formatPrice}
             onSelect={() => onPlanSelect(tier.price)}
             popular={tier.popular}
+            spotsLeft={activeTab === 'group' ? [3, 2, 4][i] : undefined}
           />
         ))}
       </div>
