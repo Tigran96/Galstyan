@@ -112,7 +112,25 @@ export const Hero = ({ t, CONFIG, lang }) => (
             <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </a>
         </div>
-        <div className="mt-6 flex flex-wrap gap-4 text-sm text-sky-200 justify-center">
+        {/* Free trial CTA */}
+        <div className="mt-6">
+          <a
+            href="#contact"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-sky-300 hover:text-white transition-colors group"
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-500/20 group-hover:bg-sky-500/40 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            {t("hero.freeTrial")}
+            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-4 text-sm text-sky-200 justify-center">
           {t("hero.smalls").map((s, i) => (
             <span key={i}>{s}</span>
           ))}

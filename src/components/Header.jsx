@@ -12,6 +12,7 @@ export const Header = ({
   unreadNotificationsCount,
   unreadSupportCount,
   currentPage,
+  activeAnchor,
   onForumClick,
   onTeachersClick,
   onNavigateAnchor,
@@ -57,7 +58,7 @@ export const Header = ({
       <nav className="hidden md:flex items-center gap-1">
         <NavLink
           href="#courses"
-          active={currentPage === 'home' && window.location.hash === '#courses'}
+          active={currentPage === 'home' && activeAnchor === 'courses'}
           onClick={(e) => {
             e.preventDefault();
             onNavigateAnchor?.("courses");
@@ -77,7 +78,7 @@ export const Header = ({
         </NavLink>
         <NavLink
           href="#pricing"
-          active={currentPage === 'home' && window.location.hash === '#pricing'}
+          active={currentPage === 'home' && activeAnchor === 'pricing'}
           onClick={(e) => {
             e.preventDefault();
             onNavigateAnchor?.("pricing");
@@ -87,7 +88,7 @@ export const Header = ({
         </NavLink>
         <NavLink
           href="#faq"
-          active={currentPage === 'home' && window.location.hash === '#faq'}
+          active={currentPage === 'home' && activeAnchor === 'faq'}
           onClick={(e) => {
             e.preventDefault();
             onNavigateAnchor?.("faq");
@@ -97,7 +98,7 @@ export const Header = ({
         </NavLink>
         <NavLink
           href="#contact"
-          active={currentPage === 'home' && window.location.hash === '#contact'}
+          active={currentPage === 'home' && activeAnchor === 'contact'}
           onClick={(e) => {
             e.preventDefault();
             onNavigateAnchor?.("contact");

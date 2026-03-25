@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="UTF-8">
+<title>Post 1 – Free Trial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px; height: 1080px; overflow: hidden;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    background: #060d1f;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .canvas {
+    width: 1080px; height: 1080px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 80px;
+  }
+
+  /* Background glows */
+  .glow1 {
+    position: absolute; top: -200px; left: -200px;
+    width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .glow2 {
+    position: absolute; bottom: -150px; right: -150px;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Top accent bar */
+  .accent-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, #0ea5e9, #818cf8, #0ea5e9);
+  }
+
+  /* Logo + brand */
+  .brand {
+    display: flex; align-items: center; gap: 18px;
+    margin-bottom: 56px; z-index: 1;
+  }
+  .brand img { height: 64px; width: auto; }
+  .brand-name {
+    font-size: 28px; font-weight: 700; color: white; letter-spacing: -0.5px;
+  }
+
+  /* Tag */
+  .tag {
+    z-index: 1;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.35);
+    border-radius: 999px; padding: 8px 22px;
+    color: #7dd3fc; font-size: 18px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 32px;
+  }
+
+  /* Headline */
+  .headline {
+    z-index: 1; text-align: center; margin-bottom: 24px;
+  }
+  .headline h1 {
+    font-size: 86px; font-weight: 900; line-height: 1;
+    background: linear-gradient(135deg, #ffffff 0%, #bae6fd 60%, #818cf8 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; letter-spacing: -2px;
+  }
+  .headline .sub {
+    font-size: 32px; font-weight: 500; color: #94a3b8; margin-top: 16px;
+  }
+
+  /* Divider */
+  .divider {
+    z-index: 1; width: 80px; height: 3px;
+    background: linear-gradient(90deg, transparent, #0ea5e9, transparent);
+    border-radius: 2px; margin: 36px 0;
+  }
+
+  /* Feature pills */
+  .pills {
+    z-index: 1; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 52px;
+  }
+  .pill {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 14px 28px;
+    color: #e2e8f0; font-size: 20px; font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .pill-icon { font-size: 22px; }
+
+  /* CTA */
+  .cta {
+    z-index: 1;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    border-radius: 20px; padding: 22px 60px;
+    color: white; font-size: 26px; font-weight: 700;
+    letter-spacing: 0.3px; margin-bottom: 44px;
+  }
+
+  /* Phone */
+  .phone {
+    z-index: 1; color: #64748b; font-size: 22px; font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .phone span { color: #94a3b8; }
+
+  /* Bottom bar */
+  .bottom-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, #6366f1, #0ea5e9, #6366f1);
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="glow1"></div>
+  <div class="glow2"></div>
+  <div class="accent-bar"></div>
+
+  <div class="brand">
+    <img src="../public/logo.png" alt="Logo">
+    <div class="brand-name">Galstyan Academy</div>
+  </div>
+
+  <div class="tag">✨ Special Offer</div>
+
+  <div class="headline">
+    <h1>FREE TRIAL<br>LESSON</h1>
+    <div class="sub">No commitment · No pressure</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="pills">
+    <div class="pill"><span class="pill-icon">📐</span> Mathematics</div>
+    <div class="pill"><span class="pill-icon">🧲</span> Physics</div>
+    <div class="pill"><span class="pill-icon">📝</span> SAT / GRE / GMAT</div>
+  </div>
+
+  <div class="cta">Book your free lesson today →</div>
+
+  <div class="phone">
+    <span>📲</span>
+    <span>+374 94 766-409</span>
+  </div>
+
+  <div class="bottom-bar"></div>
+</div>
+</body>
+</html>
