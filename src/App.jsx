@@ -36,6 +36,8 @@ import { getMe } from './services/authService';
 import { getMyNotifications } from './services/notificationService';
 import { getSupportUnreadCount } from './services/supportService';
 import { ContactSection } from "./components/ContactSection";
+import { Testimonials } from './components/Testimonials';
+import { TelegramButton } from './components/TelegramButton';
 
 const CONFIG = {
   businessName: {
@@ -123,6 +125,7 @@ const CONFIG = {
     facebook: "https://www.facebook.com/galstyanacademy",
     instagram: "https://www.instagram.com/galstyanacademy/",
   },
+  telegramPhone: "+37494766409",
   color: {
     bg: "bg-sky-950",
     card: "bg-sky-900",
@@ -239,11 +242,13 @@ const I18N = {
         "📐 Մաթեմատիկա բոլոր մակարդակների համար",
         "⚗️ Ֆիզիկա՝ տեսություն և պրակտիկա",
       ],
+      freeTrial: "Անվճար փորձնական դաս",
     },
     courses: {
       title: "Մեր դասընթացները",
       subtitle: "Հիմնական առարկաներ՝ ամուր հիմք ստեղծելու համար։",
       comingSoon: "Շուտով",
+      notifyMe: "Ծանուցեք ինձ",
       cta: "Պատրա՞ստ եք սկսել ձեր ուսուցման ճանապարհը:",
       ctaLink1: "Դիտեք մեր գնացուցակը",
       ctaLink2: "իմացեք մեր հիմնադրի մասին",
@@ -304,6 +309,30 @@ const I18N = {
         { kpi: "+2x", label: "Տնայինների կատարում և վստահություն" },
         { kpi: "−30%", label: "Սխալների նվազում թեստերում" },
         { kpi: "+1–2", label: "Գնահատականի աճ մեկ քառորդ ուսումնական տարվա ընթացքում" },
+      ],
+    },
+    testimonials: {
+      title: "Ուսանողների կարծիքները",
+      subtitle: "Մեր ուսանողներն ու ծնողները կիսում են իրենց փորձը",
+      items: [
+        {
+          quote: "Մարատ ուսուցչի հետ սովորելուց հետո SAT-ի գնահատականս 200 կետով բարձրացավ: Շնորհակալ եմ Գալստյան Ակադեմիային՝ իմ ամերիկյան երազանքն իրականություն դարձնելու համար:",
+          name: "Անի Կ.",
+          role: "SAT ուսանող",
+          rating: 5,
+        },
+        {
+          quote: "Որդիս մաթեմատիկայի գնահատականն ընդամենը 3 ամսում 4-ից 9 դարձավ: Ուսուցիչները հոյակապ են, անհատական մոտեցումը՝ անգնահատելի:",
+          name: "Կարեն Մ.",
+          role: "Ծնող",
+          rating: 5,
+        },
+        {
+          quote: "Ֆիզիկան ինձ համար անտանելի էր, բայց Գալստյան Ակադեմիան ամեն ինչ փոխեց: Հիմա ֆիզիկան իմ սիրած առարկան է:",
+          name: "Դավիթ Հ.",
+          role: "11-րդ դասարան",
+          rating: 5,
+        },
       ],
     },
     pricing: {
@@ -640,11 +669,13 @@ const I18N = {
         "📐 Mathematics for all levels",
         "⚗️ Physics theory & practice",
       ],
+      freeTrial: "Book a free trial lesson",
     },
     courses: {
       title: "Our Courses",
       subtitle: "Core subjects designed to build a strong foundation.",
       comingSoon: "Coming Soon",
+      notifyMe: "Notify me when ready",
       cta: "Ready to start your learning journey?",
       ctaLink1: "View our pricing plans",
       ctaLink2: "learn more about our teachers",
@@ -675,6 +706,30 @@ const I18N = {
         { kpi: "+2x", label: "Homework completion & confidence" },
         { kpi: "−30%", label: "Fewer mistakes on quizzes" },
         { kpi: "+1–2", label: "Grade improvement in a term" },
+      ],
+    },
+    testimonials: {
+      title: "What Our Students Say",
+      subtitle: "Real stories from students and parents",
+      items: [
+        {
+          quote: "My SAT score went up by 200 points after studying with Marat. Galstyan Academy made my dream of studying in the US a reality.",
+          name: "Ani K.",
+          role: "SAT Student",
+          rating: 5,
+        },
+        {
+          quote: "My son's math grade went from 4 to 9 in just 3 months. The teachers are amazing and the individual approach is priceless.",
+          name: "Karen M.",
+          role: "Parent",
+          rating: 5,
+        },
+        {
+          quote: "Physics was unbearable for me, but Galstyan Academy changed everything. Now it's my favorite subject.",
+          name: "Davit H.",
+          role: "Grade 11 Student",
+          rating: 5,
+        },
       ],
     },
     pricing: {
@@ -1011,11 +1066,13 @@ const I18N = {
         "📐 Математика для всех уровней",
         "⚗️ Физика: теория и практика",
       ],
+      freeTrial: "Записаться на бесплатный пробный урок",
     },
     courses: {
       title: "Наши курсы",
       subtitle: "Базовые предметы для прочного фундамента.",
       comingSoon: "Скоро",
+      notifyMe: "Уведомить меня",
       cta: "Готовы начать свое обучение?",
       ctaLink1: "Посмотрите наши цены",
       ctaLink2: "узнайте больше о нашем основателе",
@@ -1046,6 +1103,30 @@ const I18N = {
         { kpi: "+2x", label: "Выполнение домашних и уверенность" },
         { kpi: "−30%", label: "Меньше ошибок в тестах" },
         { kpi: "+1–2", label: "Рост оценок за четверть" },
+      ],
+    },
+    testimonials: {
+      title: "Отзывы наших учеников",
+      subtitle: "Реальные истории учеников и родителей",
+      items: [
+        {
+          quote: "Мой результат SAT вырос на 200 баллов после занятий с Маратом. Академия Галстяна помогла мне осуществить мечту об учёбе в США.",
+          name: "Ани К.",
+          role: "Студент SAT",
+          rating: 5,
+        },
+        {
+          quote: "Оценка моего сына по математике выросла с 4 до 9 всего за 3 месяца. Учителя замечательные, индивидуальный подход бесценен.",
+          name: "Карен М.",
+          role: "Родитель",
+          rating: 5,
+        },
+        {
+          quote: "Физика была для меня невыносимой, но Академия Галстяна всё изменила. Теперь это мой любимый предмет.",
+          name: "Давит Г.",
+          role: "Ученик 11 класса",
+          rating: 5,
+        },
       ],
     },
     pricing: {
@@ -1980,7 +2061,7 @@ export default function LandingPage() {
         <Section id="courses" title={t("courses.title")} subtitle={t("courses.subtitle")} variant="subtle">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {t("courses.items").map((c, i) => (
-              <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} />
+              <Feature key={i} icon={c.icon} title={c.title} desc={c.desc} CONFIG={CONFIG} disabled={c.disabled} comingSoonText={t("courses.comingSoon")} notifyMeText={t("courses.notifyMe")} />
             ))}
           </div>
           <div className="mt-12 text-center">
@@ -2006,6 +2087,9 @@ export default function LandingPage() {
             </p>
           </div>
         </Section>
+
+        {/* Testimonials */}
+        <Testimonials t={t} />
 
         {/* Teachers Section - Compact Preview */}
         <Section id="teachers" title={t("teachers.title")} subtitle={t("teachers.subtitle")} variant="subtle">
@@ -2105,6 +2189,9 @@ export default function LandingPage() {
           lang={lang}
           onPrivacyClick={() => setCurrentPage('privacy')}
         />
+
+        {/* Telegram Button */}
+        <TelegramButton phoneRaw={CONFIG.telegramPhone} label={lang === 'hy' ? 'Telegram-ով գրեք մեզ' : lang === 'ru' ? 'Написать в Telegram' : 'Chat on Telegram'} />
 
         {/* Chat Button */}
         <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
