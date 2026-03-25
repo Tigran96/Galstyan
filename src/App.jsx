@@ -316,7 +316,7 @@ const I18N = {
       subtitle: "Մեր ուսանողներն ու ծնողները կիսում են իրենց փորձը",
       items: [
         {
-          quote: "Մարատ ուսուցչի հետ սովորելուց հետո SAT-ի գնահատականս 200 կետով բարձրացավ: Շնորհակալ եմ Գալստյան Ակադեմիային՝ իմ ամերիկյան երազանքն իրականություն դարձնելու համար:",
+          quote: "Գալստյան Ակադեմիայում սովորելուց հետո SAT-ի գնահատականս 200 կետով բարձրացավ: Շնորհակալ եմ Գալստյան Ակադեմիային՝ իմ ամերիկյան երազանքն իրականություն դարձնելու համար:",
           name: "Անի Կ.",
           role: "SAT ուսանող",
           rating: 5,
@@ -713,7 +713,7 @@ const I18N = {
       subtitle: "Real stories from students and parents",
       items: [
         {
-          quote: "My SAT score went up by 200 points after studying with Marat. Galstyan Academy made my dream of studying in the US a reality.",
+          quote: "My SAT score went up by 200 points after studying at Galstyan Academy. They made my dream of studying in the US a reality.",
           name: "Ani K.",
           role: "SAT Student",
           rating: 5,
@@ -1110,7 +1110,7 @@ const I18N = {
       subtitle: "Реальные истории учеников и родителей",
       items: [
         {
-          quote: "Мой результат SAT вырос на 200 баллов после занятий с Маратом. Академия Галстяна помогла мне осуществить мечту об учёбе в США.",
+          quote: "Мой результат SAT вырос на 200 баллов после занятий в Академии Галстяна. Они помогли мне осуществить мечту об учёбе в США.",
           name: "Ани К.",
           role: "Студент SAT",
           rating: 5,
