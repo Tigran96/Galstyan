@@ -1,10 +1,10 @@
-export const TelegramButton = ({ phoneRaw, label }) => (
+export const TelegramButton = ({ phoneRaw, label, raised }) => (
   <a
     href={`https://t.me/${phoneRaw}`}
     target="_blank"
     rel="noopener noreferrer"
     aria-label={label || "Chat on Telegram"}
-    className="fixed bottom-6 left-6 z-40 group"
+    className={`fixed ${raised ? 'bottom-[88px]' : 'bottom-6'} left-6 z-40 group transition-all duration-300`}
   >
     <div className="relative w-16 h-16 rounded-full bg-[#2CA5E0] text-white shadow-lg shadow-[#2CA5E0]/30 hover:shadow-[#2CA5E0]/50 hover:scale-110 transition-all duration-300 flex items-center justify-center">
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">

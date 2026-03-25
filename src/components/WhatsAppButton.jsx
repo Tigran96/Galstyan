@@ -1,10 +1,10 @@
-export const WhatsAppButton = ({ phoneRaw, label }) => (
+export const WhatsAppButton = ({ phoneRaw, label, raised }) => (
   <a
     href={`https://wa.me/${phoneRaw}`}
     target="_blank"
     rel="noopener noreferrer"
     aria-label={label || "Chat on WhatsApp"}
-    className="fixed bottom-[104px] left-6 z-40 group"
+    className={`fixed ${raised ? 'bottom-[168px]' : 'bottom-[104px]'} left-6 z-40 group transition-all duration-300`}
   >
     <div className="relative w-14 h-14 rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/30 hover:shadow-[#25D366]/50 hover:scale-110 transition-all duration-300 flex items-center justify-center">
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7">
