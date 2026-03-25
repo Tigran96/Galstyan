@@ -4,7 +4,7 @@ export const TelegramButton = ({ phoneRaw, label, raised }) => (
     target="_blank"
     rel="noopener noreferrer"
     aria-label={label || "Chat on Telegram"}
-    className={`fixed ${raised ? 'bottom-[168px]' : 'bottom-[88px]'} right-6 z-40 group transition-all duration-300`}
+    className={`fixed ${raised ? 'bottom-[88px]' : 'bottom-6'} left-6 z-40 group transition-all duration-300`}
   >
     <div className="relative w-14 h-14 rounded-full bg-[#2CA5E0] text-white shadow-lg shadow-[#2CA5E0]/30 hover:shadow-[#2CA5E0]/50 hover:scale-110 transition-all duration-300 flex items-center justify-center">
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7">
@@ -12,9 +12,9 @@ export const TelegramButton = ({ phoneRaw, label, raised }) => (
       </svg>
     </div>
     {/* Tooltip */}
-    <div className="absolute bottom-[68px] right-0 w-40 origin-bottom-right rounded-xl border border-white/10 bg-sky-950/95 backdrop-blur shadow-xl px-3 py-2 text-xs text-white opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
+    <div className="absolute bottom-[68px] left-0 w-40 origin-bottom-left rounded-xl border border-white/10 bg-sky-950/95 backdrop-blur shadow-xl px-3 py-2 text-xs text-white opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
       {label || "Chat on Telegram"}
-      <div className="absolute -bottom-2 right-5 h-4 w-4 rotate-45 bg-sky-950/95 border-b border-r border-white/10" />
+      <div className="absolute -bottom-2 left-5 h-4 w-4 rotate-45 bg-sky-950/95 border-b border-r border-white/10" />
     </div>
   </a>
 );
