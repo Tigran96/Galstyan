@@ -36,7 +36,7 @@ export const Header = ({
    *
    */
 
-  <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-sky-950/60 border-b border-white/10">
+  <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-[#07091a]/70 border-b border-white/10">
     <div className="mx-auto flex max-w-6xl items-center justify-between px-3 sm:px-6 py-2 sm:py-3">
       <a
         href="#home"
@@ -142,12 +142,12 @@ export const Header = ({
                 </svg>
                 {unreadSupportCount > 0 ? (
                   <span
-                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-sky-950"
+                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#07091a]"
                     aria-label="Unread messages"
                     title="Unread messages"
                   />
                 ) : null}
-                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#07091a]/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
                   {t?.("private.supportTab") || "Messages"}
                 </span>
               </button>
@@ -172,12 +172,12 @@ export const Header = ({
                 </svg>
                 {unreadNotificationsCount > 0 ? (
                   <span
-                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-sky-950"
+                    className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#07091a]"
                     aria-label="Unread notifications"
                     title="Unread notifications"
                   />
                 ) : null}
-                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#07091a]/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
                   {t?.("private.notificationsTab") || "Notifications"}
                 </span>
               </button>
@@ -199,7 +199,7 @@ export const Header = ({
                   <path d="M20 21a8 8 0 1 0-16 0" />
                   <path d="M12 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
                 </svg>
-                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#07091a]/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
                   {t?.("private.profileNav") || "Profile"}
                 </span>
               </button>
@@ -224,7 +224,7 @@ export const Header = ({
                     <path d="M22 21a6 6 0 0 0-7-5.6" />
                     <path d="M17 11a3.5 3.5 0 1 0-2.3-6.1" />
                   </svg>
-                  <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                  <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#07091a]/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
                     {t?.("admin.members.title") || "Members"}
                   </span>
                 </button>
@@ -247,7 +247,7 @@ export const Header = ({
                   <path d="M5 12h12" />
                   <path d="M13 6l6 6-6 6" />
                 </svg>
-                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-sky-950/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
+                <span className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#07091a]/95 px-2 py-1 text-xs text-sky-100 opacity-0 shadow border border-white/10 group-hover:opacity-100 transition-opacity">
                   {t?.("private.logoutNav") || "Logout"}
                 </span>
               </button>
@@ -264,7 +264,7 @@ export const Header = ({
               <button
                 type="button"
                 onClick={onSignUpClick}
-                className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-sky-950 font-semibold px-3 py-2 text-sm hover:opacity-95 transition-opacity whitespace-nowrap"
+                className="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-400 text-white font-semibold px-3 py-2 text-sm hover:opacity-95 transition-opacity whitespace-nowrap"
               >
                 {t("auth.signupNav")}
               </button>

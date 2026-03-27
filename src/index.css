@@ -6,6 +6,15 @@
   :root {
     --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
     --font-sans: 'Inter', system-ui, sans-serif;
+    --bg-base: #07091a;
+  }
+
+  html {
+    background-color: var(--bg-base);
+  }
+
+  body {
+    background-color: var(--bg-base);
   }
 }
 

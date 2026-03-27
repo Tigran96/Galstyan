@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'sticky_trial_bar_dismissed';
 
-export const StickyTrialBar = ({ lang, phone }) => {
+export const StickyTrialBar = ({ lang, phone, onActiveChange }) => {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -19,6 +19,10 @@ export const StickyTrialBar = ({ lang, phone }) => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    onActiveChange?.(!dismissed && visible);
+  }, [visible, dismissed, onActiveChange]);
 
   const handleDismiss = () => {
     setDismissed(true);

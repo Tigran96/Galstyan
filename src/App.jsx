@@ -128,12 +128,12 @@ const CONFIG = {
   },
   telegramPhone: "+37494766409",
   color: {
-    bg: "bg-sky-950",
-    card: "bg-sky-900",
+    bg: "bg-[#07091a]",
+    card: "bg-white/5",
     text: "text-white",
-    subtext: "text-sky-200",
-    accent: "from-sky-500 to-indigo-400",
-    ring: "ring-sky-500/30",
+    subtext: "text-indigo-200",
+    accent: "from-indigo-500 to-violet-500",
+    ring: "ring-indigo-500/30",
   },
   pricing: {
     group: {
@@ -1532,6 +1532,7 @@ export default function LandingPage() {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [stickyBarActive, setStickyBarActive] = useState(false);
   const [authToken, setAuthToken] = useState(null);
   const [authUser, setAuthUser] = useState(null);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
@@ -1863,7 +1864,7 @@ export default function LandingPage() {
         />
 
         {/* Chat Button */}
-        <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
+        <ChatButton onClick={() => setIsChatOpen(true)} t={t} raised={stickyBarActive} />
 
         {/* Chat */}
         <Chat
@@ -2211,16 +2212,16 @@ export default function LandingPage() {
         />
 
         {/* WhatsApp Button */}
-        <WhatsAppButton phoneRaw={CONFIG.telegramPhone} label={lang === 'hy' ? 'WhatsApp-ով գրեք մեզ' : lang === 'ru' ? 'Написать в WhatsApp' : 'Chat on WhatsApp'} />
+        <WhatsAppButton phoneRaw={CONFIG.telegramPhone} label={lang === 'hy' ? 'WhatsApp-ով գրեք մեզ' : lang === 'ru' ? 'Написать в WhatsApp' : 'Chat on WhatsApp'} raised={stickyBarActive} />
 
         {/* Telegram Button */}
-        <TelegramButton phoneRaw={CONFIG.telegramPhone} label={lang === 'hy' ? 'Telegram-ով գրեք մեզ' : lang === 'ru' ? 'Написать в Telegram' : 'Chat on Telegram'} />
+        <TelegramButton phoneRaw={CONFIG.telegramPhone} label={lang === 'hy' ? 'Telegram-ով գրեք մեզ' : lang === 'ru' ? 'Написать в Telegram' : 'Chat on Telegram'} raised={stickyBarActive} />
 
         {/* Sticky Free Trial Bar */}
-        <StickyTrialBar lang={lang} phone={CONFIG.phone} />
+        <StickyTrialBar lang={lang} phone={CONFIG.phone} onActiveChange={setStickyBarActive} />
 
         {/* Chat Button */}
-        <ChatButton onClick={() => setIsChatOpen(true)} t={t} />
+        <ChatButton onClick={() => setIsChatOpen(true)} t={t} raised={stickyBarActive} />
 
         {/* Chat Modal */}
         <Chat
